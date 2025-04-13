@@ -143,24 +143,40 @@ const MyBookings = () => {
       }
       
       if (bookingToCancel.flight_id) {
-        const { error: seatError } = await supabase.rest.rpc('increment_available_seats', {
-          flight_id: bookingToCancel.flight_id,
-          seats_count: bookingToCancel.passenger_count
+        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/increment_available_seats`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabase.supabaseKey,
+            'Authorization': `Bearer ${supabase.supabaseKey}`
+          },
+          body: JSON.stringify({
+            flight_id: bookingToCancel.flight_id,
+            seats_count: bookingToCancel.passenger_count
+          })
         });
         
-        if (seatError) {
-          console.error("Error restoring flight seats:", seatError);
+        if (!response.ok) {
+          console.error("Error restoring flight seats:", await response.text());
         }
       }
       
       if (bookingToCancel.is_round_trip && bookingToCancel.return_flight_id) {
-        const { error: returnSeatError } = await supabase.rest.rpc('increment_available_seats', {
-          flight_id: bookingToCancel.return_flight_id,
-          seats_count: bookingToCancel.passenger_count
+        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/increment_available_seats`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabase.supabaseKey,
+            'Authorization': `Bearer ${supabase.supabaseKey}`
+          },
+          body: JSON.stringify({
+            flight_id: bookingToCancel.return_flight_id,
+            seats_count: bookingToCancel.passenger_count
+          })
         });
         
-        if (returnSeatError) {
-          console.error("Error restoring return flight seats:", returnSeatError);
+        if (!response.ok) {
+          console.error("Error restoring return flight seats:", await response.text());
         }
       }
       
