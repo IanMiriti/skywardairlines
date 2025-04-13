@@ -181,9 +181,6 @@ const AdminAuthPage = () => {
           
           <div className="mt-4 text-center text-sm text-gray-500">
             <p>Only administrators can access this portal.</p>
-            <p className="mt-2">
-              Admin Email: ianmiriti254@gmail.com
-            </p>
           </div>
         </div>
         

@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Plane, 
   Calendar, 
@@ -22,6 +22,7 @@ import { Booking, Flight } from "@/utils/types";
 const MyBookings = () => {
   // Use authentication context
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
@@ -168,6 +169,11 @@ const MyBookings = () => {
   const cancelCancellation = () => {
     setCancellationConfirm(false);
     setCancellationId(null);
+  };
+  
+  const handlePayment = (bookingId: string) => {
+    // Navigate to payment page with the booking ID
+    navigate(`/payment/${bookingId}`);
   };
   
   // Format price in KES
@@ -473,6 +479,10 @@ const MyBookings = () => {
                               <span className="text-gray-600">Status:</span>
                               <span>{booking.booking_status}</span>
                             </li>
+                            <li className="flex justify-between">
+                              <span className="text-gray-600">Payment Status:</span>
+                              <span>{booking.payment_status || "Pending"}</span>
+                            </li>
                           </ul>
                         </div>
                       </div>
@@ -486,12 +496,13 @@ const MyBookings = () => {
                         </Link>
                         
                         {booking.booking_status === "unpaid" && (
-                          <Link
-                            to={`/booking/${booking.flight_id}/payment?bookingId=${booking.id}`}
-                            className="btn btn-secondary py-2 flex-1 text-center"
+                          <button
+                            onClick={() => handlePayment(booking.id)}
+                            className="bg-safari-kente hover:bg-safari-kente/90 text-white py-2 px-4 rounded flex-1 text-center transition flex items-center justify-center gap-2"
                           >
+                            <Smartphone size={16} />
                             Complete Payment
-                          </Link>
+                          </button>
                         )}
                         
                         {(booking.booking_status === "confirmed" || booking.booking_status === "unpaid") && (
