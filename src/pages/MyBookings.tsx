@@ -13,8 +13,24 @@ import {
   RefreshCw,
   Search 
 } from "lucide-react";
-import { useUser } from "@clerk/clerk-react";
 import { supabase } from "@/integrations/supabase/client";
+
+// Check if Clerk is available
+const hasClerkKey = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+let useUser;
+
+if (hasClerkKey) {
+  try {
+    const clerkComponents = require("@clerk/clerk-react");
+    useUser = clerkComponents.useUser;
+  } catch (error) {
+    console.error("Failed to load Clerk components:", error);
+    useUser = () => ({ user: null, isLoaded: true });
+  }
+} else {
+  // Mock implementation for when Clerk is not available
+  useUser = () => ({ user: { id: "demo-user" }, isLoaded: true });
+}
 
 // Mock bookings data - we'll pretend this comes from Supabase
 // In a real app, this would be fetched from the database
@@ -79,7 +95,8 @@ const mockBookings = [
 ];
 
 const MyBookings = () => {
-  const { user } = useUser();
+  // Safely use Clerk's useUser hook or a mock implementation
+  const { user, isLoaded } = useUser ? useUser() : { user: { id: "demo-user" }, isLoaded: true };
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
@@ -90,6 +107,8 @@ const MyBookings = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
+      
+      console.log("Fetching bookings for user:", user?.id || "demo mode");
       
       // In a real app, this would be a Supabase query
       // const { data, error } = await supabase
@@ -104,10 +123,11 @@ const MyBookings = () => {
       }, 800);
     };
     
-    if (user) {
+    // Only fetch if we have a user (either real or mock)
+    if (isLoaded) {
       fetchBookings();
     }
-  }, [user]);
+  }, [user, isLoaded]);
   
   const toggleBookingDetails = (bookingId: string) => {
     if (expandedBooking === bookingId) {
