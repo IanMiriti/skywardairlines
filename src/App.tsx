@@ -1,4 +1,5 @@
 
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,6 +29,7 @@ import AdminOffers from "./pages/admin/Offers";
 import AdminEditOffer from "./pages/admin/EditOffer";
 import AdminBookings from "./pages/admin/Bookings";
 import AdminCancellations from "./pages/admin/Cancellations";
+import AdminUsers from "./pages/admin/Users";
 import AdminRoute from "./components/admin/AdminRoute";
 import { supabase } from "./integrations/supabase/client";
 
@@ -104,6 +106,7 @@ const App = () => (
             <Route path="offers/new" element={<AdminEditOffer />} />
             <Route path="offers/:id/edit" element={<AdminEditOffer />} />
             <Route path="bookings" element={<AdminBookings />} />
+            <Route path="users" element={<AdminUsers />} />
             <Route path="cancellations" element={<AdminCancellations />} />
           </Route>
           
@@ -116,3 +119,4 @@ const App = () => (
 );
 
 export default App;
+

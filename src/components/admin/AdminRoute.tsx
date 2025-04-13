@@ -63,6 +63,43 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         
+        // Also check if the role is set in publicMetadata
+        const userRole = user.publicMetadata?.role;
+        if (userRole === 'admin') {
+          console.log("User has admin role in Clerk metadata");
+          
+          // Sync with Supabase
+          const { data: existingProfile, error: profileCheckError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (profileCheckError) {
+            console.error("Error checking profile:", profileCheckError);
+          } else if (!existingProfile) {
+            console.log("Admin user not in database, creating profile");
+            await supabase
+              .from('profiles')
+              .insert({ 
+                id: user.id,
+                full_name: user.fullName || '',
+                avatar_url: user.imageUrl || '',
+                role: 'admin'
+              });
+          } else if (existingProfile.role !== 'admin') {
+            console.log("Updating user role to admin in database");
+            await supabase
+              .from('profiles')
+              .update({ role: 'admin' })
+              .eq('id', user.id);
+          }
+          
+          setIsAdmin(true);
+          setIsLoading(false);
+          return;
+        }
+        
         // Check admin role from Supabase as backup
         const { data, error } = await supabase
           .from('profiles')

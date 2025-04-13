@@ -56,6 +56,27 @@ interface FormData {
   agreeToTerms: boolean;
 }
 
+// FlutterWave interface props
+interface FlutterWaveConfig {
+  public_key: string;
+  tx_ref: string;
+  amount: number;
+  currency: string;
+  payment_options: string;
+  customer: {
+    email: string;
+    phone_number: string;
+    name: string;
+  };
+  customizations: {
+    title: string;
+    description: string;
+    logo: string;
+  };
+  callback: (response: any) => Promise<void>;
+  onClose: () => void;
+}
+
 const Booking = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -258,7 +279,7 @@ const Booking = () => {
     }
   };
   
-  const flutterwaveConfig = {
+  const flutterwaveConfig: FlutterWaveConfig = {
     public_key: "FLWPUBK_TEST-27eb6ebf4d92f44eee8c8dc83e2c2a71-X",
     tx_ref: Date.now().toString(),
     amount: calculateGrandTotal(),
@@ -614,6 +635,7 @@ const Booking = () => {
                     {...flutterwaveConfig}
                     className="btn btn-primary"
                     text="Pay with M-PESA"
+                    id="flutterwave-payment-button"
                   />
                 </div>
                 
