@@ -13,7 +13,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   isAdmin: boolean | null;
   isAdminLoading: boolean;
-  refreshSession: () => Promise<void>;
+  refreshSession: () => Promise<{session: Session | null; user: User | null} | null>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -147,7 +147,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (data.session?.user) {
         await checkUserAdmin(data.session.user);
       }
-      return data;
+      return {
+        session: data.session,
+        user: data.session?.user ?? null
+      };
     } catch (error) {
       console.error("Error refreshing session:", error);
       return null;
