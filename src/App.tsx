@@ -35,6 +35,7 @@ import AuthRoute from "./components/AuthRoute";
 import AuthRoleSelect from "./pages/AuthRoleSelect";
 import CustomerAuthPage from "./pages/CustomerAuthPage";
 import AdminAuthPage from "./pages/AdminAuthPage";
+import MakeAdmin from "./pages/MakeAdmin";
 
 // Create a query client
 const queryClient = new QueryClient({
@@ -87,6 +88,9 @@ const App = () => {
                 <Route path="/offers" element={<Offers />} />
                 <Route path="/offers/:id" element={<OfferDetails />} />
                 <Route path="/unauthorized" element={<NotFound />} />
+                
+                {/* Special admin setup route */}
+                <Route path="/make-admin" element={<MakeAdmin />} />
                 
                 {/* Protected customer routes */}
                 <Route 

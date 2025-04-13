@@ -1,3 +1,4 @@
+
 // This file allows making a user an admin by updating their role in the profiles table
 import { supabase } from "./client";
 
@@ -116,6 +117,55 @@ export const checkAdminExists = async (email: string): Promise<boolean> => {
 };
 
 /**
+ * Makes a specific email address an admin
+ * @param email The email to make admin
+ * @returns Promise<boolean> Whether the operation was successful
+ */
+export const makeEmailAdmin = async (email: string): Promise<boolean> => {
+  try {
+    // First, find the user's profile by email
+    const { data: profile, error: findError } = await supabase
+      .from('profiles')
+      .select('id, role')
+      .eq('email', email)
+      .maybeSingle();
+    
+    if (findError) {
+      console.error("Error finding user profile:", findError);
+      return false;
+    }
+    
+    if (!profile) {
+      console.error(`No profile found for email: ${email}`);
+      return false;
+    }
+    
+    // Check if already admin
+    if (profile.role === 'admin') {
+      console.log(`User ${email} is already an admin`);
+      return true;
+    }
+    
+    // Update the profile to set role as admin
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ role: 'admin' })
+      .eq('id', profile.id);
+    
+    if (updateError) {
+      console.error("Error updating user role:", updateError);
+      return false;
+    }
+    
+    console.log(`User ${email} has been made an admin successfully`);
+    return true;
+  } catch (error) {
+    console.error("Unexpected error making user admin:", error);
+    return false;
+  }
+};
+
+/**
  * Ensures the default admin user exists in the database
  * This should be called during application initialization
  */
@@ -145,5 +195,21 @@ export const ensureDefaultAdmin = async (): Promise<void> => {
     
   } catch (error) {
     console.error("Error ensuring default admin exists:", error);
+  }
+};
+
+// Make the specified email an admin - specifically for your account
+export const makeSpecificEmailAdmin = async (): Promise<void> => {
+  const specificEmail = "ianmiriti254@gmail.com"; // Your email address
+  
+  try {
+    const result = await makeEmailAdmin(specificEmail);
+    if (result) {
+      console.log(`Successfully made ${specificEmail} an admin`);
+    } else {
+      console.error(`Failed to make ${specificEmail} an admin`);
+    }
+  } catch (error) {
+    console.error(`Error making ${specificEmail} an admin:`, error);
   }
 };
