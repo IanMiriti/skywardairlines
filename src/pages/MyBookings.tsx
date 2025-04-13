@@ -19,6 +19,9 @@ import { useAuth } from "@/hooks/auth-context";
 import { toast } from "@/hooks/use-toast";
 import { Booking, Flight } from "@/utils/types";
 
+const SUPABASE_URL = "https://ytcpgoyldllvumfmieas.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0Y3Bnb3lsZGxsdnVtZm1pZWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1MTg3MzYsImV4cCI6MjA2MDA5NDczNn0.yBkDez-KnA2IgFSLUdno_BiqD7FXgvRLQ7PpCQ2IHHI";
+
 const MyBookings = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -143,12 +146,12 @@ const MyBookings = () => {
       }
       
       if (bookingToCancel.flight_id) {
-        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/increment_available_seats`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_available_seats`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': supabase.supabaseKey,
-            'Authorization': `Bearer ${supabase.supabaseKey}`
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
           },
           body: JSON.stringify({
             flight_id: bookingToCancel.flight_id,
@@ -162,12 +165,12 @@ const MyBookings = () => {
       }
       
       if (bookingToCancel.is_round_trip && bookingToCancel.return_flight_id) {
-        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/increment_available_seats`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_available_seats`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': supabase.supabaseKey,
-            'Authorization': `Bearer ${supabase.supabaseKey}`
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
           },
           body: JSON.stringify({
             flight_id: bookingToCancel.return_flight_id,
