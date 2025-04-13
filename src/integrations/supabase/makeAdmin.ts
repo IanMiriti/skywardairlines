@@ -1,5 +1,6 @@
 
 import { supabase } from "./client";
+import { Database } from "./types";
 
 /**
  * Makes a user an admin by their email address
@@ -7,29 +8,32 @@ import { supabase } from "./client";
  */
 export const makeUserAdmin = async (email: string): Promise<boolean> => {
   try {
-    // First get the user ID from Supabase by email
-    const { data: users, error: authError } = await supabase
+    // First query the profiles table to find a user with the given email
+    const { data: profiles, error: queryError } = await supabase
       .from('profiles')
       .select('id')
-      .eq('email', email)
-      .single();
+      .filter('email', 'eq', email)
+      .limit(1);
     
-    if (authError || !users) {
-      console.error("Error finding user by email:", authError);
+    if (queryError || !profiles || profiles.length === 0) {
+      console.error("Error finding user by email:", queryError);
       return false;
     }
+    
+    const userId = profiles[0].id;
     
     // Update the profile to set role as admin
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ role: 'admin' })
-      .eq('id', users.id);
+      .eq('id', userId);
     
     if (updateError) {
       console.error("Error updating user role:", updateError);
       return false;
     }
     
+    console.log(`Successfully made user ${email} an admin`);
     return true;
   } catch (error) {
     console.error("Error making user admin:", error);
