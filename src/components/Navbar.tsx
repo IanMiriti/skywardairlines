@@ -2,12 +2,36 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, Plane, LogIn, User } from "lucide-react";
-import { useUser, UserButton, SignInButton } from "@clerk/clerk-react";
+
+// Check if Clerk is available
+const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+// Only import Clerk components if available
+let SignInButton, UserButton, useUser;
+if (isClerkAvailable) {
+  const clerkComponents = import.meta.env.PROD 
+    ? require("@clerk/clerk-react") 
+    : { 
+        useUser: () => ({ isSignedIn: false, user: null }), 
+        UserButton: () => null,
+        SignInButton: ({ children }) => children
+      };
+  
+  ({ SignInButton, UserButton, useUser } = clerkComponents);
+} else {
+  // Provide mock implementation for development
+  useUser = () => ({ isSignedIn: false, user: null });
+  UserButton = () => null;
+  SignInButton = ({ children }) => children;
+}
 
 const Navbar = () => {
-  const { isSignedIn, user } = useUser();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Only use Clerk hooks if available
+  const user = isClerkAvailable ? useUser().user : null;
+  const isSignedIn = isClerkAvailable ? useUser().isSignedIn : false;
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -17,16 +41,26 @@ const Navbar = () => {
   const renderAuthButtons = () => {
     try {
       if (isSignedIn) {
-        return <UserButton afterSignOutUrl="/" />;
+        return isClerkAvailable ? <UserButton afterSignOutUrl="/" /> : null;
       } else {
         return (
           <div className="flex items-center gap-4">
-            <SignInButton mode="modal">
-              <button className="btn-outline btn py-2 px-4 flex items-center gap-2">
+            {isClerkAvailable ? (
+              <SignInButton mode="modal">
+                <button className="btn-outline btn py-2 px-4 flex items-center gap-2">
+                  <LogIn size={18} />
+                  <span>Customer Sign In</span>
+                </button>
+              </SignInButton>
+            ) : (
+              <button 
+                onClick={() => navigate('/sign-in')}
+                className="btn-outline btn py-2 px-4 flex items-center gap-2"
+              >
                 <LogIn size={18} />
                 <span>Customer Sign In</span>
               </button>
-            </SignInButton>
+            )}
             <button 
               onClick={() => navigate('/sign-in')}
               className="btn btn-primary py-2 px-4 flex items-center gap-2"
@@ -57,7 +91,7 @@ const Navbar = () => {
       if (isSignedIn) {
         return (
           <div className="flex items-center">
-            <UserButton afterSignOutUrl="/" />
+            {isClerkAvailable ? <UserButton afterSignOutUrl="/" /> : null}
             <span className="ml-4 text-sm text-gray-600">
               {user?.fullName || 'Your Account'}
             </span>
@@ -66,12 +100,25 @@ const Navbar = () => {
       } else {
         return (
           <div className="flex flex-col space-y-2">
-            <SignInButton mode="modal">
-              <button className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center">
+            {isClerkAvailable ? (
+              <SignInButton mode="modal">
+                <button className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center">
+                  <LogIn size={18} />
+                  <span>Customer Sign In</span>
+                </button>
+              </SignInButton>
+            ) : (
+              <button
+                onClick={() => {
+                  navigate('/sign-in');
+                  toggleMenu();
+                }}
+                className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center"
+              >
                 <LogIn size={18} />
                 <span>Customer Sign In</span>
               </button>
-            </SignInButton>
+            )}
             <button
               onClick={() => {
                 navigate('/sign-in');

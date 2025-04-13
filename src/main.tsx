@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ClerkProvider } from '@clerk/clerk-react';
 import App from './App.tsx';
 import './index.css';
 import { ThemeProvider } from './hooks/use-theme.tsx';
@@ -38,59 +37,52 @@ const initializeApp = () => {
   }
 
   try {
-    // We now assume Clerk should always be available in production (Netlify)
-    const isProduction = import.meta.env.PROD;
-    const isClerkMissing = !PUBLISHABLE_KEY;
-
-    // Show a warning on screen for production if Clerk key is missing
-    if (isProduction && isClerkMissing) {
-      console.error("Missing Clerk Publishable Key in production environment");
-      
-      // Fallback to render without Clerk but with a clear error message
-      createRoot(rootElement).render(
-        <React.StrictMode>
-          <ThemeProvider defaultTheme="light">
-            <div className="fixed top-0 left-0 right-0 bg-red-500 text-white p-2 text-center z-50">
-              Authentication error: Missing VITE_CLERK_PUBLISHABLE_KEY
-            </div>
-            <App />
-          </ThemeProvider>
-        </React.StrictMode>
-      );
-      return;
-    }
-    
-    if (isClerkMissing) {
-      console.warn("Missing Clerk Publishable Key - Initializing app without authentication (development mode)");
-      
-      // Initialize without Clerk but with a warning in development
-      createRoot(rootElement).render(
-        <React.StrictMode>
-          <ThemeProvider defaultTheme="light">
-            <App />
-          </ThemeProvider>
-        </React.StrictMode>
-      );
+    // Dynamic import Clerk only if key is available
+    if (PUBLISHABLE_KEY) {
+      import('@clerk/clerk-react').then(({ ClerkProvider }) => {
+        console.log("Initializing application with Clerk authentication");
+        
+        // Initialize with Clerk
+        createRoot(rootElement).render(
+          <React.StrictMode>
+            <ThemeProvider defaultTheme="light">
+              <ClerkProvider 
+                publishableKey={PUBLISHABLE_KEY}
+                signInUrl="/sign-in"
+                signUpUrl="/sign-up"
+                signInFallbackRedirectUrl="/handle-auth"
+                signUpFallbackRedirectUrl="/handle-auth"
+              >
+                <App />
+              </ClerkProvider>
+            </ThemeProvider>
+          </React.StrictMode>
+        );
+        console.log("Application initialized successfully with authentication");
+      }).catch(error => {
+        console.error("Failed to load Clerk:", error);
+        // Fallback to render without Clerk
+        initializeWithoutClerk(rootElement);
+      });
     } else {
-      console.log("Initializing application with Clerk authentication");
-      
-      // Initialize with Clerk
-      createRoot(rootElement).render(
-        <React.StrictMode>
-          <ThemeProvider defaultTheme="light">
-            <ClerkProvider 
-              publishableKey={PUBLISHABLE_KEY}
-              signInUrl="/sign-in"
-              signUpUrl="/sign-up"
-              signInFallbackRedirectUrl="/handle-auth"
-              signUpFallbackRedirectUrl="/handle-auth"
-            >
+      // In development, we can run without Clerk
+      if (import.meta.env.DEV) {
+        console.warn("Missing Clerk Publishable Key - Initializing app without authentication (development mode)");
+        initializeWithoutClerk(rootElement);
+      } else {
+        // In production, show error but still render the app
+        console.error("Missing Clerk Publishable Key in production environment");
+        createRoot(rootElement).render(
+          <React.StrictMode>
+            <ThemeProvider defaultTheme="light">
+              <div className="fixed top-0 left-0 right-0 bg-red-500 text-white p-2 text-center z-50">
+                Authentication error: Missing VITE_CLERK_PUBLISHABLE_KEY
+              </div>
               <App />
-            </ClerkProvider>
-          </ThemeProvider>
-        </React.StrictMode>
-      );
-      console.log("Application initialized successfully with authentication");
+            </ThemeProvider>
+          </React.StrictMode>
+        );
+      }
     }
   } catch (error) {
     console.error("Error initializing application:", error);
@@ -110,6 +102,17 @@ const initializeApp = () => {
       `;
     }
   }
+};
+
+// Helper function to initialize app without Clerk
+const initializeWithoutClerk = (rootElement) => {
+  createRoot(rootElement).render(
+    <React.StrictMode>
+      <ThemeProvider defaultTheme="light">
+        <App />
+      </ThemeProvider>
+    </React.StrictMode>
+  );
 };
 
 // Initialize the app

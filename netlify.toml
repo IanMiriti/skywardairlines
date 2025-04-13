@@ -10,12 +10,16 @@
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
 
-# Important: Add these environment variables in the Netlify dashboard
-# under Site settings > Build & deploy > Environment variables:
-# - VITE_CLERK_PUBLISHABLE_KEY (Required for authentication)
-# - VITE_FLUTTERWAVE_PUBLIC_KEY (Required for payments)
-# - VITE_SUPABASE_URL (Required for database access)
-# - VITE_SUPABASE_ANON_KEY (Required for database access)
+# Critical environment variables required for the application to function properly:
+# DO NOT DEPLOY WITHOUT SETTING THESE VARIABLES IN NETLIFY DASHBOARD
+# VITE_CLERK_PUBLISHABLE_KEY - Required for authentication
+# VITE_SUPABASE_URL - Required for database access
+# VITE_SUPABASE_ANON_KEY - Required for database access
+# VITE_FLUTTERWAVE_PUBLIC_KEY - Required for payments (if using payments)
+
+# Add a build plugin to check for required environment variables
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
 
 # For local development, create a .env.local file with these variables
 # Example:
