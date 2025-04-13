@@ -28,20 +28,22 @@ interface Booking {
   payment_status: string;
   created_at: string;
   is_round_trip: boolean;
+  flight_id: string;
+  return_flight_id?: string | null;
   flight: {
     flight_number: string;
     airline: string;
     departure_city: string;
     arrival_city: string;
     departure_time: string;
-  } | null;  // Make flight nullable to handle potential errors
+  } | null;
   return_flight?: {
     flight_number: string;
     airline: string;
     departure_city: string;
     arrival_city: string;
     departure_time: string;
-  } | null;  // Make return_flight nullable to handle potential errors
+  } | null;
 }
 
 const AdminBookings = () => {
@@ -68,39 +70,63 @@ const AdminBookings = () => {
       setError(null);
       
       try {
-        const { data, error } = await supabase
+        // First, get all bookings
+        const { data: bookingsData, error: bookingsError } = await supabase
           .from('bookings')
-          .select(`
-            *,
-            flight_id (
-              flight_number,
-              airline,
-              departure_city,
-              arrival_city,
-              departure_time
-            ),
-            return_flight_id (
-              flight_number,
-              airline,
-              departure_city,
-              arrival_city,
-              departure_time
-            )
-          `)
+          .select('*')
           .order('created_at', { ascending: false });
           
-        if (error) {
-          throw error;
+        if (bookingsError) {
+          throw bookingsError;
         }
         
-        // Transform the data to match the Booking interface
-        const formattedBookings: Booking[] = (data || []).map(booking => ({
-          ...booking,
-          flight: booking.flight_id || null,
-          return_flight: booking.return_flight_id || null
-        }));
+        if (!bookingsData || bookingsData.length === 0) {
+          setBookings([]);
+          return;
+        }
         
-        setBookings(formattedBookings);
+        // Create a list of processed bookings with flight details
+        const processedBookings: Booking[] = [];
+        
+        // Process each booking to get flight details
+        for (const booking of bookingsData) {
+          // Get flight details
+          let flightDetails = null;
+          if (booking.flight_id) {
+            const { data: flightData, error: flightError } = await supabase
+              .from('flights')
+              .select('flight_number, airline, departure_city, arrival_city, departure_time')
+              .eq('id', booking.flight_id)
+              .single();
+              
+            if (!flightError && flightData) {
+              flightDetails = flightData;
+            }
+          }
+          
+          // Get return flight details if exists
+          let returnFlightDetails = null;
+          if (booking.return_flight_id) {
+            const { data: returnFlightData, error: returnFlightError } = await supabase
+              .from('flights')
+              .select('flight_number, airline, departure_city, arrival_city, departure_time')
+              .eq('id', booking.return_flight_id)
+              .single();
+              
+            if (!returnFlightError && returnFlightData) {
+              returnFlightDetails = returnFlightData;
+            }
+          }
+          
+          // Add the processed booking with flight details
+          processedBookings.push({
+            ...booking,
+            flight: flightDetails,
+            return_flight: returnFlightDetails
+          } as Booking);
+        }
+        
+        setBookings(processedBookings);
       } catch (error) {
         console.error('Error fetching bookings:', error);
         setError('Failed to load bookings. Please try again.');
@@ -208,39 +234,63 @@ const AdminBookings = () => {
     setLoading(true);
     
     try {
-      const { data, error } = await supabase
+      // First, get all bookings
+      const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings')
-        .select(`
-          *,
-          flight_id (
-            flight_number,
-            airline,
-            departure_city,
-            arrival_city,
-            departure_time
-          ),
-          return_flight_id (
-            flight_number,
-            airline,
-            departure_city,
-            arrival_city,
-            departure_time
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
         
-      if (error) {
-        throw error;
+      if (bookingsError) {
+        throw bookingsError;
       }
       
-      // Transform the data to match the Booking interface
-      const formattedBookings: Booking[] = (data || []).map(booking => ({
-        ...booking,
-        flight: booking.flight_id || null,
-        return_flight: booking.return_flight_id || null
-      }));
+      if (!bookingsData || bookingsData.length === 0) {
+        setBookings([]);
+        return;
+      }
       
-      setBookings(formattedBookings);
+      // Create a list of processed bookings with flight details
+      const processedBookings: Booking[] = [];
+      
+      // Process each booking to get flight details
+      for (const booking of bookingsData) {
+        // Get flight details
+        let flightDetails = null;
+        if (booking.flight_id) {
+          const { data: flightData, error: flightError } = await supabase
+            .from('flights')
+            .select('flight_number, airline, departure_city, arrival_city, departure_time')
+            .eq('id', booking.flight_id)
+            .single();
+            
+          if (!flightError && flightData) {
+            flightDetails = flightData;
+          }
+        }
+        
+        // Get return flight details if exists
+        let returnFlightDetails = null;
+        if (booking.return_flight_id) {
+          const { data: returnFlightData, error: returnFlightError } = await supabase
+            .from('flights')
+            .select('flight_number, airline, departure_city, arrival_city, departure_time')
+            .eq('id', booking.return_flight_id)
+            .single();
+            
+          if (!returnFlightError && returnFlightData) {
+            returnFlightDetails = returnFlightData;
+          }
+        }
+        
+        // Add the processed booking with flight details
+        processedBookings.push({
+          ...booking,
+          flight: flightDetails,
+          return_flight: returnFlightDetails
+        } as Booking);
+      }
+      
+      setBookings(processedBookings);
       toast({
         title: "Success",
         description: "Bookings refreshed successfully",
