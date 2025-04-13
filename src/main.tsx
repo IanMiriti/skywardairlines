@@ -25,19 +25,32 @@ if (!PUBLISHABLE_KEY) {
   `;
   // Don't render the app if the key is missing
 } else {
-  createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-      <ClerkProvider 
-        publishableKey={PUBLISHABLE_KEY}
-        signInUrl="/sign-in"
-        signUpUrl="/sign-up"
-        signInFallbackRedirectUrl="/handle-auth"
-        signUpFallbackRedirectUrl="/handle-auth"
-        {...(CLERK_FRONTEND_API && { frontendApi: CLERK_FRONTEND_API })}
-      >
-        <App />
-      </ClerkProvider>
-    </React.StrictMode>
-  );
+  console.log("Initializing application with Clerk publishable key:", PUBLISHABLE_KEY);
+  try {
+    createRoot(document.getElementById("root")!).render(
+      <React.StrictMode>
+        <ClerkProvider 
+          publishableKey={PUBLISHABLE_KEY}
+          signInUrl="/sign-in"
+          signUpUrl="/sign-up"
+          signInFallbackRedirectUrl="/handle-auth"
+          signUpFallbackRedirectUrl="/handle-auth"
+          {...(CLERK_FRONTEND_API && { frontendApi: CLERK_FRONTEND_API })}
+        >
+          <App />
+        </ClerkProvider>
+      </React.StrictMode>
+    );
+    console.log("Application initialized successfully");
+  } catch (error) {
+    console.error("Error initializing application:", error);
+    document.body.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; font-family: 'Inter', sans-serif;">
+        <h1 style="color: #EF4444; margin-bottom: 16px;">Application Error</h1>
+        <p style="max-width: 500px; margin-bottom: 24px; color: #222;">
+          There was an error initializing the application. Please check the console for more details.
+        </p>
+      </div>
+    `;
+  }
 }
-

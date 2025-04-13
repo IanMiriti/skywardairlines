@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CardIcon, ShieldCheck, Smartphone } from "lucide-react";
+import { CreditCard, ShieldCheck, Smartphone } from "lucide-react";
 
 interface PaymentFormProps {
   isProcessing: boolean;
@@ -67,7 +67,7 @@ export const PaymentForm = ({
             >
               <RadioGroupItem value="card" id="card" className="mt-1" />
               <div className="flex gap-3">
-                <CardIcon className="text-safari-sky mt-1" size={20} />
+                <CreditCard className="text-safari-sky mt-1" size={20} />
                 <div>
                   <p className="font-medium">Credit/Debit Card</p>
                   <p className="text-sm text-gray-500">Secure card payment</p>
@@ -93,7 +93,7 @@ export const PaymentForm = ({
             </>
           ) : (
             <>
-              {paymentMethod === "mpesa" ? <Smartphone size={18} /> : <CardIcon size={18} />}
+              {paymentMethod === "mpesa" ? <Smartphone size={18} /> : <CreditCard size={18} />}
               Pay {formatPrice(totalAmount)} Now
             </>
           )}
