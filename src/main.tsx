@@ -5,7 +5,7 @@ import App from './App.tsx';
 import './index.css';
 
 // Clerk publishable key
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY = "pk_test_bGVhcm5pbmctc25hcHBlci02LmNsZXJrLmFjY291bnRzLmRldiQ";
 
 if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Clerk Publishable Key");
