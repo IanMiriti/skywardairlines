@@ -34,14 +34,14 @@ interface Booking {
     departure_city: string;
     arrival_city: string;
     departure_time: string;
-  };
+  } | null;  // Make flight nullable to handle potential errors
   return_flight?: {
     flight_number: string;
     airline: string;
     departure_city: string;
     arrival_city: string;
     departure_time: string;
-  };
+  } | null;  // Make return_flight nullable to handle potential errors
 }
 
 const AdminBookings = () => {
@@ -93,7 +93,14 @@ const AdminBookings = () => {
           throw error;
         }
         
-        setBookings(data || []);
+        // Transform the data to ensure it matches the Booking interface
+        const formattedBookings: Booking[] = (data || []).map(booking => ({
+          ...booking,
+          flight: booking.flight || null,
+          return_flight: booking.return_flight || null
+        }));
+        
+        setBookings(formattedBookings);
       } catch (error) {
         console.error('Error fetching bookings:', error);
         setError('Failed to load bookings. Please try again.');
@@ -226,7 +233,14 @@ const AdminBookings = () => {
         throw error;
       }
       
-      setBookings(data || []);
+      // Transform the data to ensure it matches the Booking interface
+      const formattedBookings: Booking[] = (data || []).map(booking => ({
+        ...booking,
+        flight: booking.flight || null,
+        return_flight: booking.return_flight || null
+      }));
+      
+      setBookings(formattedBookings);
       toast({
         title: "Success",
         description: "Bookings refreshed successfully",

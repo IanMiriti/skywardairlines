@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { format, parseISO } from "date-fns";
@@ -64,12 +63,10 @@ const Booking = () => {
   const queryParams = new URLSearchParams(location.search);
   const { user, isSignedIn, isLoaded } = useUser();
   
-  // Parse query params
   const [passengerCount, setPassengerCount] = useState(Number(queryParams.get('passengers')) || 1);
   const [tripType] = useState(queryParams.get('tripType') || 'oneWay');
   const [returnFlightId] = useState(queryParams.get('returnFlightId') || null);
   
-  // State for flight data
   const [flight, setFlight] = useState<Flight | null>(null);
   const [returnFlight, setReturnFlight] = useState<Flight | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,13 +80,11 @@ const Booking = () => {
     agreeToTerms: false
   });
   
-  // State for payment
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [bookingReference, setBookingReference] = useState<string | null>(null);
   
-  // Generate a booking reference
   const generateBookingReference = () => {
     const prefix = 'FS';
     const randomDigits = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
@@ -97,7 +92,6 @@ const Booking = () => {
   };
   
   useEffect(() => {
-    // Auto-fill user data if signed in
     if (isLoaded && isSignedIn && user) {
       setFormData(prevData => ({
         ...prevData,
@@ -113,7 +107,6 @@ const Booking = () => {
       setLoading(true);
       
       try {
-        // Fetch the main flight
         const { data, error } = await supabase
           .from('flights')
           .select('*')
@@ -126,7 +119,6 @@ const Booking = () => {
         
         setFlight(data);
         
-        // If it's a round trip and we have a return flight ID, fetch that too
         if (returnFlightId) {
           const { data: returnData, error: returnError } = await supabase
             .from('flights')
@@ -167,7 +159,6 @@ const Booking = () => {
     });
   };
   
-  // Format price in KES
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
@@ -176,7 +167,6 @@ const Booking = () => {
     }).format(price);
   };
   
-  // Format date for display
   const formatDate = (dateString: string) => {
     try {
       const date = parseISO(dateString);
@@ -187,7 +177,6 @@ const Booking = () => {
     }
   };
   
-  // Format time for display
   const formatTime = (dateString: string) => {
     try {
       const date = parseISO(dateString);
@@ -198,7 +187,6 @@ const Booking = () => {
     }
   };
   
-  // Calculate total price
   const calculateTotalPrice = () => {
     let basePrice = 0;
     
@@ -213,23 +201,19 @@ const Booking = () => {
     return basePrice * passengerCount;
   };
   
-  // Calculate taxes
   const calculateTaxes = () => {
-    return calculateTotalPrice() * 0.16; // 16% tax
+    return calculateTotalPrice() * 0.16;
   };
   
-  // Grand total
   const calculateGrandTotal = () => {
     return calculateTotalPrice() + calculateTaxes();
   };
   
-  // Save booking to database
   const saveBooking = async (paymentReference: string = "", paymentStatus: string = "pending") => {
     try {
       const ref = generateBookingReference();
       setBookingReference(ref);
       
-      // Check if user is signed in
       if (!isSignedIn || !user) {
         throw new Error("User must be signed in to complete booking");
       }
@@ -274,9 +258,8 @@ const Booking = () => {
     }
   };
   
-  // Initialize Flutterwave configuration
   const flutterwaveConfig = {
-    public_key: "FLWPUBK_TEST-27eb6ebf4d92f44eee8c8dc83e2c2a71-X", // This is a test key
+    public_key: "FLWPUBK_TEST-27eb6ebf4d92f44eee8c8dc83e2c2a71-X",
     tx_ref: Date.now().toString(),
     amount: calculateGrandTotal(),
     currency: 'KES',
@@ -302,7 +285,6 @@ const Booking = () => {
           const booking = await saveBooking(response.transaction_id, "completed");
           setPaymentSuccess(true);
           
-          // Navigate to confirmation page
           navigate(`/booking/${id}/confirmation?bookingId=${booking.id}&reference=${booking.booking_reference}`);
         } catch (error) {
           console.error("Error processing successful payment:", error);
@@ -322,7 +304,6 @@ const Booking = () => {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.idPassport) {
       toast({
         title: "Missing Information",
@@ -341,7 +322,6 @@ const Booking = () => {
       return;
     }
     
-    // For trip types that need return flights
     if (tripType === 'roundTrip' && !returnFlightId) {
       toast({
         title: "Return Flight Required",
@@ -351,7 +331,6 @@ const Booking = () => {
       return;
     }
     
-    // If the user is not signed in, redirect to sign-in page
     if (!isSignedIn) {
       toast({
         title: "Login Required",
@@ -359,7 +338,6 @@ const Booking = () => {
         variant: "default"
       });
       
-      // Save booking details to local storage and redirect
       localStorage.setItem('pendingBooking', JSON.stringify({
         flightId: id,
         returnFlightId: returnFlightId,
@@ -372,8 +350,6 @@ const Booking = () => {
       return;
     }
     
-    // If everything is valid, proceed with payment
-    // Flutterwave button click will handle the rest
     document.getElementById('flutterwave-payment-button')?.click();
   };
   
@@ -448,7 +424,6 @@ const Booking = () => {
   return (
     <div className="bg-gray-50 min-h-screen py-12">
       <div className="container">
-        {/* Back button */}
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-flysafari-primary mb-6 hover:underline"
@@ -458,7 +433,6 @@ const Booking = () => {
         </button>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Booking form */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="bg-flysafari-primary text-white p-4">
@@ -624,7 +598,6 @@ const Booking = () => {
                   </label>
                 </div>
                 
-                {/* Payment security notice */}
                 <div className="p-4 bg-gray-50 rounded-md mb-6">
                   <h3 className="text-md font-semibold mb-2 flex items-center gap-2">
                     <Shield size={16} className="text-flysafari-primary" />
@@ -636,17 +609,14 @@ const Booking = () => {
                   </p>
                 </div>
                 
-                {/* Flutterwave Button (hidden) */}
                 <div className="hidden">
                   <FlutterWaveButton
                     {...flutterwaveConfig}
                     className="btn btn-primary"
-                    id="flutterwave-payment-button"
                     text="Pay with M-PESA"
                   />
                 </div>
                 
-                {/* Proceed to Payment button */}
                 <button
                   type="submit"
                   className="btn btn-secondary w-full py-3 text-base flex items-center justify-center gap-2"
@@ -658,12 +628,10 @@ const Booking = () => {
             </div>
           </div>
           
-          {/* Booking summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
               <h2 className="text-xl font-semibold mb-4">Booking Summary</h2>
               
-              {/* Trip type badge */}
               {tripType === 'roundTrip' && (
                 <div className="mb-4 inline-flex items-center gap-2 bg-flysafari-primary/10 text-flysafari-primary py-1 px-3 rounded-full text-sm">
                   <ArrowLeftRight size={16} />
@@ -671,7 +639,6 @@ const Booking = () => {
                 </div>
               )}
               
-              {/* Outbound flight */}
               <div className="border-b border-gray-200 pb-4 mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
@@ -707,7 +674,6 @@ const Booking = () => {
                 </div>
               </div>
               
-              {/* Return flight if round trip */}
               {tripType === 'roundTrip' && returnFlight && (
                 <div className="border-b border-gray-200 pb-4 mb-4">
                   <div className="flex justify-between items-center mb-2">
@@ -743,13 +709,11 @@ const Booking = () => {
                 </div>
               )}
               
-              {/* Passenger count */}
               <div className="flex justify-between items-center mb-4 py-2">
                 <span>Passengers</span>
                 <span>{passengerCount} {passengerCount === 1 ? 'passenger' : 'passengers'}</span>
               </div>
               
-              {/* Price breakdown */}
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span>Flight Price</span>
@@ -767,7 +731,6 @@ const Booking = () => {
                 </div>
               </div>
               
-              {/* Payment method */}
               <div className="bg-gray-50 p-4 rounded-md">
                 <h3 className="font-medium mb-2 flex items-center gap-2">
                   <CreditCardIcon size={16} className="text-flysafari-primary" />
