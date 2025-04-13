@@ -1,8 +1,15 @@
 
 import { SignIn as ClerkSignIn } from "@clerk/clerk-react";
 import { Plane } from "lucide-react";
+import { useEffect } from "react";
 
 const SignIn = () => {
+  useEffect(() => {
+    // Log information about the redirect setup for debugging purposes
+    console.log("SignIn page loaded, using Clerk redirect configuration");
+    console.log("Expected redirect path after sign-in: /handle-auth");
+  }, []);
+
   return (
     <div className="container mx-auto py-12 px-4">
       <div className="max-w-md mx-auto">
@@ -45,6 +52,9 @@ const SignIn = () => {
           <p>
             Admin users will be redirected to the admin dashboard.
             Regular users will be redirected to the homepage.
+          </p>
+          <p className="mt-2">
+            <strong>Admin Email:</strong> ianmiriti254@gmail.com
           </p>
         </div>
       </div>

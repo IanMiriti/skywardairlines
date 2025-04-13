@@ -8,11 +8,10 @@ import './index.css';
 // Clerk publishable key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_bGVhcm5pbmctc25hcHBlci02LmNsZXJrLmFjY291bnRzLmRldiQ";
 
-// Clerk redirect URLs
+// Clerk redirect URLs - using the new recommended props instead of deprecated ones
 const signInUrl = "/sign-in";
 const signUpUrl = "/sign-up";
-const afterSignInUrl = "/handle-auth";
-const afterSignUpUrl = "/handle-auth";
+const fallbackRedirectUrl = "/handle-auth"; // Replaces afterSignInUrl/afterSignUpUrl
 
 if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Clerk Publishable Key");
@@ -24,8 +23,7 @@ createRoot(document.getElementById("root")!).render(
       publishableKey={PUBLISHABLE_KEY}
       signInUrl={signInUrl}
       signUpUrl={signUpUrl}
-      afterSignInUrl={afterSignInUrl}
-      afterSignUpUrl={afterSignUpUrl}
+      fallbackRedirectUrl={fallbackRedirectUrl}
     >
       <App />
     </ClerkProvider>
