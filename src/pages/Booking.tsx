@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
@@ -26,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Flight } from "@/utils/types";
 
 // Flutterwave library
-import { FlutterWaveButton, closePaymentModal } from 'flutterwave-react-v3';
+import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 
 // Form data interface
 interface FormData {
@@ -37,27 +38,6 @@ interface FormData {
   idPassport: string;
   specialRequests: string;
   agreeToTerms: boolean;
-}
-
-// FlutterWave interface props
-interface FlutterWaveConfig {
-  public_key: string;
-  tx_ref: string;
-  amount: number;
-  currency: string;
-  payment_options: string;
-  customer: {
-    email: string;
-    phone_number: string;
-    name: string;
-  };
-  customizations: {
-    title: string;
-    description: string;
-    logo: string;
-  };
-  callback: (response: any) => Promise<void>;
-  onClose: () => void;
 }
 
 const Booking = () => {
@@ -94,8 +74,6 @@ const Booking = () => {
     const randomDigits = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
     return `${prefix}${randomDigits}`;
   };
-  
-  const flutterwaveButtonRef = useRef<HTMLButtonElement>(null);
   
   useEffect(() => {
     if (isLoaded && isSignedIn && user) {
@@ -243,12 +221,15 @@ const Booking = () => {
         special_requests: formData.specialRequests || null
       };
       
+      console.log("Booking data being inserted:", bookingData);
+      
       const { data, error } = await supabase
         .from('bookings')
         .insert(bookingData)
         .select();
         
       if (error) {
+        console.error("Supabase insert error:", error.message, error.details, error.hint);
         throw error;
       }
       
@@ -264,7 +245,8 @@ const Booking = () => {
     }
   };
 
-  const flutterwaveConfig: FlutterWaveConfig = {
+  // Flutterwave payment configuration
+  const flutterwaveConfig = {
     public_key: "FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X",
     tx_ref: `FLYS-${Date.now().toString()}`,
     amount: calculateGrandTotal(),
@@ -280,51 +262,70 @@ const Booking = () => {
       description: `Booking for flight ${flight?.flight_number} from ${flight?.departure_city} to ${flight?.arrival_city}`,
       logo: 'https://cdn-icons-png.flaticon.com/512/5403/5403491.png',
     },
-    callback: async (response: any) => {
-      console.log("Payment callback:", response);
-      closePaymentModal();
+  };
+  
+  // Initialize the Flutterwave hook
+  const handleFlutterwavePayment = useFlutterwave(flutterwaveConfig);
+  
+  const initiatePayment = async () => {
+    try {
+      const pendingBooking = await saveBooking("pending", "pending");
       
-      if (response.status === "successful") {
-        setIsProcessingPayment(true);
-        
-        try {
-          const verificationResponse = await fetch(
-            `https://ytcpgoyldllvumfmieas.functions.supabase.co/verify-flutterwave-payment`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                transactionId: response.transaction_id,
-                amount: calculateGrandTotal(),
-                currency: 'KES',
-              }),
-            }
-          );
+      handleFlutterwavePayment({
+        callback: async (response) => {
+          console.log("Payment callback:", response);
+          closePaymentModal();
           
-          const verificationData = await verificationResponse.json();
-          
-          if (verificationData.success) {
-            const booking = await saveBooking(response.transaction_id, "completed");
-            setPaymentSuccess(true);
+          if (response.status === "successful") {
+            setIsProcessingPayment(true);
             
-            navigate(`/booking/${id}/confirmation?bookingId=${booking.id}&reference=${booking.booking_reference}`);
+            try {
+              const verificationResponse = await fetch(
+                `https://ytcpgoyldllvumfmieas.functions.supabase.co/verify-flutterwave-payment`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    transactionId: response.transaction_id,
+                    amount: calculateGrandTotal(),
+                    currency: 'KES',
+                  }),
+                }
+              );
+              
+              const verificationData = await verificationResponse.json();
+              
+              if (verificationData.success) {
+                const booking = await saveBooking(response.transaction_id, "completed");
+                setPaymentSuccess(true);
+                
+                navigate(`/booking/${id}/confirmation?bookingId=${booking.id}&reference=${booking.booking_reference}`);
+              } else {
+                setPaymentError("Payment verification failed. Please contact support.");
+              }
+            } catch (error) {
+              console.error("Error processing successful payment:", error);
+              setPaymentError("Payment was successful but we couldn't complete your booking. Please contact support.");
+            } finally {
+              setIsProcessingPayment(false);
+            }
           } else {
-            setPaymentError("Payment verification failed. Please contact support.");
+            setPaymentError("Payment was not successful. Please try again.");
           }
-        } catch (error) {
-          console.error("Error processing successful payment:", error);
-          setPaymentError("Payment was successful but we couldn't complete your booking. Please contact support.");
-        } finally {
-          setIsProcessingPayment(false);
+        },
+        onClose: () => {
+          console.log("Payment modal closed");
         }
-      } else {
-        setPaymentError("Payment was not successful. Please try again.");
-      }
-    },
-    onClose: () => {
-      console.log("Payment modal closed");
+      });
+    } catch (error) {
+      console.error("Error creating pending booking:", error);
+      toast({
+        title: "Booking Error",
+        description: "Could not create booking. Please try again.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -377,26 +378,7 @@ const Booking = () => {
       return;
     }
     
-    try {
-      const pendingBooking = await saveBooking("pending", "pending");
-      
-      if (flutterwaveButtonRef.current) {
-        flutterwaveButtonRef.current.click();
-      } else {
-        toast({
-          title: "Payment Error",
-          description: "Could not initialize payment system. Please try again.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error creating pending booking:", error);
-      toast({
-        title: "Booking Error",
-        description: "Could not create booking. Please try again.",
-        variant: "destructive"
-      });
-    }
+    initiatePayment();
   };
   
   if (loading) {
@@ -653,14 +635,6 @@ const Booking = () => {
                     Your payment and personal information are protected by secure encryption.
                     We use Flutterwave, a trusted payment gateway for secure M-PESA transactions.
                   </p>
-                </div>
-                
-                <div className="hidden">
-                  <FlutterWaveButton
-                    {...flutterwaveConfig}
-                    text="Pay with M-PESA"
-                    ref={flutterwaveButtonRef}
-                  />
                 </div>
                 
                 <Button
