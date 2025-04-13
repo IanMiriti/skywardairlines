@@ -7,10 +7,14 @@ import { supabase } from "./client";
  */
 export const makeUserAdmin = async (email: string): Promise<boolean> => {
   try {
-    // First, get the auth user ID from Supabase Auth by email
-    const { data: authUser, error: authError } = await supabase.auth.admin.getUserByEmail(email);
+    // First get the user ID from Supabase by email
+    const { data: users, error: authError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .single();
     
-    if (authError || !authUser) {
+    if (authError || !users) {
       console.error("Error finding user by email:", authError);
       return false;
     }
@@ -19,7 +23,7 @@ export const makeUserAdmin = async (email: string): Promise<boolean> => {
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ role: 'admin' })
-      .eq('id', authUser.id);
+      .eq('id', users.id);
     
     if (updateError) {
       console.error("Error updating user role:", updateError);
