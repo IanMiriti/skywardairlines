@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
@@ -94,6 +94,8 @@ const Booking = () => {
     const randomDigits = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
     return `${prefix}${randomDigits}`;
   };
+  
+  const flutterwaveButtonRef = useRef<HTMLButtonElement>(null);
   
   useEffect(() => {
     if (isLoaded && isSignedIn && user) {
@@ -378,9 +380,8 @@ const Booking = () => {
     try {
       const pendingBooking = await saveBooking("pending", "pending");
       
-      const flutterwave = document.getElementById('flutterwave-payment-btn');
-      if (flutterwave) {
-        flutterwave.click();
+      if (flutterwaveButtonRef.current) {
+        flutterwaveButtonRef.current.click();
       } else {
         toast({
           title: "Payment Error",
@@ -658,7 +659,7 @@ const Booking = () => {
                   <FlutterWaveButton
                     {...flutterwaveConfig}
                     text="Pay with M-PESA"
-                    id="flutterwave-payment-btn"
+                    ref={flutterwaveButtonRef}
                   />
                 </div>
                 
