@@ -72,6 +72,18 @@ export default {
 					clay: '#CD5C5C',       // Reddish clay
 					acacia: '#FFD700',     // Acacia yellow
 					wildlife: '#8B5CF6',   // Wildlife purple accent
+					
+					// New African-themed colors
+					masai: '#E53935',      // Masai red
+					serengeti: '#FFB74D',  // Serengeti sun/sand
+					kente: '#43A047',      // Kente cloth green
+					tribal: '#6D4C41',     // Tribal wood brown
+					sahara: '#FFCC80',     // Sahara sand
+					baobab: '#795548',     // Baobab tree brown
+					zebra: '#212121',      // Zebra black
+					sunset: '#FF7043',     // African sunset orange
+					jungle: '#2E7D32',     // Jungle green
+					savanna: '#F57F17',    // Savanna gold
 				},
 			},
 			borderRadius: {
@@ -109,6 +121,9 @@ export default {
 			backgroundImage: {
 				'safari-gradient': 'linear-gradient(90deg, hsla(29, 92%, 70%, 1) 0%, hsla(0, 87%, 73%, 1) 100%)',
 				'wildlife-gradient': 'linear-gradient(90deg, hsla(139, 70%, 75%, 1) 0%, hsla(63, 90%, 76%, 1) 100%)',
+				'serengeti-sunset': 'linear-gradient(90deg, #F57F17 0%, #FF7043 100%)',
+				'savanna-plains': 'linear-gradient(90deg, #FFCC80 0%, #FFB74D 100%)',
+				'tribal-pattern': 'repeating-linear-gradient(45deg, #6D4C41 0px, #6D4C41 10px, #8D6E63 10px, #8D6E63 20px)',
 			}
 		}
 	},

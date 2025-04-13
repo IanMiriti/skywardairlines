@@ -130,4 +130,30 @@
   .safari-header {
     @apply bg-safari-orange text-white p-4 rounded-t-lg;
   }
+  
+  /* New African-themed components */
+  .african-card {
+    @apply bg-white bg-opacity-95 backdrop-blur-sm border-2 border-safari-serengeti rounded-xl shadow-lg overflow-hidden;
+  }
+  
+  .african-header {
+    @apply bg-safari-masai text-white p-4 rounded-t-xl;
+  }
+  
+  .tribal-pattern {
+    @apply bg-tribal-pattern;
+  }
+  
+  .savanna-gradient {
+    @apply bg-savanna-plains text-safari-tribal;
+  }
+  
+  .sunset-gradient {
+    @apply bg-serengeti-sunset text-white;
+  }
+  
+  .mpesa-button {
+    @apply bg-safari-kente text-white hover:bg-safari-kente/90 px-6 py-3 rounded-lg font-medium
+    flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg;
+  }
 }

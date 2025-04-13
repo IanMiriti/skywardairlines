@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { format, parseISO } from "date-fns";
@@ -257,6 +256,11 @@ const Booking = () => {
       description: flight ? `Booking for flight ${flight.flight_number} from ${flight.departure_city} to ${flight.arrival_city}` : 'Flight Booking',
       logo: 'https://cdn-icons-png.flaticon.com/512/5403/5403491.png',
     },
+    meta: {
+      consumer_id: user?.id || 'guest-user',
+      consumer_mac: "92a3-912ba-1192a",
+    },
+    payment_plan: null,
   };
   
   const handleFlutterPayment = useFlutterwave(flutterwaveConfig);
@@ -266,11 +270,23 @@ const Booking = () => {
     
     setIsProcessing(true);
     
+    const paymentConfig = {
+      ...flutterwaveConfig,
+      ...(formData.paymentMethod === "mpesa" && {
+        payment_options: "mobilemoney",
+        mobilemoney: {
+          type: "mpesa",
+          phone: formData.phone,
+          country: "KE"
+        }
+      })
+    };
+    
     handleFlutterPayment({
       callback: async (response) => {
         closePaymentModal();
         
-        if (response.status === 'successful') {
+        if (response.status === 'successful' || response.status === 'completed') {
           try {
             const txId = typeof response.transaction_id === 'number' 
               ? String(response.transaction_id) 
@@ -341,10 +357,10 @@ const Booking = () => {
   
   return (
     <div className="bg-[url('https://images.unsplash.com/photo-1504432842672-1a79f78e4084?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80')] bg-fixed bg-cover bg-center bg-no-repeat min-h-screen py-12">
-      <div className="container bg-white bg-opacity-90 rounded-xl shadow-xl backdrop-blur-sm p-6 md:p-8">
+      <div className="container bg-white bg-opacity-90 rounded-xl shadow-xl backdrop-blur-sm p-6 md:p-8 border-2 border-safari-serengeti">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-safari-orange mb-6 hover:underline"
+          className="flex items-center gap-2 text-safari-masai mb-6 hover:underline"
         >
           <ArrowLeft size={16} />
           Back to flight details
@@ -352,12 +368,12 @@ const Booking = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <div className="wildlife-card mb-6">
-              <div className="safari-header">
+            <div className="african-card mb-6">
+              <div className="african-header">
                 <h1 className="text-xl font-bold">Passenger Information</h1>
               </div>
               
-              <div className="p-6">
+              <div className="p-6 bg-gradient-to-r from-white to-safari-sahara/10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -453,12 +469,12 @@ const Booking = () => {
               </div>
             </div>
             
-            <div className="wildlife-card mb-6">
-              <div className="safari-header">
+            <div className="african-card mb-6">
+              <div className="bg-safari-kente text-white p-4 rounded-t-lg">
                 <h2 className="text-xl font-bold">Flight Summary</h2>
               </div>
               
-              <div className="p-6">
+              <div className="p-6 bg-gradient-to-r from-white to-safari-sahara/10">
                 <div className="border-b border-gray-200 pb-4 mb-4">
                   <div className="flex items-center gap-2 text-safari-orange mb-2">
                     <Plane size={18} />
@@ -544,12 +560,12 @@ const Booking = () => {
           </div>
           
           <div className="lg:col-span-1">
-            <div className="wildlife-card sticky top-6">
-              <div className="safari-header">
+            <div className="african-card sticky top-6">
+              <div className="bg-safari-sunset text-white p-4 rounded-t-lg">
                 <h2 className="text-xl font-semibold">Payment Summary</h2>
               </div>
               
-              <div className="p-6">
+              <div className="p-6 bg-gradient-to-r from-white to-safari-sahara/10">
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
                     <span>{flight.departure_city} to {flight.arrival_city}</span>
@@ -590,13 +606,13 @@ const Booking = () => {
                     <label 
                       className={`flex items-start gap-3 p-3 border rounded-md cursor-pointer transition-all ${
                         formData.paymentMethod === "mpesa" 
-                          ? "border-safari-orange bg-orange-50" 
-                          : "border-gray-200 bg-gray-50 hover:border-safari-orange/50"
+                          ? "border-safari-kente bg-safari-kente/10" 
+                          : "border-gray-200 bg-gray-50 hover:border-safari-kente/50"
                       }`}
                     >
                       <RadioGroupItem value="mpesa" id="mpesa" className="mt-1" />
                       <div className="flex gap-3">
-                        <Smartphone className="text-safari-green mt-1" size={20} />
+                        <Smartphone className="text-safari-kente mt-1" size={20} />
                         <div>
                           <p className="font-medium">M-Pesa (Mobile Money)</p>
                           <p className="text-sm text-gray-500">Fast and convenient mobile payment</p>
@@ -607,8 +623,8 @@ const Booking = () => {
                     <label 
                       className={`flex items-start gap-3 p-3 border rounded-md cursor-pointer transition-all ${
                         formData.paymentMethod === "card" 
-                          ? "border-safari-orange bg-orange-50" 
-                          : "border-gray-200 bg-gray-50 hover:border-safari-orange/50"
+                          ? "border-safari-sky bg-safari-sky/10" 
+                          : "border-gray-200 bg-gray-50 hover:border-safari-sky/50"
                       }`}
                     >
                       <RadioGroupItem value="card" id="card" className="mt-1" />
@@ -628,9 +644,9 @@ const Booking = () => {
                   disabled={isProcessing}
                   className={`w-full py-3 text-white rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
                     formData.paymentMethod === "mpesa" 
-                      ? "bg-safari-green hover:bg-safari-green/90" 
+                      ? "bg-safari-kente hover:bg-safari-kente/90" 
                       : "bg-safari-sky hover:bg-safari-sky/90"
-                  }`}
+                  } transform hover:-translate-y-1 hover:shadow-lg duration-300`}
                 >
                   {isProcessing ? (
                     <>
@@ -646,7 +662,7 @@ const Booking = () => {
                 </button>
                 
                 <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
-                  <ShieldCheck size={14} />
+                  <ShieldCheck size={14} className="text-safari-kente" />
                   <span>Your payment is secure and encrypted</span>
                 </div>
               </div>
