@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 
 const AdminAuthPage = () => {
   const navigate = useNavigate();
-  const { user, signIn, isAdmin, isAdminLoading } = useAuth();
+  const { user, signIn, isAdmin, isAdminLoading, refreshSession } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,10 +22,10 @@ const AdminAuthPage = () => {
         navigate("/admin/dashboard");
       } else if (!checkingAdmin) {
         // If user is logged in but not an admin, show error
-        setError("You do not have admin privileges");
+        setError("You do not have admin privileges. Please visit /make-admin to grant admin access.");
         toast({
           title: "Access Denied",
-          description: "You do not have admin privileges",
+          description: "You do not have admin privileges. Visit /make-admin to grant admin access.",
           variant: "destructive"
         });
       }
@@ -57,6 +57,9 @@ const AdminAuthPage = () => {
           variant: "destructive"
         });
       } else {
+        // Force refresh the session to get latest admin status
+        await refreshSession();
+        
         // We'll check admin status in the useEffect
         toast({
           title: "Signed in",
@@ -153,6 +156,16 @@ const AdminAuthPage = () => {
                 "Sign In to Admin Portal"
               )}
             </button>
+            
+            <div className="mt-4 pt-2 border-t border-gray-200">
+              <p className="text-sm text-gray-600 mb-2">Not an admin yet?</p>
+              <Link 
+                to="/make-admin" 
+                className="w-full bg-flysafari-primary hover:bg-flysafari-primary/90 text-white py-2 px-4 rounded block text-center"
+              >
+                Setup Admin Access
+              </Link>
+            </div>
           </form>
         </div>
         

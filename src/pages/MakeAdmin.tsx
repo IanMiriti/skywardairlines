@@ -5,12 +5,14 @@ import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Shield, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/auth-context";
 
 const MakeAdmin = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { refreshSession } = useAuth();
   
   const handleMakeAdmin = async () => {
     setIsProcessing(true);
@@ -28,6 +30,9 @@ const MakeAdmin = () => {
       }
       
       if (data === true) {
+        // Refresh session to get updated admin status
+        await refreshSession();
+        
         setSuccess(true);
         toast({
           title: "Success!",
@@ -62,6 +67,9 @@ const MakeAdmin = () => {
           });
           
         if (insertError) throw insertError;
+        
+        // Refresh session to get updated admin status
+        await refreshSession();
         
         setSuccess(true);
         toast({

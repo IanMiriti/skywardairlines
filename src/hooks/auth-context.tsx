@@ -72,7 +72,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAdminLoading(true);
 
     try {
-      // Check database for admin role
+      try {
+        // Try using the is_admin RPC function first
+        const { data: isAdminResult, error: rpcError } = await supabase.rpc('is_admin');
+        
+        if (!rpcError) {
+          console.log("Admin check via RPC:", isAdminResult);
+          setIsAdmin(isAdminResult === true);
+          setIsAdminLoading(false);
+          return;
+        }
+      } catch (rpcError) {
+        console.error("Error checking admin via RPC:", rpcError);
+        // Continue with fallback method
+      }
+
+      // Fallback: Check database for admin role
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
@@ -124,12 +139,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const refreshSession = async () => {
-    const { data } = await supabase.auth.refreshSession();
-    setSession(data.session);
-    setUser(data.session?.user ?? null);
-    
-    if (data.session?.user) {
-      checkUserAdmin(data.session.user);
+    try {
+      const { data } = await supabase.auth.refreshSession();
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      
+      if (data.session?.user) {
+        await checkUserAdmin(data.session.user);
+      }
+      return data;
+    } catch (error) {
+      console.error("Error refreshing session:", error);
+      return null;
     }
   };
 
@@ -137,15 +158,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const response = await supabase.auth.signInWithPassword({ email, password });
     
     if (!response.error && response.data.user) {
-      // Check if user is admin directly here
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', response.data.user.id)
-        .maybeSingle();
+      // Directly check if user is admin
+      try {
+        const { data: isAdminResult, error: rpcError } = await supabase.rpc('is_admin');
         
-      if (!error && data?.role === 'admin') {
-        setIsAdmin(true);
+        if (!rpcError && isAdminResult === true) {
+          setIsAdmin(true);
+        } else {
+          // Fallback to database check
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', response.data.user.id)
+            .maybeSingle();
+            
+          if (!error && data?.role === 'admin') {
+            setIsAdmin(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking admin status during signin:", error);
       }
     }
     
