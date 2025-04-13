@@ -1,7 +1,18 @@
 
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
-import { useUser } from "@clerk/clerk-react";
+
+// Check if Clerk is available
+const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+// Only import Clerk components if available
+const ClerkComponents = isClerkAvailable
+  ? require("@clerk/clerk-react")
+  : { 
+      useUser: () => ({ user: null, isLoaded: true }) 
+    };
+
+const { useUser } = ClerkComponents;
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,7 +23,7 @@ const NotFound = () => {
       "404 Error: User attempted to access non-existent route:",
       location.pathname,
       "User authenticated:", 
-      isLoaded ? (user ? "Yes" : "No") : "Loading"
+      isClerkAvailable ? (isLoaded ? (user ? "Yes" : "No") : "Loading") : "Auth disabled"
     );
   }, [location.pathname, user, isLoaded]);
 
@@ -32,7 +43,7 @@ const NotFound = () => {
           >
             Return to Home
           </Link>
-          {!user && isLoaded && (
+          {isClerkAvailable && !user && isLoaded && (
             <Link 
               to="/sign-in" 
               className="block w-full bg-white border border-flysafari-primary text-flysafari-primary hover:bg-gray-50 py-2 px-4 rounded transition-colors"
@@ -40,7 +51,7 @@ const NotFound = () => {
               Sign In
             </Link>
           )}
-          {user && isLoaded && (
+          {isClerkAvailable && user && isLoaded && (
             <Link 
               to="/handle-auth" 
               className="block w-full bg-white border border-flysafari-primary text-flysafari-primary hover:bg-gray-50 py-2 px-4 rounded transition-colors"
