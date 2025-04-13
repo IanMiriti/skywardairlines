@@ -1,41 +1,81 @@
-
+// This file allows making a user an admin by updating their role in the profiles table
 import { supabase } from "./client";
 
 /**
- * Makes a user an admin by their email address
- * @param email The email address of the user to make an admin
+ * Makes a user with a specified Clerk ID an admin by updating their role in the profiles table
+ * @param clerkUserId The Clerk user ID to make admin
+ * @returns Promise<boolean> Whether the operation was successful
  */
-export const makeUserAdmin = async (email: string): Promise<boolean> => {
+export const makeUserAdmin = async (clerkUserId: string): Promise<boolean> => {
   try {
-    // First query the profiles table to find a user with the given email
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, role')
-      .filter('email', 'eq', email)
-      .limit(1);
-    
-    if (error || !data || data.length === 0) {
-      console.error("Error finding user by email:", error);
-      return false;
-    }
-    
-    const userId = data[0].id;
-    
     // Update the profile to set role as admin
-    const { error: updateError } = await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({ role: 'admin' })
-      .eq('id', userId);
+      .eq('id', clerkUserId);
     
-    if (updateError) {
-      console.error("Error updating user role:", updateError);
+    if (error) {
+      console.error("Error updating user role:", error);
       return false;
     }
     
-    console.log(`Successfully made user ${email} an admin`);
+    console.log(`User ${clerkUserId} has been made an admin successfully`);
     return true;
   } catch (error) {
-    console.error("Error making user admin:", error);
+    console.error("Unexpected error making user admin:", error);
+    return false;
+  }
+};
+
+/**
+ * Creates an admin profile for a new Clerk user if it doesn't exist
+ * @param clerkUserId The Clerk user ID
+ * @param fullName Optional full name
+ * @param avatarUrl Optional avatar URL
+ * @returns Promise<boolean> Whether the operation was successful
+ */
+export const createAdminProfile = async (
+  clerkUserId: string, 
+  fullName?: string,
+  avatarUrl?: string
+): Promise<boolean> => {
+  try {
+    // Check if the profile already exists
+    const { data: existingProfile, error: checkError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', clerkUserId)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error("Error checking for existing profile:", checkError);
+      return false;
+    }
+    
+    // If profile exists, update role to admin
+    if (existingProfile) {
+      return makeUserAdmin(clerkUserId);
+    }
+    
+    // Otherwise, create a new profile with admin role
+    const { error: createError } = await supabase
+      .from('profiles')
+      .insert({
+        id: clerkUserId,
+        full_name: fullName || '',
+        avatar_url: avatarUrl || '',
+        role: 'admin'
+      });
+    
+    if (createError) {
+      console.error("Error creating admin profile:", createError);
+      return false;
+    }
+    
+    console.log(`Admin profile created for user ${clerkUserId}`);
+    return true;
+  } catch (error) {
+    console.error("Unexpected error creating admin profile:", error);
     return false;
   }
 };

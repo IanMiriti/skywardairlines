@@ -18,18 +18,22 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       }
 
       try {
+        console.log("AdminRoute: Checking admin status for user:", user.id);
+        
         // Check admin role from Supabase
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error('Error checking admin role:', error);
           setIsAdmin(false);
         } else {
-          setIsAdmin(data?.role === 'admin');
+          const isUserAdmin = data?.role === 'admin';
+          console.log("User admin status:", isUserAdmin);
+          setIsAdmin(isUserAdmin);
         }
       } catch (error) {
         console.error('Error checking admin status:', error);
@@ -51,13 +55,16 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!isLoaded || !user) {
+    console.log("User not loaded or not logged in, redirecting to sign-in");
     return <Navigate to="/sign-in" replace />;
   }
   
   if (!isAdmin) {
+    console.log("User is not admin, redirecting to unauthorized");
     return <Navigate to="/unauthorized" replace />;
   }
   
+  console.log("User is admin, rendering admin component");
   return <>{children}</>;
 };
 

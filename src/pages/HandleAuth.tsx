@@ -14,23 +14,59 @@ const HandleAuth = () => {
       if (!isLoaded || !user) return;
 
       try {
+        console.log("Checking role for user:", user.id);
+        
         // Check if user exists in profiles and their role
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error("Error checking user role:", error);
+          
+          // If the user doesn't exist in the profiles table, create a new profile
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({ 
+              id: user.id,
+              full_name: user.fullName || '',
+              avatar_url: user.imageUrl || '',
+              role: 'user' // Default role
+            })
+            .select('role')
+            .single();
+            
+          if (createError) {
+            console.error("Error creating new profile:", createError);
+            navigate('/');
+            return;
+          }
+          
+          console.log("Created new profile with role:", newProfile?.role);
           navigate('/');
+          return;
+        }
+
+        // If the specified email needs admin role, assign it here
+        if (user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com' && (!profile || profile.role !== 'admin')) {
+          console.log("Assigning admin role to ianmiriti254@gmail.com");
+          await supabase
+            .from('profiles')
+            .update({ role: 'admin' })
+            .eq('id', user.id);
+            
+          navigate('/admin/dashboard');
           return;
         }
 
         // Redirect based on role
         if (profile?.role === 'admin') {
+          console.log("User is admin, redirecting to admin dashboard");
           navigate('/admin/dashboard');
         } else {
+          console.log("User is not admin, redirecting to home page");
           navigate('/');
         }
       } catch (error) {
