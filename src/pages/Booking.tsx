@@ -262,7 +262,6 @@ const Booking = () => {
     }
   };
 
-  // Updated Flutterwave configuration
   const flutterwaveConfig: FlutterWaveConfig = {
     public_key: "FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X",
     tx_ref: `FLYS-${Date.now().toString()}`,
@@ -287,7 +286,6 @@ const Booking = () => {
         setIsProcessingPayment(true);
         
         try {
-          // Verify the transaction server-side via Edge Function
           const verificationResponse = await fetch(
             `https://ytcpgoyldllvumfmieas.functions.supabase.co/verify-flutterwave-payment`,
             {
@@ -306,13 +304,11 @@ const Booking = () => {
           const verificationData = await verificationResponse.json();
           
           if (verificationData.success) {
-            // Payment verified, save booking
             const booking = await saveBooking(response.transaction_id, "completed");
             setPaymentSuccess(true);
             
             navigate(`/booking/${id}/confirmation?bookingId=${booking.id}&reference=${booking.booking_reference}`);
           } else {
-            // Verification failed
             setPaymentError("Payment verification failed. Please contact support.");
           }
         } catch (error) {
@@ -379,12 +375,10 @@ const Booking = () => {
       return;
     }
     
-    // Create a temporary pending booking
     try {
       const pendingBooking = await saveBooking("pending", "pending");
       
-      // Trigger the Flutterwave payment modal
-      const flutterwave = document.getElementById('flutterwave-btn');
+      const flutterwave = document.getElementById('flutterwave-payment-btn');
       if (flutterwave) {
         flutterwave.click();
       } else {
@@ -664,6 +658,7 @@ const Booking = () => {
                   <FlutterWaveButton
                     {...flutterwaveConfig}
                     text="Pay with M-PESA"
+                    id="flutterwave-payment-btn"
                   />
                 </div>
                 
