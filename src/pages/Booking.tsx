@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Flight } from "@/utils/types";
 import { toast } from "@/hooks/use-toast";
 
+const FLUTTERWAVE_PUBLIC_KEY = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X";
+
 interface FormData {
   firstName: string;
   lastName: string;
@@ -229,14 +231,14 @@ const Booking = () => {
   };
   
   const flutterwaveConfig = {
-    public_key: "FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X",
+    public_key: FLUTTERWAVE_PUBLIC_KEY,
     tx_ref: `FLYS-${Date.now().toString()}`,
-    amount: calculateGrandTotal().toString(),
+    amount: calculateGrandTotal(),
     currency: 'KES',
-    payment_options: 'mpesa',
+    payment_options: 'mobilemoney',
     customer: {
       email: formData.email,
-      phone_number: formData.phone,
+      phone_number: "054709929300",
       name: `${formData.firstName} ${formData.lastName}`,
     },
     customizations: {
@@ -564,7 +566,7 @@ const Booking = () => {
                 <div className="flex items-start gap-3 p-3 border border-gray-200 rounded-md bg-gray-50">
                   <CreditCard className="text-flysafari-secondary mt-1" size={20} />
                   <div>
-                    <p className="font-medium">Credit/Debit Card or M-Pesa</p>
+                    <p className="font-medium">M-Pesa (Mobile Money)</p>
                     <p className="text-sm text-gray-500">Secure payment via Flutterwave</p>
                   </div>
                 </div>
