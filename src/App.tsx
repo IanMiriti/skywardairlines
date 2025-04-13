@@ -17,6 +17,7 @@ import Offers from "./pages/Offers";
 import OfferDetails from "./pages/OfferDetails";
 import Profile from "./pages/Profile";
 import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
 import HandleAuth from "./pages/HandleAuth";
 import RootLayout from "./components/layouts/RootLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
@@ -61,7 +62,7 @@ const App = () => (
                     <MyBookings />
                   </SignedIn>
                   <SignedOut>
-                    <Navigate to="/" replace />
+                    <Navigate to="/sign-in" replace />
                   </SignedOut>
                 </>
               } 
@@ -74,7 +75,7 @@ const App = () => (
                     <Profile />
                   </SignedIn>
                   <SignedOut>
-                    <Navigate to="/" replace />
+                    <Navigate to="/sign-in" replace />
                   </SignedOut>
                 </>
               } 
@@ -82,6 +83,7 @@ const App = () => (
             
             {/* Authentication routes */}
             <Route path="/sign-in/*" element={<SignIn />} />
+            <Route path="/sign-up/*" element={<SignUp />} />
           </Route>
           
           {/* Admin routes */}

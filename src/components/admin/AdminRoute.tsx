@@ -14,7 +14,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
     const checkAdminRole = async () => {
       if (!isLoaded) {
         console.log("AdminRoute: User data not loaded yet");
-        setIsLoading(false);
         return;
       }
       
@@ -31,6 +30,34 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         // Check if user is the admin email directly first
         if (user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com') {
           console.log("User has admin email, granting admin access directly");
+          
+          // Ensure admin role is saved in database
+          const { data: existingProfile, error: profileCheckError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (profileCheckError) {
+            console.error("Error checking profile:", profileCheckError);
+          } else if (!existingProfile) {
+            console.log("Admin user not in database, creating profile");
+            await supabase
+              .from('profiles')
+              .insert({ 
+                id: user.id,
+                full_name: user.fullName || '',
+                avatar_url: user.imageUrl || '',
+                role: 'admin'
+              });
+          } else if (existingProfile.role !== 'admin') {
+            console.log("Updating user role to admin in database");
+            await supabase
+              .from('profiles')
+              .update({ role: 'admin' })
+              .eq('id', user.id);
+          }
+          
           setIsAdmin(true);
           setIsLoading(false);
           return;

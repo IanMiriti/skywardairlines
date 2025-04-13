@@ -8,7 +8,8 @@ import './index.css';
 // Clerk publishable key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_bGVhcm5pbmctc25hcHBlci02LmNsZXJrLmFjY291bnRzLmRldiQ";
 
-// Clerk redirect URLs - using the new recommended props
+// Clerk redirect URLs
+// According to the Clerk dashboard settings, redirectUrl should be /handle-auth
 const signInUrl = "/sign-in";
 const signUpUrl = "/sign-up";
 
@@ -22,8 +23,8 @@ createRoot(document.getElementById("root")!).render(
       publishableKey={PUBLISHABLE_KEY}
       signInUrl={signInUrl}
       signUpUrl={signUpUrl}
-      signInFallbackRedirectUrl="/"
-      signUpFallbackRedirectUrl="/"
+      signInFallbackRedirectUrl="/handle-auth"
+      signUpFallbackRedirectUrl="/handle-auth"
     >
       <App />
     </ClerkProvider>

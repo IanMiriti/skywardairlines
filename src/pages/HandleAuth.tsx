@@ -25,7 +25,7 @@ const HandleAuth = () => {
       }
 
       try {
-        console.log("HandleAuth: Checking role for user:", user.id, user.primaryEmailAddress?.emailAddress);
+        console.log("HandleAuth: Checking role for user:", user.id, "Email:", user.primaryEmailAddress?.emailAddress);
         
         // Admin email shortcut - if email matches admin email, redirect directly to admin dashboard
         if (user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com') {
@@ -58,6 +58,8 @@ const HandleAuth = () => {
             if (createError) {
               console.error("Error creating admin profile:", createError);
               setError("Database error: " + createError.message);
+            } else {
+              console.log("Admin profile created successfully");
             }
           } else if (existingProfile.role !== 'admin') {
             console.log("Updating existing profile to admin role");
@@ -70,11 +72,17 @@ const HandleAuth = () => {
             if (updateError) {
               console.error("Error updating to admin role:", updateError);
               setError("Database error: " + updateError.message);
+            } else {
+              console.log("Profile updated to admin role successfully");
             }
           }
           
-          navigate('/admin/dashboard');
-          setIsChecking(false);
+          // Added delay to ensure database operations complete before redirect
+          setTimeout(() => {
+            console.log("Redirecting to admin dashboard...");
+            navigate('/admin/dashboard');
+            setIsChecking(false);
+          }, 500);
           return;
         }
         
