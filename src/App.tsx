@@ -1,10 +1,8 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { SignedIn, SignedOut, useAuth, useUser } from "@clerk/clerk-react";
 import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -32,6 +30,21 @@ import AdminUsers from "./pages/admin/Users";
 import AdminRoute from "./components/admin/AdminRoute";
 import { supabase } from "./integrations/supabase/client";
 
+// Conditionally import Clerk components
+const hasClerkKey = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+let SignedIn, SignedOut;
+
+if (hasClerkKey) {
+  try {
+    // Dynamic import
+    const clerkComponents = require("@clerk/clerk-react");
+    SignedIn = clerkComponents.SignedIn;
+    SignedOut = clerkComponents.SignedOut;
+  } catch (error) {
+    console.error("Failed to load Clerk components:", error);
+  }
+}
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,14 +57,21 @@ const queryClient = new QueryClient({
 
 // Protected route component that works with or without authentication
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <>
-      <SignedIn>{children}</SignedIn>
-      <SignedOut>
-        <Navigate to="/sign-in" replace />
-      </SignedOut>
-    </>
-  );
+  // Check if we're using Clerk authentication
+  if (hasClerkKey && SignedIn && SignedOut) {
+    return (
+      <>
+        <SignedIn>{children}</SignedIn>
+        <SignedOut>
+          <Navigate to="/sign-in" replace />
+        </SignedOut>
+      </>
+    );
+  } else {
+    // Fallback for when Clerk is not available - simple demo mode
+    console.log("Protected route in demo mode - no authentication required");
+    return <>{children}</>;
+  }
 };
 
 const App = () => {
