@@ -1,6 +1,5 @@
 
 import { supabase } from "./client";
-import { Database } from "./types";
 
 /**
  * Makes a user an admin by their email address
@@ -11,8 +10,8 @@ export const makeUserAdmin = async (email: string): Promise<boolean> => {
     // First query the profiles table to find a user with the given email
     const { data: profiles, error: queryError } = await supabase
       .from('profiles')
-      .select('id')
-      .filter('email', 'eq', email)
+      .select('id, email')
+      .eq('email', email)
       .limit(1);
     
     if (queryError || !profiles || profiles.length === 0) {

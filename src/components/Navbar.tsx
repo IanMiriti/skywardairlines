@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser, UserButton, SignInButton } from "@clerk/clerk-react";
-import { Menu, X, Plane, User, LogIn } from "lucide-react";
+import { Menu, X, Plane, LogIn } from "lucide-react";
 
 const Navbar = () => {
   const { isSignedIn } = useUser();
@@ -44,7 +44,7 @@ const Navbar = () => {
               <UserButton afterSignOutUrl="/" />
             ) : (
               <div className="flex items-center gap-4">
-                <SignInButton mode="modal">
+                <SignInButton mode="modal" redirectUrl="/handle-auth">
                   <button className="btn-outline btn py-2 px-4 flex items-center gap-2">
                     <LogIn size={18} />
                     <span>Customer Sign In</span>
@@ -54,7 +54,7 @@ const Navbar = () => {
                   onClick={() => navigate('/sign-in')}
                   className="btn btn-primary py-2 px-4 flex items-center gap-2"
                 >
-                  <User size={18} />
+                  <LogIn size={18} />
                   <span>Admin Sign In</span>
                 </button>
               </div>
@@ -108,7 +108,7 @@ const Navbar = () => {
                 </div>
               ) : (
                 <div className="flex flex-col space-y-2">
-                  <SignInButton mode="modal">
+                  <SignInButton mode="modal" redirectUrl="/handle-auth">
                     <button className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center">
                       <LogIn size={18} />
                       <span>Customer Sign In</span>
@@ -121,7 +121,7 @@ const Navbar = () => {
                     }}
                     className="btn btn-primary py-2 text-center w-full flex items-center gap-2 justify-center"
                   >
-                    <User size={18} />
+                    <LogIn size={18} />
                     <span>Admin Sign In</span>
                   </button>
                 </div>

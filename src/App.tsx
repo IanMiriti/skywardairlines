@@ -17,6 +17,7 @@ import Offers from "./pages/Offers";
 import OfferDetails from "./pages/OfferDetails";
 import Profile from "./pages/Profile";
 import SignIn from "./pages/SignIn";
+import HandleAuth from "./pages/HandleAuth";
 import RootLayout from "./components/layouts/RootLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -26,65 +27,11 @@ import AdminOffers from "./pages/admin/Offers";
 import AdminEditOffer from "./pages/admin/EditOffer";
 import AdminBookings from "./pages/admin/Bookings";
 import AdminCancellations from "./pages/admin/Cancellations";
+import AdminRoute from "./components/admin/AdminRoute";
 import { supabase } from "./integrations/supabase/client";
 
 // Create a client
 const queryClient = new QueryClient();
-
-// Role-based access control
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { userId } = useAuth();
-  const { user } = useUser();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    const checkAdminRole = async () => {
-      if (!userId) {
-        setIsAdmin(false);
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Check admin role from Supabase
-        const { data, error } = await supabase.rpc('is_admin');
-        
-        if (error) {
-          console.error('Error checking admin role:', error);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(data || false);
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        setIsAdmin(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAdminRole();
-  }, [userId, user]);
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-flysafari-primary"></div>
-      </div>
-    );
-  }
-  
-  if (!userId) {
-    return <Navigate to="/sign-in" replace />;
-  }
-  
-  if (!isAdmin) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-  
-  return <>{children}</>;
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -103,6 +50,7 @@ const App = () => (
             <Route path="/offers" element={<Offers />} />
             <Route path="/offers/:id" element={<OfferDetails />} />
             <Route path="/unauthorized" element={<NotFound />} />
+            <Route path="/handle-auth" element={<HandleAuth />} />
             
             {/* Protected customer routes */}
             <Route 

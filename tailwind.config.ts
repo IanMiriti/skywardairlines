@@ -57,11 +57,11 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				flysafari: {
-					primary: '#8B5CF6',    // Changed to vivid purple
-					secondary: '#D946EF',  // Changed to magenta pink
-					dark: '#1A1F2C',       // Changed to dark purple
-					light: '#F8FAFC',      // Light background (unchanged)
-					accent: '#F97316',     // Changed to bright orange
+					primary: '#6200EA',    // Deep purple
+					secondary: '#7C43BD',  // Light purple
+					dark: '#1A1F2C',       // Dark blue
+					light: '#F8FAFC',      // Light background 
+					accent: '#FF6D00',     // Bright orange
 				},
 			},
 			borderRadius: {
