@@ -21,7 +21,7 @@ const SignIn = () => {
           <ClerkSignIn 
             routing="path" 
             path="/sign-in" 
-            redirectUrl="/handle-auth"
+            afterSignInUrl="/handle-auth"
             appearance={{
               elements: {
                 rootBox: "mx-auto w-full",

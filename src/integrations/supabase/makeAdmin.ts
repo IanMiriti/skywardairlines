@@ -10,7 +10,7 @@ export const makeUserAdmin = async (email: string): Promise<boolean> => {
     // First query the profiles table to find a user with the given email
     const { data: profiles, error: queryError } = await supabase
       .from('profiles')
-      .select('id, email')
+      .select('id, role')
       .eq('email', email)
       .limit(1);
     

@@ -44,7 +44,7 @@ const Navbar = () => {
               <UserButton afterSignOutUrl="/" />
             ) : (
               <div className="flex items-center gap-4">
-                <SignInButton mode="modal" redirectUrl="/handle-auth">
+                <SignInButton mode="modal">
                   <button className="btn-outline btn py-2 px-4 flex items-center gap-2">
                     <LogIn size={18} />
                     <span>Customer Sign In</span>
@@ -108,7 +108,7 @@ const Navbar = () => {
                 </div>
               ) : (
                 <div className="flex flex-col space-y-2">
-                  <SignInButton mode="modal" redirectUrl="/handle-auth">
+                  <SignInButton mode="modal">
                     <button className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center">
                       <LogIn size={18} />
                       <span>Customer Sign In</span>
