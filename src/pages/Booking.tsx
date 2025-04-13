@@ -250,7 +250,7 @@ const Booking = () => {
   const flutterwaveConfig = {
     public_key: "FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X",
     tx_ref: `FLYS-${Date.now().toString()}`,
-    amount: calculateGrandTotal().toString(), // Convert amount to string
+    amount: calculateGrandTotal(), // Remove toString() to keep it as a number
     currency: 'KES',
     payment_options: 'mpesa',
     customer: {
