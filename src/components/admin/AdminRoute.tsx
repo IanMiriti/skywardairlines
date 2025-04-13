@@ -18,7 +18,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       }
 
       try {
-        console.log("AdminRoute: Checking admin status for user:", user.id);
+        console.log("AdminRoute: Checking admin status for user:", user.id, "Email:", user.primaryEmailAddress?.emailAddress);
         
         // Check admin role from Supabase
         const { data, error } = await supabase
