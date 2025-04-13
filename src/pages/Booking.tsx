@@ -663,9 +663,7 @@ const Booking = () => {
                 <div className="hidden">
                   <FlutterWaveButton
                     {...flutterwaveConfig}
-                    className="btn btn-primary"
                     text="Pay with M-PESA"
-                    id="flutterwave-btn"
                   />
                 </div>
                 
