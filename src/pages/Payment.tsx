@@ -2,12 +2,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
-import { ArrowLeft, CreditCard, Smartphone } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Booking, Flight } from "@/utils/types";
 import { toast } from "@/hooks/use-toast";
 import { formatPrice, formatDate, formatTime } from "@/utils/bookingUtils";
+import { PaymentForm } from "@/components/booking/PaymentForm";
 
 const FLUTTERWAVE_PUBLIC_KEY = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X";
 
@@ -71,7 +72,23 @@ const Payment = () => {
         }
         
         setBooking(bookingData);
-        setPhoneNumber(bookingData.phone_number || "");
+        
+        // Format and save phone number if it exists
+        if (bookingData.phone_number) {
+          // Ensure phone number is in the correct format for M-PESA
+          let formattedPhone = bookingData.phone_number;
+          
+          // If number starts with +254, replace with 0
+          if (formattedPhone.startsWith("+254")) {
+            formattedPhone = "0" + formattedPhone.substring(4);
+          }
+          // If number starts with 254, replace with 0
+          else if (formattedPhone.startsWith("254")) {
+            formattedPhone = "0" + formattedPhone.substring(3);
+          }
+          
+          setPhoneNumber(formattedPhone);
+        }
         
         // Fetch flight data
         const { data: flightData, error: flightError } = await supabase
@@ -141,19 +158,50 @@ const Payment = () => {
     }
   };
   
+  const validatePhoneNumber = () => {
+    // Validate Kenyan phone number format
+    const phoneRegex = /^(?:254|\+254|0)?(7|1)[0-9]{8}$/;
+    
+    if (!phoneNumber || !phoneRegex.test(phoneNumber)) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a valid Kenyan phone number for M-PESA payment.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    return true;
+  };
+  
+  const formatPhoneForMpesa = (phone: string) => {
+    // Remove any non-digit characters
+    let cleaned = phone.replace(/\D/g, '');
+    
+    // If the number starts with '0', replace it with '254'
+    if (cleaned.startsWith('0')) {
+      cleaned = '254' + cleaned.substring(1);
+    }
+    
+    // If the number doesn't start with '254', add it
+    if (!cleaned.startsWith('254')) {
+      cleaned = '254' + cleaned;
+    }
+    
+    return cleaned;
+  };
+  
   const handlePayment = () => {
     if (!booking || !flight || !user) return;
     
-    if (!phoneNumber || phoneNumber.length < 10) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid phone number for M-PESA payment.",
-        variant: "destructive"
-      });
+    if (paymentMethod === "mpesa" && !validatePhoneNumber()) {
       return;
     }
     
     setProcessingPayment(true);
+    
+    // Format phone number for M-PESA
+    const mpesaPhone = formatPhoneForMpesa(phoneNumber);
     
     const flutterwaveConfig = {
       public_key: FLUTTERWAVE_PUBLIC_KEY,
@@ -163,7 +211,7 @@ const Payment = () => {
       payment_options: paymentMethod === "mpesa" ? "mobilemoney" : "card",
       customer: {
         email: booking.email || user.email || "",
-        phone_number: phoneNumber,
+        phone_number: mpesaPhone,
         name: booking.passenger_name,
       },
       customizations: {
@@ -183,7 +231,7 @@ const Payment = () => {
         payment_options: "mobilemoney",
         mobilemoney: {
           type: "mpesa",
-          phone: phoneNumber,
+          phone: mpesaPhone,
           country: "KE"
         }
       })
@@ -350,117 +398,19 @@ const Payment = () => {
                 </div>
               </div>
             </div>
-            
-            {/* Payment Form */}
-            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-              <h2 className="text-xl font-semibold mb-4">Payment Method</h2>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number (for M-PESA)
-                  </label>
-                  <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="Enter your M-PESA phone number"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-safari-kente focus:border-safari-kente"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Format: 07XXXXXXXX or 01XXXXXXXX</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Payment Method
-                  </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div
-                      className={`border rounded-lg p-4 cursor-pointer flex flex-col items-center ${
-                        paymentMethod === "mpesa" 
-                          ? "border-safari-kente bg-safari-kente/10" 
-                          : "border-gray-200 hover:border-safari-kente/50"
-                      }`}
-                      onClick={() => setPaymentMethod("mpesa")}
-                    >
-                      <Smartphone 
-                        size={36} 
-                        className={paymentMethod === "mpesa" ? "text-safari-kente" : "text-gray-400"} 
-                      />
-                      <span className="mt-2 font-medium">M-PESA</span>
-                    </div>
-                    
-                    <div
-                      className={`border rounded-lg p-4 cursor-pointer flex flex-col items-center ${
-                        paymentMethod === "card" 
-                          ? "border-safari-sky bg-safari-sky/10" 
-                          : "border-gray-200 hover:border-safari-sky/50"
-                      }`}
-                      onClick={() => setPaymentMethod("card")}
-                    >
-                      <CreditCard 
-                        size={36} 
-                        className={paymentMethod === "card" ? "text-safari-sky" : "text-gray-400"} 
-                      />
-                      <span className="mt-2 font-medium">Card</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
           
           <div className="md:col-span-1">
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden sticky top-6">
-              <div className="bg-safari-sunset text-white p-4">
-                <h2 className="text-lg font-semibold">Payment Summary</h2>
-              </div>
-              
-              <div className="p-4 bg-gradient-to-r from-white to-safari-sahara/10">
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-sm">
-                    <span>Ticket Price:</span>
-                    <span>{formatPrice(booking.total_amount * 0.84)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between text-sm">
-                    <span>Taxes & Fees (16%):</span>
-                    <span>{formatPrice(booking.total_amount * 0.16)}</span>
-                  </div>
-                  
-                  <div className="border-t pt-3 flex justify-between font-bold">
-                    <span>Total:</span>
-                    <span className="text-safari-sunset">{formatPrice(booking.total_amount)}</span>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={handlePayment}
-                  disabled={processingPayment}
-                  className={`w-full py-3 text-white rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
-                    paymentMethod === "mpesa" 
-                      ? "bg-safari-kente hover:bg-safari-kente/90" 
-                      : "bg-safari-sky hover:bg-safari-sky/90"
-                  } transform hover:-translate-y-1 hover:shadow-lg duration-300`}
-                >
-                  {processingPayment ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-white"></div>
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      {paymentMethod === "mpesa" ? <Smartphone size={18} /> : <CreditCard size={18} />}
-                      Pay {formatPrice(booking.total_amount)}
-                    </>
-                  )}
-                </button>
-                
-                <div className="mt-4 text-center text-xs text-gray-500">
-                  <p>By proceeding with the payment you agree to our terms and conditions.</p>
-                </div>
-              </div>
-            </div>
+            <PaymentForm 
+              isProcessing={processingPayment}
+              totalAmount={booking.total_amount}
+              paymentMethod={paymentMethod}
+              onPaymentMethodChange={setPaymentMethod}
+              phoneNumber={phoneNumber}
+              onPhoneNumberChange={setPhoneNumber}
+              onSubmit={handlePayment}
+              buttonText="Pay Now"
+            />
           </div>
         </div>
       </div>

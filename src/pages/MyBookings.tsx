@@ -30,6 +30,7 @@ const MyBookings = () => {
   const [cancellationId, setCancellationId] = useState<string | null>(null);
   const [cancellationConfirm, setCancellationConfirm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [cancellingBooking, setCancellingBooking] = useState(false);
   
   useEffect(() => {
     const fetchBookings = async () => {
@@ -128,17 +129,60 @@ const MyBookings = () => {
   const confirmCancellation = async () => {
     if (!cancellationId) return;
     
+    setCancellingBooking(true);
+    
     try {
+      // Get the booking to cancel
+      const bookingToCancel = bookings.find(b => b.id === cancellationId);
+      
+      if (!bookingToCancel) {
+        throw new Error("Booking not found");
+      }
+      
       // Update booking status in Supabase
       const { error } = await supabase
         .from('bookings')
         .update({ 
-          booking_status: 'cancelled'
+          booking_status: 'cancelled',
+          updated_at: new Date().toISOString()
         })
         .eq('id', cancellationId);
       
       if (error) {
         throw error;
+      }
+      
+      // If this was a paid booking, we might want to process a refund here
+      // For now, just release seats back to inventory
+      
+      // Release seats back into inventory for outbound flight
+      if (bookingToCancel.flight_id) {
+        const { error: seatError } = await supabase.rpc(
+          "increment_available_seats",
+          {
+            flight_id: bookingToCancel.flight_id,
+            seats_count: bookingToCancel.passenger_count
+          }
+        );
+        
+        if (seatError) {
+          console.error("Error restoring flight seats:", seatError);
+        }
+      }
+      
+      // Release seats for return flight if this was a round trip
+      if (bookingToCancel.is_round_trip && bookingToCancel.return_flight_id) {
+        const { error: returnSeatError } = await supabase.rpc(
+          "increment_available_seats",
+          {
+            flight_id: bookingToCancel.return_flight_id,
+            seats_count: bookingToCancel.passenger_count
+          }
+        );
+        
+        if (returnSeatError) {
+          console.error("Error restoring return flight seats:", returnSeatError);
+        }
       }
       
       // Update local state
@@ -164,6 +208,7 @@ const MyBookings = () => {
     } finally {
       setCancellationConfirm(false);
       setCancellationId(null);
+      setCancellingBooking(false);
     }
   };
   
@@ -418,6 +463,9 @@ const MyBookings = () => {
                           <p className="text-lg font-bold text-flysafari-primary">
                             {formatPrice(booking.total_amount)}
                           </p>
+                          {booking.booking_status === "unpaid" && (
+                            <span className="text-xs text-yellow-600 font-medium">Payment Required</span>
+                          )}
                         </div>
                         
                         <button
@@ -489,17 +537,20 @@ const MyBookings = () => {
                       </div>
                       
                       <div className="flex flex-col sm:flex-row gap-3 mt-4">
-                        <Link
-                          to={`/booking/${booking.flight_id}/confirmation?bookingId=${booking.id}`}
-                          className="btn btn-primary py-2 flex-1 text-center"
-                        >
-                          View Ticket
-                        </Link>
+                        {booking.booking_status !== "cancelled" && (
+                          <Link
+                            to={`/booking/${booking.flight_id}/confirmation?bookingId=${booking.id}`}
+                            className="bg-safari-sky hover:bg-safari-sky/90 text-white py-2 px-4 rounded flex-1 text-center transition flex items-center justify-center gap-1"
+                          >
+                            <CheckCircle size={16} />
+                            View Ticket
+                          </Link>
+                        )}
                         
                         {booking.booking_status === "unpaid" && (
                           <button
                             onClick={() => handlePayment(booking.id)}
-                            className="bg-safari-kente hover:bg-safari-kente/90 text-white py-2 px-4 rounded flex-1 text-center transition flex items-center justify-center gap-2"
+                            className="bg-safari-kente hover:bg-safari-kente/90 text-white py-2 px-4 rounded flex-1 text-center transition flex items-center justify-center gap-2 animate-pulse"
                           >
                             <Smartphone size={16} />
                             Complete Payment
@@ -509,8 +560,9 @@ const MyBookings = () => {
                         {(booking.booking_status === "confirmed" || booking.booking_status === "unpaid") && (
                           <button
                             onClick={() => handleCancelBooking(booking.id)}
-                            className="btn btn-outline py-2 flex-1 text-red-500 border-red-200 hover:bg-red-50"
+                            className="border border-red-300 text-red-500 bg-white hover:bg-red-50 py-2 px-4 rounded flex-1 text-center transition flex items-center justify-center gap-1"
                           >
+                            <XCircle size={16} />
                             Cancel Booking
                           </button>
                         )}
@@ -559,15 +611,27 @@ const MyBookings = () => {
             <div className="flex justify-end gap-3">
               <button
                 onClick={cancelCancellation}
-                className="btn btn-outline py-2 px-4"
+                className="border border-gray-300 bg-white hover:bg-gray-50 py-2 px-4 rounded"
+                disabled={cancellingBooking}
               >
                 No, Keep Booking
               </button>
               <button
                 onClick={confirmCancellation}
-                className="btn bg-red-500 hover:bg-red-600 text-white py-2 px-4"
+                className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded flex items-center gap-2"
+                disabled={cancellingBooking}
               >
-                Yes, Cancel Booking
+                {cancellingBooking ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-b-transparent"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <XCircle size={16} />
+                    Yes, Cancel Booking
+                  </>
+                )}
               </button>
             </div>
           </div>

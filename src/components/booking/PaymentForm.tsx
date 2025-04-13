@@ -1,7 +1,9 @@
 
 import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CreditCard, ShieldCheck, Smartphone } from "lucide-react";
+import { CreditCard, ShieldCheck, Smartphone, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface PaymentFormProps {
   isProcessing: boolean;
@@ -9,7 +11,10 @@ interface PaymentFormProps {
   onPaymentMethodChange: (method: "mpesa" | "card") => void;
   paymentMethod: "mpesa" | "card";
   onSubmit: () => void;
+  phoneNumber: string;
+  onPhoneNumberChange: (phoneNumber: string) => void;
   buttonText?: string;
+  validatePhoneNumber?: boolean;
 }
 
 export const PaymentForm = ({
@@ -18,14 +23,39 @@ export const PaymentForm = ({
   onPaymentMethodChange,
   paymentMethod,
   onSubmit,
-  buttonText = "Pay Now"
+  phoneNumber,
+  onPhoneNumberChange,
+  buttonText = "Pay Now",
+  validatePhoneNumber = true
 }: PaymentFormProps) => {
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
       currency: 'KES',
       minimumFractionDigits: 0,
     }).format(price);
+  };
+
+  const validateAndSubmit = () => {
+    if (paymentMethod === "mpesa" && validatePhoneNumber) {
+      // Validate Kenyan phone number format
+      const phoneRegex = /^(?:254|\+254|0)?(7|1)[0-9]{8}$/;
+      
+      if (!phoneNumber || !phoneRegex.test(phoneNumber)) {
+        setPhoneError("Please enter a valid Kenyan phone number");
+        return;
+      }
+    }
+    
+    setPhoneError(null);
+    onSubmit();
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onPhoneNumberChange(e.target.value);
+    if (phoneError) setPhoneError(null);
   };
 
   return (
@@ -79,14 +109,35 @@ export const PaymentForm = ({
           </RadioGroup>
         </div>
         
+        {paymentMethod === "mpesa" && (
+          <div className="mb-6">
+            <Label htmlFor="phone-number" className="mb-2 block">M-PESA Phone Number</Label>
+            <Input
+              id="phone-number"
+              type="tel"
+              placeholder="07XX XXX XXX"
+              value={phoneNumber}
+              onChange={handlePhoneChange}
+              className={`w-full ${phoneError ? 'border-red-500' : ''}`}
+            />
+            {phoneError && (
+              <div className="mt-1 text-red-500 text-sm flex items-center gap-1">
+                <AlertCircle size={14} />
+                {phoneError}
+              </div>
+            )}
+            <p className="mt-1 text-xs text-gray-500">Enter your M-PESA registered number (e.g. 0712345678)</p>
+          </div>
+        )}
+        
         <button
-          onClick={onSubmit}
+          onClick={validateAndSubmit}
           disabled={isProcessing}
           className={`w-full py-3 text-white rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
             paymentMethod === "mpesa" 
               ? "bg-safari-kente hover:bg-safari-kente/90" 
               : "bg-safari-sky hover:bg-safari-sky/90"
-          } transform hover:-translate-y-1 hover:shadow-lg duration-300`}
+          } transform hover:-translate-y-1 hover:shadow-lg duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:shadow-none`}
         >
           {isProcessing ? (
             <>

@@ -39,6 +39,7 @@ export interface Booking {
   special_requests: string | null;
   total_amount: number;
   user_id: string;
+  updated_at?: string;
   flight?: Flight | null;
   return_flight?: Flight | null;
 }
