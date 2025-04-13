@@ -9,14 +9,19 @@ import {
   LogOut
 } from "lucide-react";
 import { useClerk } from "@clerk/clerk-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminSidebar = () => {
   const location = useLocation();
   const { signOut } = useClerk();
   
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    // Sign out from Supabase first
+    await supabase.auth.signOut();
+    
+    // Then sign out from Clerk
     signOut(() => {
-      window.location.href = "/";
+      window.location.href = "/sign-in";
     });
   };
   

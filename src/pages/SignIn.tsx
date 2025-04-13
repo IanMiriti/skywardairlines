@@ -35,7 +35,8 @@ const SignIn = () => {
                 alert: "bg-red-50 border-red-100 text-red-600",
                 socialButtonsBlockButton: "bg-white border hover:bg-gray-50",
                 socialButtonsBlockButtonText: "text-gray-700",
-                formFieldAction__signIn: "hidden" // Hide password login option
+                formFieldAction__signIn: "hidden", // Hide password login option
+                footerAction: "hidden" // Hide sign up link
               }
             }}
           />
