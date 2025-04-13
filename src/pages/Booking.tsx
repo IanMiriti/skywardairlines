@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { format, parseISO } from "date-fns";
@@ -21,29 +22,12 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Flight } from "@/utils/types";
 
 // Flutterwave library
 import { FlutterWaveButton, closePaymentModal } from 'flutterwave-react-v3';
-
-// Flight interface
-interface Flight {
-  id: string;
-  airline: string;
-  flight_number: string;
-  departure_city: string;
-  arrival_city: string;
-  departure_time: string;
-  arrival_time: string;
-  price: number;
-  duration: string;
-  available_seats: number;
-  baggage_allowance: string;
-  aircraft?: string;
-  amenities?: string[];
-  terminal?: string;
-  gate?: string;
-  status?: string;
-}
 
 // Form data interface
 interface FormData {
@@ -278,10 +262,11 @@ const Booking = () => {
       throw error;
     }
   };
-  
+
+  // Updated Flutterwave configuration with FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X as requested
   const flutterwaveConfig: FlutterWaveConfig = {
-    public_key: "FLWPUBK_TEST-27eb6ebf4d92f44eee8c8dc83e2c2a71-X",
-    tx_ref: Date.now().toString(),
+    public_key: "FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X",
+    tx_ref: `FLYS-${Date.now().toString()}`,
     amount: calculateGrandTotal(),
     currency: 'KES',
     payment_options: 'mpesa',
@@ -303,10 +288,34 @@ const Booking = () => {
         setIsProcessingPayment(true);
         
         try {
-          const booking = await saveBooking(response.transaction_id, "completed");
-          setPaymentSuccess(true);
+          // Verify the transaction server-side via Edge Function
+          const verificationResponse = await fetch(
+            `https://ytcpgoyldllvumfmieas.functions.supabase.co/verify-flutterwave-payment`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                transactionId: response.transaction_id,
+                amount: calculateGrandTotal(),
+                currency: 'KES',
+              }),
+            }
+          );
           
-          navigate(`/booking/${id}/confirmation?bookingId=${booking.id}&reference=${booking.booking_reference}`);
+          const verificationData = await verificationResponse.json();
+          
+          if (verificationData.success) {
+            // Payment verified, save booking
+            const booking = await saveBooking(response.transaction_id, "completed");
+            setPaymentSuccess(true);
+            
+            navigate(`/booking/${id}/confirmation?bookingId=${booking.id}&reference=${booking.booking_reference}`);
+          } else {
+            // Verification failed
+            setPaymentError("Payment verification failed. Please contact support.");
+          }
         } catch (error) {
           console.error("Error processing successful payment:", error);
           setPaymentError("Payment was successful but we couldn't complete your booking. Please contact support.");
@@ -371,7 +380,29 @@ const Booking = () => {
       return;
     }
     
-    document.getElementById('flutterwave-payment-button')?.click();
+    // Create a temporary pending booking
+    try {
+      const pendingBooking = await saveBooking("pending", "pending");
+      
+      // Trigger the Flutterwave payment modal
+      const flutterwave = document.getElementById('flutterwave-btn');
+      if (flutterwave) {
+        flutterwave.click();
+      } else {
+        toast({
+          title: "Payment Error",
+          description: "Could not initialize payment system. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error creating pending booking:", error);
+      toast({
+        title: "Booking Error",
+        description: "Could not create booking. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   if (loading) {
@@ -484,14 +515,14 @@ const Booking = () => {
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                      <input
+                      <Input
                         type="text"
                         id="firstName"
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleInputChange}
                         required
-                        className="form-input pl-10 w-full"
+                        className="pl-10 w-full"
                         placeholder="Enter your first name"
                       />
                     </div>
@@ -503,14 +534,14 @@ const Booking = () => {
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                      <input
+                      <Input
                         type="text"
                         id="lastName"
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleInputChange}
                         required
-                        className="form-input pl-10 w-full"
+                        className="pl-10 w-full"
                         placeholder="Enter your last name"
                       />
                     </div>
@@ -522,14 +553,14 @@ const Booking = () => {
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                      <input
+                      <Input
                         type="email"
                         id="email"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
                         required
-                        className="form-input pl-10 w-full"
+                        className="pl-10 w-full"
                         placeholder="Enter your email"
                       />
                     </div>
@@ -541,14 +572,14 @@ const Booking = () => {
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                      <input
+                      <Input
                         type="tel"
                         id="phone"
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
                         required
-                        className="form-input pl-10 w-full"
+                        className="pl-10 w-full"
                         placeholder="e.g. 07XXXXXXXX"
                       />
                     </div>
@@ -563,14 +594,14 @@ const Booking = () => {
                     </label>
                     <div className="relative">
                       <CreditCardIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                      <input
+                      <Input
                         type="text"
                         id="idPassport"
                         name="idPassport"
                         value={formData.idPassport}
                         onChange={handleInputChange}
                         required
-                        className="form-input pl-10 w-full"
+                        className="pl-10 w-full"
                         placeholder="Enter your ID or passport number"
                       />
                     </div>
@@ -635,16 +666,18 @@ const Booking = () => {
                     {...flutterwaveConfig}
                     className="btn btn-primary"
                     text="Pay with M-PESA"
+                    id="flutterwave-btn"
                   />
                 </div>
                 
-                <button
+                <Button
                   type="submit"
-                  className="btn btn-secondary w-full py-3 text-base flex items-center justify-center gap-2"
+                  variant="secondary"
+                  className="w-full py-6 text-base flex items-center justify-center gap-2"
                 >
                   <CreditCardIcon size={18} />
                   Proceed to Payment
-                </button>
+                </Button>
               </form>
             </div>
           </div>
