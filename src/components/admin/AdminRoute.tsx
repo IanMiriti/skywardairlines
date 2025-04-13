@@ -3,17 +3,9 @@ import { useUser } from "@clerk/clerk-react";
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-
-// Check if Clerk is available
-const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+import { toast } from "@/hooks/use-toast";
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  // Skip auth check if Clerk is not available (development mode)
-  if (!isClerkAvailable) {
-    console.warn("Authentication is disabled - Development mode admin access granted");
-    return <>{children}</>;
-  }
-
   const { user, isLoaded } = useUser();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,6 +42,11 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
               
             if (profileCheckError) {
               console.error("Error checking profile:", profileCheckError);
+              toast({
+                title: "Database Error",
+                description: "Error checking your profile, but granting admin access.",
+                variant: "default",
+              });
             } else if (!existingProfile) {
               console.log("Admin user not in database, creating profile");
               await supabase
@@ -69,7 +66,11 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
             }
           } catch (dbError) {
             console.error("Database operation failed:", dbError);
-            // Continue anyway since we're using the email check as primary
+            toast({
+              title: "Database Error",
+              description: "Error updating profile, but granting admin access.",
+              variant: "default",
+            });
           }
           
           setIsAdmin(true);

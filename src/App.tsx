@@ -42,16 +42,8 @@ const queryClient = new QueryClient({
   },
 });
 
-// Check if Clerk is available
-const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
 // Protected route component that works with or without authentication
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  if (!isClerkAvailable) {
-    console.warn("Authentication is disabled: VITE_CLERK_PUBLISHABLE_KEY not set");
-    return <>{children}</>;
-  }
-  
   return (
     <>
       <SignedIn>{children}</SignedIn>
@@ -66,7 +58,7 @@ const App = () => {
   // Log app initialization for debugging
   useEffect(() => {
     console.log("App component initialized");
-    console.log("Authentication status:", isClerkAvailable ? "Enabled" : "Disabled");
+    console.log("Authentication status:", !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ? "Enabled" : "Disabled");
     
     // Check Supabase connection
     const checkSupabaseConnection = async () => {
@@ -122,13 +114,9 @@ const App = () => {
                 } 
               />
               
-              {/* Authentication routes - only shown if Clerk is available */}
-              {isClerkAvailable && (
-                <>
-                  <Route path="/sign-in/*" element={<SignIn />} />
-                  <Route path="/sign-up/*" element={<SignUp />} />
-                </>
-              )}
+              {/* Authentication routes */}
+              <Route path="/sign-in/*" element={<SignIn />} />
+              <Route path="/sign-up/*" element={<SignUp />} />
             </Route>
             
             {/* Admin routes */}

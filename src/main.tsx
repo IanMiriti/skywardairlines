@@ -8,13 +8,11 @@ import { ThemeProvider } from './hooks/use-theme.tsx';
 
 // Get the publishable key from environment variable
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-const CLERK_FRONTEND_API = import.meta.env.VITE_CLERK_FRONTEND_API;
 
 // Create console message function for debugging
 const logEnvironmentStatus = () => {
   console.log("Environment variables status:");
   console.log("- VITE_CLERK_PUBLISHABLE_KEY:", PUBLISHABLE_KEY ? "✓ Present" : "✗ Missing");
-  console.log("- VITE_CLERK_FRONTEND_API:", CLERK_FRONTEND_API ? "✓ Present (optional)" : "Not provided (optional)");
   
   // Log other important env variables if they exist
   if (import.meta.env.VITE_SUPABASE_URL) {
@@ -31,7 +29,7 @@ const logEnvironmentStatus = () => {
 // Log environment status for debugging
 logEnvironmentStatus();
 
-// Initialize app with or without Clerk
+// Initialize app with Clerk (with improved error handling)
 const initializeApp = () => {
   const rootElement = document.getElementById("root");
   if (!rootElement) {
@@ -40,10 +38,32 @@ const initializeApp = () => {
   }
 
   try {
-    if (!PUBLISHABLE_KEY) {
-      console.warn("Missing Clerk Publishable Key - Initializing app without authentication");
+    // We now assume Clerk should always be available in production (Netlify)
+    const isProduction = import.meta.env.PROD;
+    const isClerkMissing = !PUBLISHABLE_KEY;
+
+    // Show a warning on screen for production if Clerk key is missing
+    if (isProduction && isClerkMissing) {
+      console.error("Missing Clerk Publishable Key in production environment");
       
-      // Render app without Clerk
+      // Fallback to render without Clerk but with a clear error message
+      createRoot(rootElement).render(
+        <React.StrictMode>
+          <ThemeProvider defaultTheme="light">
+            <div className="fixed top-0 left-0 right-0 bg-red-500 text-white p-2 text-center z-50">
+              Authentication error: Missing VITE_CLERK_PUBLISHABLE_KEY
+            </div>
+            <App />
+          </ThemeProvider>
+        </React.StrictMode>
+      );
+      return;
+    }
+    
+    if (isClerkMissing) {
+      console.warn("Missing Clerk Publishable Key - Initializing app without authentication (development mode)");
+      
+      // Initialize without Clerk but with a warning in development
       createRoot(rootElement).render(
         <React.StrictMode>
           <ThemeProvider defaultTheme="light">
@@ -51,17 +71,10 @@ const initializeApp = () => {
           </ThemeProvider>
         </React.StrictMode>
       );
-      
-      // Show warning banner but still allow app to function
-      const warningDiv = document.createElement('div');
-      warningDiv.innerHTML = `
-        <div style="position: fixed; bottom: 0; left: 0; right: 0; background-color: #fff3cd; color: #856404; padding: 10px; text-align: center; z-index: 9999; border-top: 1px solid #ffeeba;">
-          Authentication is disabled: VITE_CLERK_PUBLISHABLE_KEY not set. Some features may not work.
-        </div>
-      `;
-      document.body.appendChild(warningDiv);
     } else {
-      console.log("Initializing application with Clerk publishable key");
+      console.log("Initializing application with Clerk authentication");
+      
+      // Initialize with Clerk
       createRoot(rootElement).render(
         <React.StrictMode>
           <ThemeProvider defaultTheme="light">
@@ -71,7 +84,6 @@ const initializeApp = () => {
               signUpUrl="/sign-up"
               signInFallbackRedirectUrl="/handle-auth"
               signUpFallbackRedirectUrl="/handle-auth"
-              {...(CLERK_FRONTEND_API && { frontendApi: CLERK_FRONTEND_API })}
             >
               <App />
             </ClerkProvider>
@@ -83,6 +95,7 @@ const initializeApp = () => {
   } catch (error) {
     console.error("Error initializing application:", error);
     
+    // Show error on screen
     if (rootElement) {
       rootElement.innerHTML = `
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; font-family: 'Inter', sans-serif;">

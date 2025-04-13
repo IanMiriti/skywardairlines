@@ -13,7 +13,6 @@
 # Important: Add these environment variables in the Netlify dashboard
 # under Site settings > Build & deploy > Environment variables:
 # - VITE_CLERK_PUBLISHABLE_KEY (Required for authentication)
-# - VITE_CLERK_FRONTEND_API (Optional for Clerk configuration)
 # - VITE_FLUTTERWAVE_PUBLIC_KEY (Required for payments)
 # - VITE_SUPABASE_URL (Required for database access)
 # - VITE_SUPABASE_ANON_KEY (Required for database access)
@@ -28,4 +27,3 @@
   from = "/*"
   to = "/index.html"
   status = 200
-

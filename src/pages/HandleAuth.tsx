@@ -3,9 +3,7 @@ import { useUser } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-
-// Check if Clerk is available
-const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+import { toast } from "@/hooks/use-toast";
 
 const HandleAuth = () => {
   const { user, isLoaded } = useUser();
@@ -14,13 +12,6 @@ const HandleAuth = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // If Clerk is not available, redirect to home
-    if (!isClerkAvailable) {
-      console.warn("Authentication is disabled - Redirecting to home page");
-      navigate('/');
-      return;
-    }
-    
     const checkUserRole = async () => {
       if (!isLoaded) {
         console.log("HandleAuth: User data not loaded yet");
@@ -51,7 +42,11 @@ const HandleAuth = () => {
               
             if (profileError) {
               console.error("Error checking existing profile:", profileError);
-              console.warn("Continuing with admin redirection despite database error");
+              toast({
+                title: "Database Error",
+                description: "There was an error checking your profile. Some features may be limited.",
+                variant: "destructive"
+              });
             }
               
             if (!existingProfile) {
@@ -69,13 +64,16 @@ const HandleAuth = () => {
                   
                 if (createError) {
                   console.error("Error creating admin profile:", createError);
-                  console.warn("Continuing with admin redirection despite database error");
+                  toast({
+                    title: "Profile Error",
+                    description: "Could not create your admin profile, but proceeding with login.",
+                    variant: "destructive"
+                  });
                 } else {
                   console.log("Admin profile created successfully");
                 }
               } catch (dbError) {
                 console.error("Database operation failed:", dbError);
-                console.warn("Continuing with admin redirection despite database error");
               }
             } else if (existingProfile.role !== 'admin') {
               console.log("Updating existing profile to admin role");
@@ -88,18 +86,15 @@ const HandleAuth = () => {
                   
                 if (updateError) {
                   console.error("Error updating to admin role:", updateError);
-                  console.warn("Continuing with admin redirection despite database error");
                 } else {
                   console.log("Profile updated to admin role successfully");
                 }
               } catch (dbError) {
                 console.error("Database operation failed:", dbError);
-                console.warn("Continuing with admin redirection despite database error");
               }
             }
           } catch (dbError) {
             console.error("Database operations failed:", dbError);
-            console.warn("Continuing with admin redirection despite database errors");
           }
           
           // Redirect to admin dashboard despite any database errors
@@ -121,8 +116,7 @@ const HandleAuth = () => {
             console.error("Error checking user role:", error);
             
             // If the user doesn't exist in the profiles table, create a new profile
-            const isAdmin = user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com';
-            console.log("Creating new profile, isAdmin:", isAdmin);
+            console.log("Creating new user profile");
 
             try {
               const { data: newProfile, error: createError } = await supabase
@@ -131,7 +125,7 @@ const HandleAuth = () => {
                   id: user.id,
                   full_name: user.fullName || '',
                   avatar_url: user.imageUrl || '',
-                  role: isAdmin ? 'admin' : 'user'
+                  role: 'user'
                 })
                 .select('role')
                 .single();
@@ -181,10 +175,6 @@ const HandleAuth = () => {
 
     checkUserRole();
   }, [isLoaded, user, navigate]);
-
-  if (!isClerkAvailable) {
-    return null; // Should never render as we redirect immediately
-  }
 
   if (isChecking) {
     return (

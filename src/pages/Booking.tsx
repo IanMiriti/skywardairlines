@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import { ArrowLeft } from "lucide-react";
+import { useUser } from "@clerk/clerk-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Flight } from "@/utils/types";
 import { toast } from "@/hooks/use-toast";
@@ -13,16 +14,6 @@ import {
   calculateGrandTotal, 
   generateBookingReference 
 } from "@/utils/bookingUtils";
-
-const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-const ClerkComponents = isClerkAvailable
-  ? require("@clerk/clerk-react")
-  : { 
-      useUser: () => ({ user: null, isSignedIn: false, isLoaded: true }) 
-    };
-
-const { useUser } = ClerkComponents;
 
 const FLUTTERWAVE_PUBLIC_KEY = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X";
 
@@ -165,7 +156,7 @@ const Booking = () => {
     
     const bookingData = {
       booking_reference: bookingReference,
-      user_id: isClerkAvailable && user ? user.id : null,
+      user_id: user?.id || null,
       flight_id: flight.id,
       return_flight_id: returnFlight?.id || null,
       passenger_name: `${formData.firstName} ${formData.lastName}`,
@@ -215,7 +206,7 @@ const Booking = () => {
       logo: 'https://cdn-icons-png.flaticon.com/512/5403/5403491.png',
     },
     meta: {
-      consumer_id: isClerkAvailable && user ? user.id : 'guest-user',
+      consumer_id: user?.id || 'guest-user',
       consumer_mac: "92a3-912ba-1192a",
     },
     payment_plan: null,

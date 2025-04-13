@@ -1,30 +1,105 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, Plane, LogIn } from "lucide-react";
-
-// Import Clerk components conditionally
-const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-// Only import Clerk components if Clerk is available
-const ClerkComponents = isClerkAvailable
-  ? require("@clerk/clerk-react")
-  : {
-      useUser: () => ({ isSignedIn: false }),
-      UserButton: () => null,
-      SignInButton: ({ children }: { children: React.ReactNode }) => children,
-    };
-
-const { useUser, UserButton, SignInButton } = ClerkComponents;
+import { Menu, X, Plane, LogIn, User } from "lucide-react";
+import { useUser, UserButton, SignInButton } from "@clerk/clerk-react";
 
 const Navbar = () => {
-  // Use Clerk hooks safely
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  // Function to handle auth errors gracefully
+  const renderAuthButtons = () => {
+    try {
+      if (isSignedIn) {
+        return <UserButton afterSignOutUrl="/" />;
+      } else {
+        return (
+          <div className="flex items-center gap-4">
+            <SignInButton mode="modal">
+              <button className="btn-outline btn py-2 px-4 flex items-center gap-2">
+                <LogIn size={18} />
+                <span>Customer Sign In</span>
+              </button>
+            </SignInButton>
+            <button 
+              onClick={() => navigate('/sign-in')}
+              className="btn btn-primary py-2 px-4 flex items-center gap-2"
+            >
+              <LogIn size={18} />
+              <span>Admin Sign In</span>
+            </button>
+          </div>
+        );
+      }
+    } catch (error) {
+      console.error("Auth rendering error:", error);
+      return (
+        <button 
+          onClick={() => navigate('/sign-in')}
+          className="btn btn-primary py-2 px-4 flex items-center gap-2"
+        >
+          <LogIn size={18} />
+          <span>Sign In</span>
+        </button>
+      );
+    }
+  };
+
+  // Function to handle auth errors in mobile view
+  const renderMobileAuthButtons = () => {
+    try {
+      if (isSignedIn) {
+        return (
+          <div className="flex items-center">
+            <UserButton afterSignOutUrl="/" />
+            <span className="ml-4 text-sm text-gray-600">
+              {user?.fullName || 'Your Account'}
+            </span>
+          </div>
+        );
+      } else {
+        return (
+          <div className="flex flex-col space-y-2">
+            <SignInButton mode="modal">
+              <button className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center">
+                <LogIn size={18} />
+                <span>Customer Sign In</span>
+              </button>
+            </SignInButton>
+            <button
+              onClick={() => {
+                navigate('/sign-in');
+                toggleMenu();
+              }}
+              className="btn btn-primary py-2 text-center w-full flex items-center gap-2 justify-center"
+            >
+              <LogIn size={18} />
+              <span>Admin Sign In</span>
+            </button>
+          </div>
+        );
+      }
+    } catch (error) {
+      console.error("Mobile auth rendering error:", error);
+      return (
+        <button
+          onClick={() => {
+            navigate('/sign-in');
+            toggleMenu();
+          }}
+          className="btn btn-primary py-2 text-center w-full flex items-center gap-2 justify-center"
+        >
+          <LogIn size={18} />
+          <span>Sign In</span>
+        </button>
+      );
+    }
   };
 
   return (
@@ -54,37 +129,7 @@ const Navbar = () => {
 
           {/* Auth Buttons - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
-            {isClerkAvailable ? (
-              isSignedIn ? (
-                <UserButton afterSignOutUrl="/" />
-              ) : (
-                <div className="flex items-center gap-4">
-                  <SignInButton mode="modal">
-                    <button className="btn-outline btn py-2 px-4 flex items-center gap-2">
-                      <LogIn size={18} />
-                      <span>Customer Sign In</span>
-                    </button>
-                  </SignInButton>
-                  <button 
-                    onClick={() => navigate('/sign-in')}
-                    className="btn btn-primary py-2 px-4 flex items-center gap-2"
-                  >
-                    <LogIn size={18} />
-                    <span>Admin Sign In</span>
-                  </button>
-                </div>
-              )
-            ) : (
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => navigate('/sign-in')}
-                  className="btn btn-primary py-2 px-4 flex items-center gap-2"
-                >
-                  <LogIn size={18} />
-                  <span>Sign In</span>
-                </button>
-              </div>
-            )}
+            {renderAuthButtons()}
           </div>
 
           {/* Mobile Menu Button */}
@@ -127,44 +172,7 @@ const Navbar = () => {
               My Bookings
             </Link>
             <div className="pt-2 border-t border-gray-200">
-              {isClerkAvailable ? (
-                isSignedIn ? (
-                  <div className="flex items-center">
-                    <UserButton afterSignOutUrl="/" />
-                    <span className="ml-4 text-sm text-gray-600">Your Account</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-2">
-                    <SignInButton mode="modal">
-                      <button className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center">
-                        <LogIn size={18} />
-                        <span>Customer Sign In</span>
-                      </button>
-                    </SignInButton>
-                    <button
-                      onClick={() => {
-                        navigate('/sign-in');
-                        toggleMenu();
-                      }}
-                      className="btn btn-primary py-2 text-center w-full flex items-center gap-2 justify-center"
-                    >
-                      <LogIn size={18} />
-                      <span>Admin Sign In</span>
-                    </button>
-                  </div>
-                )
-              ) : (
-                <button
-                  onClick={() => {
-                    navigate('/sign-in');
-                    toggleMenu();
-                  }}
-                  className="btn btn-primary py-2 text-center w-full flex items-center gap-2 justify-center"
-                >
-                  <LogIn size={18} />
-                  <span>Sign In</span>
-                </button>
-              )}
+              {renderMobileAuthButtons()}
             </div>
           </div>
         )}
