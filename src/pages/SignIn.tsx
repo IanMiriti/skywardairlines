@@ -42,13 +42,7 @@ const SignInPage = () => {
           title: "Welcome back!",
           description: "You've successfully signed in."
         });
-        
-        // Check if it's an admin email
-        if (email === "ianmiriti254@gmail.com") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/");
-        }
+        navigate("/");
       }
     } catch (err) {
       console.error("Unexpected error during sign in:", err);
@@ -152,16 +146,6 @@ const SignInPage = () => {
               </p>
             </div>
           </form>
-        </div>
-        
-        <div className="text-center mt-6 text-sm text-gray-600">
-          <p>
-            Admin users will be redirected to the admin dashboard.
-            Regular users will be redirected to the homepage.
-          </p>
-          <p className="mt-2">
-            <strong>Admin Email:</strong> ianmiriti254@gmail.com
-          </p>
         </div>
       </div>
     </div>

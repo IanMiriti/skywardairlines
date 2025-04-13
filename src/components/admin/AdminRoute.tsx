@@ -1,18 +1,31 @@
 
 import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth-context";
 import { toast } from "@/hooks/use-toast";
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, isAdmin, isAdminLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   useEffect(() => {
     if (!loading && !user) {
       console.log("AdminRoute: No authenticated user, redirecting to sign-in");
+      navigate("/auth/admin");
     }
-  }, [loading, user]);
+    
+    if (!isAdminLoading && user && !isAdmin) {
+      console.log("User is not admin, showing error");
+      setError("You do not have administrative privileges");
+      
+      toast({
+        title: "Access Denied",
+        description: "You do not have administrative privileges",
+        variant: "destructive"
+      });
+    }
+  }, [loading, user, isAdmin, isAdminLoading, navigate]);
   
   if (loading || isAdminLoading) {
     return (
@@ -27,8 +40,8 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!user) {
-    console.log("User not loaded or not logged in, redirecting to sign-in");
-    return <Navigate to="/sign-in" replace />;
+    console.log("User not loaded or not logged in, redirecting to admin sign-in");
+    return <Navigate to="/auth/admin" replace />;
   }
   
   if (error) {

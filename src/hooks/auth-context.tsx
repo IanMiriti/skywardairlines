@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 type AuthContextType = {
   session: Session | null;
@@ -23,9 +24,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isAdminLoading, setIsAdminLoading] = useState(true);
-
-  // Default admin email - will also check database for admin role
-  const ADMIN_EMAIL = 'ianmiriti254@gmail.com';
 
   useEffect(() => {
     // Set up the auth listener
@@ -74,54 +72,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAdminLoading(true);
 
     try {
-      // First check for known admin email
-      if (user.email === ADMIN_EMAIL) {
-        console.log("Admin email detected");
-        setIsAdmin(true);
+      // Check database for admin role
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
         
-        // Ensure admin status in database
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          if (error) {
-            console.error("Error checking profile:", error);
-          } else if (!profile) {
-            console.log("Creating admin profile");
-            await supabase
-              .from('profiles')
-              .insert({
-                id: user.id,
-                email: user.email,
-                full_name: user.user_metadata?.full_name || '',
-                role: 'admin'
-              });
-          } else if (profile.role !== 'admin') {
-            console.log("Updating to admin role");
-            await supabase
-              .from('profiles')
-              .update({ role: 'admin' })
-              .eq('id', user.id);
-          }
-        } catch (error) {
-          console.error("Database operation failed:", error);
+      if (error) {
+        console.error('Error checking admin role:', error);
+        setIsAdmin(false);
+        toast({
+          title: "Error",
+          description: "Couldn't verify admin status. Please try again.",
+          variant: "destructive"
+        });
+      } else if (!data) {
+        console.log("No profile found for user", user.id);
+        setIsAdmin(false);
+        
+        // Create a profile for the user if it doesn't exist
+        const { error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            full_name: user.user_metadata?.full_name || '',
+            role: 'customer'
+          });
+          
+        if (createError) {
+          console.error("Error creating profile:", createError);
         }
       } else {
-        // For all other users, check database for admin role
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (error) {
-          console.error('Error checking admin role:', error);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(data?.role === 'admin');
+        console.log("User role:", data.role);
+        setIsAdmin(data.role === 'admin');
+        
+        if (data.role === 'admin') {
+          toast({
+            title: "Admin Access",
+            description: "You have admin privileges.",
+          });
         }
       }
     } catch (error) {
@@ -144,6 +135,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     const response = await supabase.auth.signInWithPassword({ email, password });
+    
+    if (!response.error && response.data.user) {
+      // Check if user is admin directly here
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', response.data.user.id)
+        .maybeSingle();
+        
+      if (!error && data?.role === 'admin') {
+        setIsAdmin(true);
+      }
+    }
+    
     return response;
   };
 
@@ -165,6 +170,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setIsAdmin(null);
   };
 
   const value = {

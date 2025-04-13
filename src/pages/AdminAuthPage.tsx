@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { Plane, Mail, Lock, AlertCircle, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/hooks/auth-context";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 const AdminAuthPage = () => {
   const navigate = useNavigate();
@@ -155,11 +154,6 @@ const AdminAuthPage = () => {
               )}
             </button>
           </form>
-          
-          <div className="mt-4 text-center text-sm text-gray-500">
-            <p>Note: Admin password is password123</p>
-            <p className="mt-1">Default admin email: ianmiriti254@gmail.com</p>
-          </div>
         </div>
         
         <div className="text-center mt-6">

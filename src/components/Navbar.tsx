@@ -96,7 +96,7 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/auth")}
-            className="nav-button btn-outline btn py-2 px-4 flex items-center gap-2"
+            className="nav-button btn-outline btn py-2 px-4 flex items-center gap-2 floating"
           >
             <LogIn size={18} className="icon-spin" />
             <span>Sign In</span>
@@ -130,7 +130,7 @@ const Navbar = () => {
               navigate("/profile");
               toggleMenu();
             }}
-            className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary"
+            className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary zoom-on-hover"
           >
             <User size={16} />
             Profile
@@ -141,7 +141,7 @@ const Navbar = () => {
               navigate("/my-bookings");
               toggleMenu();
             }}
-            className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary"
+            className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary zoom-on-hover"
           >
             <Plane size={16} />
             My Bookings
@@ -153,7 +153,7 @@ const Navbar = () => {
                 navigate("/admin/dashboard");
                 toggleMenu();
               }}
-              className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary"
+              className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary zoom-on-hover"
             >
               <UserCircle size={16} />
               Admin Dashboard
@@ -165,7 +165,7 @@ const Navbar = () => {
               handleSignOut();
               toggleMenu();
             }}
-            className="flex w-full items-center gap-2 py-2 text-red-600 hover:text-red-700"
+            className="flex w-full items-center gap-2 py-2 text-red-600 hover:text-red-700 zoom-on-hover"
           >
             <LogOut size={16} />
             Sign Out
@@ -180,7 +180,7 @@ const Navbar = () => {
               navigate("/auth");
               toggleMenu();
             }}
-            className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center"
+            className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center zoom-on-hover"
           >
             <LogIn size={18} />
             <span>Sign In</span>
@@ -194,7 +194,7 @@ const Navbar = () => {
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 hover-scale">
+          <Link to="/" className="flex items-center gap-2 hover-scale floating">
             <Plane className="h-6 w-6 text-flysafari-primary icon-spin" />
             <span className="text-xl font-bold text-flysafari-dark nav-link-highlight">
               FlySafari
@@ -210,7 +210,7 @@ const Navbar = () => {
               <Link 
                 key={item.path}
                 to={item.path} 
-                className={`nav-item ${isActive(item.path) ? 'text-flysafari-primary font-semibold' : 'text-gray-700'}`}
+                className={`nav-item staggered-fade-in ${isActive(item.path) ? 'text-flysafari-primary font-semibold' : 'text-gray-700'}`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {item.label}
@@ -218,7 +218,7 @@ const Navbar = () => {
             ))}
           </div>
 
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 animate-fade-in">
             {renderAuthButtons()}
           </div>
 
@@ -247,7 +247,7 @@ const Navbar = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`block py-2 nav-item ${isActive(item.path) ? 'text-flysafari-primary font-semibold' : 'text-gray-700'}`}
+                className={`block py-2 nav-item staggered-fade-in ${isActive(item.path) ? 'text-flysafari-primary font-semibold' : 'text-gray-700'}`}
                 onClick={toggleMenu}
                 style={{ animationDelay: `${index * 100}ms` }}
               >

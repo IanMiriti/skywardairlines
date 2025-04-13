@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Users, UserPlus, Shield, AlertCircle, Search, RefreshCw } from "lucide-react";
+import { Users, Shield, AlertCircle, Search, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/auth-context";
 
 interface UserProfile {
@@ -104,10 +104,10 @@ const AdminUserManagement = () => {
   );
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow">
+    <div className="p-6 bg-white rounded-lg shadow animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div className="flex items-center gap-2">
-          <Users className="text-flysafari-primary" size={24} />
+          <Users className="text-flysafari-primary floating" size={24} />
           <h2 className="text-xl font-semibold">User Management</h2>
         </div>
         
@@ -119,16 +119,16 @@ const AdminUserManagement = () => {
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="form-input pl-10 pr-4 py-2 w-full sm:w-64"
+              className="form-input pl-10 pr-4 py-2 w-full sm:w-64 hover-scale"
             />
           </div>
           
           <button
             onClick={fetchUsers}
-            className="btn btn-outline p-2"
+            className="btn btn-outline p-2 hover-scale"
             disabled={loading}
           >
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={16} className={loading ? "animate-spin" : "icon-spin"} />
           </button>
         </div>
       </div>
@@ -138,8 +138,8 @@ const AdminUserManagement = () => {
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-flysafari-primary"></div>
         </div>
       ) : filteredUsers.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-md">
-          <Users className="mx-auto text-gray-400 mb-2" size={32} />
+        <div className="text-center py-8 bg-gray-50 rounded-md animate-fade-in">
+          <Users className="mx-auto text-gray-400 mb-2 floating" size={32} />
           <p className="text-gray-500">No users found matching your search.</p>
         </div>
       ) : (
@@ -155,8 +155,8 @@ const AdminUserManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id}>
+              {filteredUsers.map((user, index) => (
+                <tr key={user.id} className="staggered-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                   <td className="p-3 whitespace-nowrap">{user.name || 'N/A'}</td>
                   <td className="p-3 whitespace-nowrap">{user.email || 'N/A'}</td>
                   <td className="p-3 whitespace-nowrap">
@@ -174,7 +174,7 @@ const AdminUserManagement = () => {
                       <button
                         onClick={() => handlePromoteToAdmin(user.id)}
                         disabled={isPromotingUser === user.id}
-                        className="btn btn-sm btn-outline flex items-center gap-1"
+                        className="btn btn-sm btn-outline flex items-center gap-1 hover-scale"
                       >
                         {isPromotingUser === user.id ? (
                           <>
@@ -183,14 +183,14 @@ const AdminUserManagement = () => {
                           </>
                         ) : (
                           <>
-                            <Shield size={14} />
+                            <Shield size={14} className="icon-spin" />
                             Make Admin
                           </>
                         )}
                       </button>
                     ) : (
                       <span className="text-sm text-gray-500 italic flex items-center gap-1">
-                        <Shield size={14} className="text-purple-500" />
+                        <Shield size={14} className="text-purple-500 floating" />
                         Admin
                       </span>
                     )}
@@ -202,8 +202,8 @@ const AdminUserManagement = () => {
         </div>
       )}
       
-      <div className="mt-6 bg-yellow-50 p-4 rounded-md flex items-start gap-3">
-        <AlertCircle size={20} className="text-yellow-600 mt-0.5" />
+      <div className="mt-6 bg-yellow-50 p-4 rounded-md flex items-start gap-3 animate-fade-in">
+        <AlertCircle size={20} className="text-yellow-600 mt-0.5 pulsing" />
         <div>
           <h3 className="font-medium text-yellow-800">Admin Permissions Note</h3>
           <p className="text-sm mt-1 text-yellow-700">
