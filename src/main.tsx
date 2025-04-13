@@ -8,13 +8,25 @@ import './index.css';
 // Clerk publishable key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_bGVhcm5pbmctc25hcHBlci02LmNsZXJrLmFjY291bnRzLmRldiQ";
 
+// Clerk redirect URLs
+const signInUrl = "/sign-in";
+const signUpUrl = "/sign-up";
+const afterSignInUrl = "/handle-auth";
+const afterSignUpUrl = "/handle-auth";
+
 if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Clerk Publishable Key");
 }
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+    <ClerkProvider 
+      publishableKey={PUBLISHABLE_KEY}
+      signInUrl={signInUrl}
+      signUpUrl={signUpUrl}
+      afterSignInUrl={afterSignInUrl}
+      afterSignUpUrl={afterSignUpUrl}
+    >
       <App />
     </ClerkProvider>
   </React.StrictMode>

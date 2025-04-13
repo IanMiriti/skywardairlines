@@ -21,7 +21,7 @@ const SignUp = () => {
           <ClerkSignUp 
             routing="path" 
             path="/sign-up" 
-            signInUrl="/sign-in"
+            redirectUrl="/handle-auth"
             appearance={{
               elements: {
                 rootBox: "mx-auto w-full",
@@ -34,6 +34,8 @@ const SignUp = () => {
                 formFieldLabel: "text-gray-700",
                 identityPreview: "bg-gray-50 border-gray-200",
                 alert: "bg-red-50 border-red-100 text-red-600",
+                socialButtonsBlockButton: "bg-white border hover:bg-gray-50",
+                socialButtonsBlockButtonText: "text-gray-700"
               }
             }}
           />

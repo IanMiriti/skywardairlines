@@ -16,6 +16,50 @@ const HandleAuth = () => {
       try {
         console.log("HandleAuth: Checking role for user:", user.id, user.primaryEmailAddress?.emailAddress);
         
+        // Admin email shortcut - if email matches admin email, redirect directly to admin dashboard
+        if (user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com') {
+          console.log("Admin email detected, redirecting to admin dashboard");
+          
+          // Ensure profile exists with admin role
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id, role')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (!existingProfile) {
+            console.log("Creating admin profile for admin email");
+            // Create admin profile if it doesn't exist
+            const { error: createError } = await supabase
+              .from('profiles')
+              .insert({ 
+                id: user.id,
+                full_name: user.fullName || '',
+                avatar_url: user.imageUrl || '',
+                role: 'admin'
+              });
+              
+            if (createError) {
+              console.error("Error creating admin profile:", createError);
+            }
+          } else if (existingProfile.role !== 'admin') {
+            console.log("Updating existing profile to admin role");
+            // Update to admin role if profile exists but not admin
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ role: 'admin' })
+              .eq('id', user.id);
+              
+            if (updateError) {
+              console.error("Error updating to admin role:", updateError);
+            }
+          }
+          
+          navigate('/admin/dashboard');
+          setIsChecking(false);
+          return;
+        }
+        
         // Check if user exists in profiles and their role
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -56,25 +100,7 @@ const HandleAuth = () => {
             console.log("Redirecting new user to homepage");
             navigate('/');
           }
-          return;
-        }
-
-        // If the profile exists but the user should be admin and isn't
-        if (user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com' && profile.role !== 'admin') {
-          console.log("Updating role to admin for ianmiriti254@gmail.com");
-          
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ role: 'admin' })
-            .eq('id', user.id);
-            
-          if (updateError) {
-            console.error("Error updating role to admin:", updateError);
-          } else {
-            console.log("Successfully updated role to admin");
-          }
-            
-          navigate('/admin/dashboard');
+          setIsChecking(false);
           return;
         }
 

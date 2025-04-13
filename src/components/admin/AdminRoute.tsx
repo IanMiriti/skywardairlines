@@ -20,7 +20,15 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       try {
         console.log("AdminRoute: Checking admin status for user:", user.id, "Email:", user.primaryEmailAddress?.emailAddress);
         
-        // Check admin role from Supabase
+        // Check if user is the admin email directly first
+        if (user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com') {
+          console.log("User has admin email, granting admin access directly");
+          setIsAdmin(true);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Check admin role from Supabase as backup
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
@@ -32,7 +40,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
           setIsAdmin(false);
         } else {
           const isUserAdmin = data?.role === 'admin';
-          console.log("User admin status:", isUserAdmin, "Data:", data);
+          console.log("User admin status from database:", isUserAdmin, "Data:", data);
           setIsAdmin(isUserAdmin);
         }
       } catch (error) {

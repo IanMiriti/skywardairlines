@@ -13,7 +13,7 @@ const SignIn = () => {
           </div>
           <h1 className="text-2xl font-bold text-flysafari-dark">Sign In</h1>
           <p className="text-gray-600 mt-2">
-            Please sign in with Google to access FlySafari.
+            Please sign in to access FlySafari.
           </p>
         </div>
         
@@ -21,7 +21,6 @@ const SignIn = () => {
           <ClerkSignIn 
             routing="path" 
             path="/sign-in" 
-            afterSignInUrl="/handle-auth"
             redirectUrl="/handle-auth"
             appearance={{
               elements: {
@@ -36,10 +35,7 @@ const SignIn = () => {
                 identityPreview: "bg-gray-50 border-gray-200",
                 alert: "bg-red-50 border-red-100 text-red-600",
                 socialButtonsBlockButton: "bg-white border hover:bg-gray-50",
-                socialButtonsBlockButtonText: "text-gray-700",
-                formFieldAction__signIn: "hidden", // Hide password login option
-                footerAction: "hidden", // Hide sign up link
-                alternativeMethods: "hidden" // Hide alternative methods
+                socialButtonsBlockButtonText: "text-gray-700"
               }
             }}
           />
@@ -47,7 +43,8 @@ const SignIn = () => {
         
         <div className="text-center mt-6 text-sm text-gray-600">
           <p>
-            By signing in, you agree to our Terms of Service and Privacy Policy.
+            Admin users will be redirected to the admin dashboard.
+            Regular users will be redirected to the homepage.
           </p>
         </div>
       </div>
