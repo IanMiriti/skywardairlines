@@ -248,7 +248,10 @@ const Booking = () => {
     },
   };
   
-  const handleFlutterPayment = useFlutterwave(flutterwaveConfig);
+  const handleFlutterPayment = useFlutterwave({
+    ...flutterwaveConfig,
+    amount: String(flutterwaveConfig.amount)
+  });
   
   const handleBooking = () => {
     if (!validateForm()) return;
@@ -261,7 +264,11 @@ const Booking = () => {
         
         if (response.status === 'successful') {
           try {
-            const booking = await createBooking(response.transaction_id, 'paid');
+            const txId = typeof response.transaction_id === 'number' 
+              ? String(response.transaction_id) 
+              : response.transaction_id;
+              
+            const booking = await createBooking(txId, 'paid');
             
             navigate(`/booking/${id}/confirmation?bookingId=${booking.id}`);
             

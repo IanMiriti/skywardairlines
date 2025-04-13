@@ -15,7 +15,7 @@ const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ||
 const signInUrl = "/sign-in";
 const signUpUrl = "/sign-up";
 
-if (!PUBLISHABLE_KEY) {
+if (!PUBLISHABLE_KEY && !import.meta.env.DEV) {
   console.error("Missing Clerk Publishable Key - Please set VITE_CLERK_PUBLISHABLE_KEY environment variable");
   document.body.innerHTML = `
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center;">
@@ -28,7 +28,7 @@ if (!PUBLISHABLE_KEY) {
       </p>
     </div>
   `;
-  // Don't throw error - render a helpful message instead
+  throw new Error("Missing Clerk Publishable Key"); // Throw error to prevent further rendering
 } else {
   createRoot(document.getElementById("root")!).render(
     <React.StrictMode>

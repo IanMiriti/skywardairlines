@@ -10,8 +10,10 @@
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
 
-# Important: Add VITE_CLERK_PUBLISHABLE_KEY in the Netlify dashboard
-# under Site settings > Build & deploy > Environment variables
+# Important: Add these environment variables in the Netlify dashboard
+# under Site settings > Build & deploy > Environment variables:
+# - VITE_CLERK_PUBLISHABLE_KEY
+# - VITE_FLUTTERWAVE_PUBLIC_KEY
 
 [[redirects]]
   from = "/*"
