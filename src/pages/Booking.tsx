@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
@@ -270,7 +269,6 @@ const Booking = () => {
     }
   };
   
-  // Initialize the unpaid booking (before payment)
   const createUnpaidBooking = async () => {
     if (!flight || !user || !validateForm()) return null;
     
@@ -346,18 +344,15 @@ const Booking = () => {
   
   const handleFlutterPayment = useFlutterwave(flutterwaveConfig);
   
-  // New handler for the "Book Now" button that creates an unpaid booking first
   const handleBookNow = async () => {
     if (!validateForm() || !flight) return;
     
     setIsProcessing(true);
     
     try {
-      // Create an unpaid booking first
       const unpaidBooking = await createUnpaidBooking();
       
       if (unpaidBooking) {
-        // Redirect to payment page
         navigate(`/payment/${unpaidBooking.id}`);
       }
     } catch (error) {
@@ -367,7 +362,6 @@ const Booking = () => {
     }
   };
   
-  // Original payment handler (for direct payment from this page)
   const handleBooking = () => {
     if (!validateForm() || !flight) return;
     
@@ -491,6 +485,10 @@ const Booking = () => {
                   onPaymentMethodChange={handlePaymentMethodChange}
                   paymentMethod={formData.paymentMethod}
                   onSubmit={handleBookNow}
+                  phoneNumber={formData.phone}
+                  onPhoneNumberChange={(value) => handleInputChange({ 
+                    target: { name: 'phone', value } 
+                  } as React.ChangeEvent<HTMLInputElement>)}
                   buttonText="Book Now"
                 />
               </div>

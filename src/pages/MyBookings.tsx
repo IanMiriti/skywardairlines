@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
@@ -21,7 +20,6 @@ import { toast } from "@/hooks/use-toast";
 import { Booking, Flight } from "@/utils/types";
 
 const MyBookings = () => {
-  // Use authentication context
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -40,7 +38,6 @@ const MyBookings = () => {
       console.log("Fetching bookings for user:", user.id);
       
       try {
-        // First get all bookings
         const { data: bookingsData, error: bookingsError } = await supabase
           .from('bookings')
           .select('*')
@@ -57,17 +54,14 @@ const MyBookings = () => {
           return;
         }
         
-        // Create a map to store flight details for each flight_id
         const flightDetailsMap = new Map<string, Flight>();
         
-        // Get unique flight IDs (both outbound and return)
         const flightIds = new Set<string>();
         bookingsData.forEach(booking => {
           if (booking.flight_id) flightIds.add(booking.flight_id);
           if (booking.return_flight_id) flightIds.add(booking.return_flight_id);
         });
         
-        // Fetch flight details for all flight IDs
         for (const flightId of flightIds) {
           const { data: flightData, error: flightError } = await supabase
             .from('flights')
@@ -83,7 +77,6 @@ const MyBookings = () => {
           flightDetailsMap.set(flightId, flightData as Flight);
         }
         
-        // Combine booking data with flight details
         const fullBookings = bookingsData.map(booking => {
           return {
             ...booking,
@@ -105,7 +98,6 @@ const MyBookings = () => {
       }
     };
     
-    // Only fetch bookings if user is authenticated
     if (!authLoading && user) {
       fetchBookings();
     } else if (!authLoading && !user) {
@@ -132,14 +124,12 @@ const MyBookings = () => {
     setCancellingBooking(true);
     
     try {
-      // Get the booking to cancel
       const bookingToCancel = bookings.find(b => b.id === cancellationId);
       
       if (!bookingToCancel) {
         throw new Error("Booking not found");
       }
       
-      // Update booking status in Supabase
       const { error } = await supabase
         .from('bookings')
         .update({ 
@@ -152,40 +142,30 @@ const MyBookings = () => {
         throw error;
       }
       
-      // If this was a paid booking, we might want to process a refund here
-      // For now, just release seats back to inventory
-      
-      // Release seats back into inventory for outbound flight
       if (bookingToCancel.flight_id) {
-        const { error: seatError } = await supabase.rpc(
-          "increment_available_seats",
-          {
+        const { error: seatError } = await supabase
+          .rpc("increment_available_seats", {
             flight_id: bookingToCancel.flight_id,
             seats_count: bookingToCancel.passenger_count
-          }
-        );
+          });
         
         if (seatError) {
           console.error("Error restoring flight seats:", seatError);
         }
       }
       
-      // Release seats for return flight if this was a round trip
       if (bookingToCancel.is_round_trip && bookingToCancel.return_flight_id) {
-        const { error: returnSeatError } = await supabase.rpc(
-          "increment_available_seats",
-          {
+        const { error: returnSeatError } = await supabase
+          .rpc("increment_available_seats", {
             flight_id: bookingToCancel.return_flight_id,
             seats_count: bookingToCancel.passenger_count
-          }
-        );
+          });
         
         if (returnSeatError) {
           console.error("Error restoring return flight seats:", returnSeatError);
         }
       }
       
-      // Update local state
       setBookings(prevBookings => 
         prevBookings.map(booking => 
           booking.id === cancellationId 
@@ -218,11 +198,9 @@ const MyBookings = () => {
   };
   
   const handlePayment = (bookingId: string) => {
-    // Navigate to payment page with the booking ID
     navigate(`/payment/${bookingId}`);
   };
   
-  // Format price in KES
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
@@ -231,7 +209,6 @@ const MyBookings = () => {
     }).format(price);
   };
   
-  // Filter bookings based on search term
   const filteredBookings = bookings.filter(booking => 
     booking.booking_reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     booking.flight?.airline?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -287,7 +264,6 @@ const MyBookings = () => {
     setLoading(true);
     
     try {
-      // Similar to the above but with a simpler structure
       const { data: bookingsData, error } = await supabase
         .from('bookings')
         .select('*')
@@ -304,17 +280,14 @@ const MyBookings = () => {
         return;
       }
       
-      // Create a map to store flight details for each flight_id
       const flightDetailsMap = new Map<string, Flight>();
       
-      // Get unique flight IDs (both outbound and return)
       const flightIds = new Set<string>();
       bookingsData.forEach(booking => {
         if (booking.flight_id) flightIds.add(booking.flight_id);
         if (booking.return_flight_id) flightIds.add(booking.return_flight_id);
       });
       
-      // Fetch flight details for all flight IDs
       for (const flightId of flightIds) {
         const { data: flightData, error: flightError } = await supabase
           .from('flights')
@@ -330,7 +303,6 @@ const MyBookings = () => {
         flightDetailsMap.set(flightId, flightData as Flight);
       }
       
-      // Combine booking data with flight details
       const fullBookings = bookingsData.map(booking => {
         return {
           ...booking,
@@ -399,7 +371,6 @@ const MyBookings = () => {
             </button>
           </div>
           
-          {/* Search Box */}
           <div className="mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -420,7 +391,6 @@ const MyBookings = () => {
                   key={booking.id} 
                   className="bg-white rounded-lg shadow-sm overflow-hidden card-hover"
                 >
-                  {/* Booking summary */}
                   <div className="p-4 md:p-6">
                     <div className="flex flex-col md:flex-row justify-between gap-4">
                       <div>
@@ -488,7 +458,6 @@ const MyBookings = () => {
                     </div>
                   </div>
                   
-                  {/* Expanded details */}
                   {expandedBooking === booking.id && booking.flight && (
                     <div className="px-4 md:px-6 pb-6 border-t border-gray-100 pt-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -600,7 +569,6 @@ const MyBookings = () => {
         </div>
       </div>
       
-      {/* Cancellation Confirmation Modal */}
       {cancellationConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
