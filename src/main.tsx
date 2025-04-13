@@ -6,7 +6,8 @@ import App from './App.tsx';
 import './index.css';
 
 // Clerk publishable key
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_bGVhcm5pbmctc25hcHBlci02LmNsZXJrLmFjY291bnRzLmRldiQ";
+// Using environment variable only, with no fallback that would expose the key in the code
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 // Clerk redirect URLs
 // According to the Clerk dashboard settings, redirectUrl should be /handle-auth
