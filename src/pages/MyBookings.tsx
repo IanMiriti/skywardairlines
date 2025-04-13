@@ -12,7 +12,8 @@ import {
   ChevronUp,
   ArrowRight,
   RefreshCw,
-  Search 
+  Search,
+  Smartphone
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth-context";
