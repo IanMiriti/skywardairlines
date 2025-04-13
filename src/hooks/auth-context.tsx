@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isAdminLoading, setIsAdminLoading] = useState(true);
 
-  // Special admin email constant
+  // Default admin email - will also check database for admin role
   const ADMIN_EMAIL = 'ianmiriti254@gmail.com';
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     setIsAdminLoading(true);
 
-    // Quick admin check by email
+    // Quick check for known admin email
     if (user.email === ADMIN_EMAIL) {
       console.log("Admin email detected");
       setIsAdmin(true);
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    // Database admin check
+    // For all other users, check database for admin role
     try {
       const { data, error } = await supabase
         .from('profiles')

@@ -106,10 +106,10 @@ const Index = () => {
               Book affordable flights across Kenya with ease. Search, book, and fly with confidence.
             </p>
             <div className="flex gap-4">
-              <Link to="/flights" className="btn btn-primary py-3 px-8 rounded-md text-lg">
+              <Link to="/flights" className="bg-flysafari-primary hover:bg-flysafari-primary/90 text-white py-3 px-8 rounded-md text-lg font-medium">
                 Book a Flight
               </Link>
-              <Link to="/offers" className="btn btn-outline border-white text-white py-3 px-8 rounded-md text-lg hover:bg-white/10">
+              <Link to="/offers" className="bg-flysafari-secondary hover:bg-flysafari-secondary/90 text-white py-3 px-8 rounded-md text-lg font-medium border border-white">
                 View Offers
               </Link>
             </div>
