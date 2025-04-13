@@ -72,14 +72,14 @@ const AdminBookings = () => {
           .from('bookings')
           .select(`
             *,
-            flight:flight_id (
+            flight_id (
               flight_number,
               airline,
               departure_city,
               arrival_city,
               departure_time
             ),
-            return_flight:return_flight_id (
+            return_flight_id (
               flight_number,
               airline,
               departure_city,
@@ -93,11 +93,11 @@ const AdminBookings = () => {
           throw error;
         }
         
-        // Transform the data to ensure it matches the Booking interface
+        // Transform the data to match the Booking interface
         const formattedBookings: Booking[] = (data || []).map(booking => ({
           ...booking,
-          flight: booking.flight || null,
-          return_flight: booking.return_flight || null
+          flight: booking.flight_id || null,
+          return_flight: booking.return_flight_id || null
         }));
         
         setBookings(formattedBookings);
@@ -212,14 +212,14 @@ const AdminBookings = () => {
         .from('bookings')
         .select(`
           *,
-          flight:flight_id (
+          flight_id (
             flight_number,
             airline,
             departure_city,
             arrival_city,
             departure_time
           ),
-          return_flight:return_flight_id (
+          return_flight_id (
             flight_number,
             airline,
             departure_city,
@@ -233,11 +233,11 @@ const AdminBookings = () => {
         throw error;
       }
       
-      // Transform the data to ensure it matches the Booking interface
+      // Transform the data to match the Booking interface
       const formattedBookings: Booking[] = (data || []).map(booking => ({
         ...booking,
-        flight: booking.flight || null,
-        return_flight: booking.return_flight || null
+        flight: booking.flight_id || null,
+        return_flight: booking.return_flight_id || null
       }));
       
       setBookings(formattedBookings);

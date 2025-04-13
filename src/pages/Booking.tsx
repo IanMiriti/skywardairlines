@@ -296,7 +296,7 @@ const Booking = () => {
         setPaymentError("Payment was not successful. Please try again.");
       }
     },
-    onclose: () => {
+    onClose: () => {
       console.log("Payment modal closed");
     }
   };
