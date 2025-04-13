@@ -31,6 +31,9 @@ import AdminCancellations from "./pages/admin/Cancellations";
 import AdminUsers from "./pages/admin/Users";
 import AdminRoute from "./components/admin/AdminRoute";
 import AuthRoute from "./components/AuthRoute";
+import AuthRoleSelect from "./pages/AuthRoleSelect";
+import CustomerAuthPage from "./pages/CustomerAuthPage";
+import AdminAuthPage from "./pages/AdminAuthPage";
 
 // Create a query client
 const queryClient = new QueryClient({
@@ -102,8 +105,11 @@ const App = () => {
                 />
                 
                 {/* Authentication routes */}
-                <Route path="/sign-in" element={<SignIn />} />
-                <Route path="/sign-up" element={<SignUp />} />
+                <Route path="/auth" element={<AuthRoleSelect />} />
+                <Route path="/auth/customer" element={<CustomerAuthPage />} />
+                <Route path="/auth/admin" element={<AdminAuthPage />} /> 
+                <Route path="/sign-in" element={<Navigate to="/auth/customer" replace />} />
+                <Route path="/sign-up" element={<Navigate to="/auth/customer" replace />} />
               </Route>
               
               {/* Admin routes */}

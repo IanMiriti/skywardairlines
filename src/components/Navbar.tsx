@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, Plane, LogIn, LogOut, User, UserCircle } from "lucide-react";
@@ -78,18 +77,11 @@ const Navbar = () => {
       return (
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate("/sign-in")}
+            onClick={() => navigate("/auth")}
             className="btn-outline btn py-2 px-4 flex items-center gap-2"
           >
             <LogIn size={18} />
             <span>Sign In</span>
-          </button>
-          <button
-            onClick={() => navigate("/sign-up")}
-            className="btn btn-primary py-2 px-4 flex items-center gap-2"
-          >
-            <User size={18} />
-            <span>Sign Up</span>
           </button>
         </div>
       );
@@ -167,23 +159,13 @@ const Navbar = () => {
         <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">
           <button
             onClick={() => {
-              navigate("/sign-in");
+              navigate("/auth");
               toggleMenu();
             }}
             className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center"
           >
             <LogIn size={18} />
             <span>Sign In</span>
-          </button>
-          <button
-            onClick={() => {
-              navigate("/sign-up");
-              toggleMenu();
-            }}
-            className="btn btn-primary py-2 text-center w-full flex items-center gap-2 justify-center"
-          >
-            <User size={18} />
-            <span>Sign Up</span>
           </button>
         </div>
       );
@@ -194,7 +176,6 @@ const Navbar = () => {
     <nav className="bg-white shadow-sm">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <Plane className="h-6 w-6 text-flysafari-primary" />
             <span className="text-xl font-bold text-flysafari-dark">
@@ -202,7 +183,6 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/flights" className="text-gray-700 hover:text-flysafari-primary">
               Flights
@@ -215,12 +195,10 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Auth Buttons - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
             {renderAuthButtons()}
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
               onClick={toggleMenu}
@@ -235,7 +213,6 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden mt-4 pb-4 space-y-4">
             <Link
