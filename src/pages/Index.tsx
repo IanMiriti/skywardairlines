@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Plane, 
   Calendar, 
@@ -8,17 +8,21 @@ import {
   ArrowRight, 
   CheckCircle2,
   MapPin,
-  BookOpen
+  BookOpen,
+  ArrowLeftRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeroImage from "@/assets/hero-image.png";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useState({
     from: "",
     to: "",
-    date: "",
-    passengers: 1
+    departureDate: "",
+    returnDate: "",
+    passengers: 1,
+    tripType: "oneWay" // Default to one-way trip
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -26,10 +30,26 @@ const Index = () => {
     setSearchParams((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleTripTypeChange = (type: string) => {
+    setSearchParams((prev) => ({ ...prev, tripType: type }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Navigate to flights page with search params
-    window.location.href = `/flights?from=${searchParams.from}&to=${searchParams.to}&date=${searchParams.date}&passengers=${searchParams.passengers}`;
+    const queryParams = new URLSearchParams();
+    queryParams.append("from", searchParams.from);
+    queryParams.append("to", searchParams.to);
+    queryParams.append("departureDate", searchParams.departureDate);
+    
+    if (searchParams.tripType === "roundTrip") {
+      queryParams.append("returnDate", searchParams.returnDate);
+    }
+    
+    queryParams.append("passengers", searchParams.passengers.toString());
+    queryParams.append("tripType", searchParams.tripType);
+    
+    navigate(`/flights?${queryParams.toString()}`);
   };
 
   // Sample featured offers
@@ -62,7 +82,7 @@ const Index = () => {
 
   // Popular destinations in Kenya
   const popularDestinations = [
-    "Nairobi", "Mombasa", "Kisumu", "Malindi", "Eldoret", "Lamu", "Ukunda"
+    "Nairobi", "Mombasa", "Kisumu", "Malindi", "Eldoret", "Lamu", "Ukunda", "Diani", "Lokichoggio"
   ];
 
   return (
@@ -104,6 +124,32 @@ const Index = () => {
             <h2 className="text-2xl font-bold mb-6 text-flysafari-dark">Search for Flights</h2>
             
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Trip Type Selection */}
+              <div className="flex bg-gray-100 p-1 rounded-lg mb-4 w-full md:w-1/2">
+                <button 
+                  type="button"
+                  className={`flex-1 py-2 px-4 text-center rounded-md transition-colors ${
+                    searchParams.tripType === "oneWay" 
+                      ? "bg-flysafari-primary text-white" 
+                      : "text-gray-700 hover:bg-gray-200"
+                  }`}
+                  onClick={() => handleTripTypeChange("oneWay")}
+                >
+                  One Way
+                </button>
+                <button 
+                  type="button"
+                  className={`flex-1 py-2 px-4 text-center rounded-md transition-colors ${
+                    searchParams.tripType === "roundTrip" 
+                      ? "bg-flysafari-primary text-white" 
+                      : "text-gray-700 hover:bg-gray-200"
+                  }`}
+                  onClick={() => handleTripTypeChange("roundTrip")}
+                >
+                  Round Trip
+                </button>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label htmlFor="from" className="text-sm font-medium text-gray-700">From</label>
@@ -148,14 +194,14 @@ const Index = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="date" className="text-sm font-medium text-gray-700">Departure Date</label>
+                  <label htmlFor="departureDate" className="text-sm font-medium text-gray-700">Departure Date</label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
                       type="date"
-                      id="date"
-                      name="date"
-                      value={searchParams.date}
+                      id="departureDate"
+                      name="departureDate"
+                      value={searchParams.departureDate}
                       onChange={handleInputChange}
                       required
                       className="form-input pl-10 w-full"
@@ -164,26 +210,71 @@ const Index = () => {
                   </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <label htmlFor="passengers" className="text-sm font-medium text-gray-700">Passengers</label>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <select
-                      id="passengers"
-                      name="passengers"
-                      value={searchParams.passengers}
-                      onChange={handleInputChange}
-                      className="form-input pl-10 w-full"
-                    >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-                        <option key={num} value={num}>
-                          {num} {num === 1 ? "Passenger" : "Passengers"}
-                        </option>
-                      ))}
-                    </select>
+                {searchParams.tripType === "roundTrip" && (
+                  <div className="space-y-2">
+                    <label htmlFor="returnDate" className="text-sm font-medium text-gray-700">Return Date</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <input
+                        type="date"
+                        id="returnDate"
+                        name="returnDate"
+                        value={searchParams.returnDate}
+                        onChange={handleInputChange}
+                        required
+                        className="form-input pl-10 w-full"
+                        min={searchParams.departureDate || new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {searchParams.tripType === "oneWay" && (
+                  <div className="space-y-2">
+                    <label htmlFor="passengers" className="text-sm font-medium text-gray-700">Passengers</label>
+                    <div className="relative">
+                      <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <select
+                        id="passengers"
+                        name="passengers"
+                        value={searchParams.passengers}
+                        onChange={handleInputChange}
+                        className="form-input pl-10 w-full"
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                          <option key={num} value={num}>
+                            {num} {num === 1 ? "Passenger" : "Passengers"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {searchParams.tripType === "roundTrip" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="passengers" className="text-sm font-medium text-gray-700">Passengers</label>
+                    <div className="relative">
+                      <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <select
+                        id="passengers"
+                        name="passengers"
+                        value={searchParams.passengers}
+                        onChange={handleInputChange}
+                        className="form-input pl-10 w-full"
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                          <option key={num} value={num}>
+                            {num} {num === 1 ? "Passenger" : "Passengers"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
               
               <button
                 type="submit"

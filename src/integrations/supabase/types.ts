@@ -9,6 +9,150 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          booking_reference: string
+          booking_status: string | null
+          created_at: string | null
+          email: string
+          flight_id: string
+          id: string
+          id_passport_number: string
+          is_round_trip: boolean | null
+          passenger_count: number
+          passenger_name: string
+          payment_method: string | null
+          payment_reference: string | null
+          payment_status: string | null
+          phone_number: string
+          return_flight_id: string | null
+          special_requests: string | null
+          total_amount: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          booking_reference: string
+          booking_status?: string | null
+          created_at?: string | null
+          email: string
+          flight_id: string
+          id?: string
+          id_passport_number: string
+          is_round_trip?: boolean | null
+          passenger_count?: number
+          passenger_name: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          phone_number: string
+          return_flight_id?: string | null
+          special_requests?: string | null
+          total_amount: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          booking_reference?: string
+          booking_status?: string | null
+          created_at?: string | null
+          email?: string
+          flight_id?: string
+          id?: string
+          id_passport_number?: string
+          is_round_trip?: boolean | null
+          passenger_count?: number
+          passenger_name?: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          phone_number?: string
+          return_flight_id?: string | null
+          special_requests?: string | null
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_flight_id_fkey"
+            columns: ["flight_id"]
+            isOneToOne: false
+            referencedRelation: "flights"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_return_flight_id_fkey"
+            columns: ["return_flight_id"]
+            isOneToOne: false
+            referencedRelation: "flights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flights: {
+        Row: {
+          aircraft: string | null
+          airline: Database["public"]["Enums"]["airline"]
+          amenities: string[] | null
+          arrival_city: string
+          arrival_time: string
+          available_seats: number
+          baggage_allowance: string
+          created_at: string | null
+          departure_city: string
+          departure_time: string
+          duration: string
+          flight_number: string
+          gate: string | null
+          id: string
+          price: number
+          status: Database["public"]["Enums"]["flight_status"] | null
+          terminal: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aircraft?: string | null
+          airline: Database["public"]["Enums"]["airline"]
+          amenities?: string[] | null
+          arrival_city: string
+          arrival_time: string
+          available_seats: number
+          baggage_allowance: string
+          created_at?: string | null
+          departure_city: string
+          departure_time: string
+          duration: string
+          flight_number: string
+          gate?: string | null
+          id?: string
+          price: number
+          status?: Database["public"]["Enums"]["flight_status"] | null
+          terminal?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aircraft?: string | null
+          airline?: Database["public"]["Enums"]["airline"]
+          amenities?: string[] | null
+          arrival_city?: string
+          arrival_time?: string
+          available_seats?: number
+          baggage_allowance?: string
+          created_at?: string | null
+          departure_city?: string
+          departure_time?: string
+          duration?: string
+          flight_number?: string
+          gate?: string | null
+          id?: string
+          price?: number
+          status?: Database["public"]["Enums"]["flight_status"] | null
+          terminal?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -47,6 +191,19 @@ export type Database = {
       }
     }
     Enums: {
+      airline:
+        | "Kenya Airways"
+        | "Jambojet"
+        | "Fly540"
+        | "SafariLink"
+        | "Skyward Express"
+        | "AirKenya"
+      flight_status:
+        | "scheduled"
+        | "departed"
+        | "arrived"
+        | "cancelled"
+        | "delayed"
       user_role: "admin" | "user"
     }
     CompositeTypes: {
@@ -163,6 +320,21 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      airline: [
+        "Kenya Airways",
+        "Jambojet",
+        "Fly540",
+        "SafariLink",
+        "Skyward Express",
+        "AirKenya",
+      ],
+      flight_status: [
+        "scheduled",
+        "departed",
+        "arrived",
+        "cancelled",
+        "delayed",
+      ],
       user_role: ["admin", "user"],
     },
   },

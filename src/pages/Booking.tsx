@@ -1,5 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { format, parseISO } from "date-fns";
+import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
 import { 
   Plane, 
   Calendar, 
@@ -10,65 +13,149 @@ import {
   Phone,
   Mail,
   User,
-  ArrowLeft
+  ArrowLeft,
+  CreditCard as CreditCardIcon,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  ArrowLeftRight
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
-// Use the same mock flight data from FlightDetails
-const mockFlights = [
-  {
-    id: 1,
-    airline: "Kenya Airways",
-    flightNumber: "KQ123",
-    from: "Nairobi",
-    to: "Mombasa",
-    departureTime: "08:00 AM",
-    arrivalTime: "09:00 AM",
-    date: "2025-05-01",
-    price: 12500,
-    duration: "1h",
-    seatsAvailable: 25,
-    aircraft: "Boeing 737-800",
-    amenities: ["Wi-Fi", "In-flight meals", "Entertainment"],
-    baggageAllowance: "23kg checked, 7kg cabin",
-    terminal: "Terminal 1A",
-    gate: "Gate 5",
-    status: "Scheduled"
-  },
-  // ...other flights from previous component
-];
+// Flutterwave library
+import { FlutterWaveButton, closePaymentModal } from 'flutterwave-react-v3';
+
+// Flight interface
+interface Flight {
+  id: string;
+  airline: string;
+  flight_number: string;
+  departure_city: string;
+  arrival_city: string;
+  departure_time: string;
+  arrival_time: string;
+  price: number;
+  duration: string;
+  available_seats: number;
+  baggage_allowance: string;
+  aircraft?: string;
+  amenities?: string[];
+  terminal?: string;
+  gate?: string;
+  status?: string;
+}
+
+// Form data interface
+interface FormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  idPassport: string;
+  specialRequests: string;
+  agreeToTerms: boolean;
+}
 
 const Booking = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
+  const { user, isSignedIn, isLoaded } = useUser();
   
-  const [flight, setFlight] = useState<any>(null);
+  // Parse query params
+  const [passengerCount, setPassengerCount] = useState(Number(queryParams.get('passengers')) || 1);
+  const [tripType] = useState(queryParams.get('tripType') || 'oneWay');
+  const [returnFlightId] = useState(queryParams.get('returnFlightId') || null);
+  
+  // State for flight data
+  const [flight, setFlight] = useState<Flight | null>(null);
+  const [returnFlight, setReturnFlight] = useState<Flight | null>(null);
   const [loading, setLoading] = useState(true);
-  const [passengerCount, setPassengerCount] = useState(1);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
+    idPassport: "",
     specialRequests: "",
     agreeToTerms: false
   });
   
+  // State for payment
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [bookingReference, setBookingReference] = useState<string | null>(null);
+  
+  // Generate a booking reference
+  const generateBookingReference = () => {
+    const prefix = 'FS';
+    const randomDigits = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    return `${prefix}${randomDigits}`;
+  };
+  
   useEffect(() => {
-    // Get passenger count from URL
-    const passengersParam = queryParams.get("passengers");
-    if (passengersParam) {
-      setPassengerCount(Number(passengersParam));
+    // Auto-fill user data if signed in
+    if (isLoaded && isSignedIn && user) {
+      setFormData(prevData => ({
+        ...prevData,
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.primaryEmailAddress?.emailAddress || ""
+      }));
     }
+  }, [isLoaded, isSignedIn, user]);
+  
+  useEffect(() => {
+    const fetchFlightDetails = async () => {
+      setLoading(true);
+      
+      try {
+        // Fetch the main flight
+        const { data, error } = await supabase
+          .from('flights')
+          .select('*')
+          .eq('id', id)
+          .single();
+          
+        if (error) {
+          throw error;
+        }
+        
+        setFlight(data);
+        
+        // If it's a round trip and we have a return flight ID, fetch that too
+        if (returnFlightId) {
+          const { data: returnData, error: returnError } = await supabase
+            .from('flights')
+            .select('*')
+            .eq('id', returnFlightId)
+            .single();
+            
+          if (returnError) {
+            console.error('Error fetching return flight:', returnError);
+          } else {
+            setReturnFlight(returnData);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching flight details:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load flight details. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    // Simulate API fetch
-    setTimeout(() => {
-      const foundFlight = mockFlights.find(f => f.id.toString() === id);
-      setFlight(foundFlight || null);
-      setLoading(false);
-    }, 500);
-  }, [id, queryParams]);
+    if (id) {
+      fetchFlightDetails();
+    }
+  }, [id, returnFlightId]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
@@ -80,16 +167,6 @@ const Booking = () => {
     });
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // In a real app, you would process the booking here
-    console.log("Booking submitted:", { flight, passengerCount, formData });
-    
-    // For demo purposes, just navigate to the confirmation page
-    navigate(`/booking/${id}/confirmation`);
-  };
-  
   // Format price in KES
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-KE', {
@@ -97,6 +174,207 @@ const Booking = () => {
       currency: 'KES',
       minimumFractionDigits: 0,
     }).format(price);
+  };
+  
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    try {
+      const date = parseISO(dateString);
+      return format(date, 'EEE, MMM d, yyyy');
+    } catch (e) {
+      console.error('Date parsing error:', e);
+      return dateString;
+    }
+  };
+  
+  // Format time for display
+  const formatTime = (dateString: string) => {
+    try {
+      const date = parseISO(dateString);
+      return format(date, 'h:mm a');
+    } catch (e) {
+      console.error('Time parsing error:', e);
+      return dateString;
+    }
+  };
+  
+  // Calculate total price
+  const calculateTotalPrice = () => {
+    let basePrice = 0;
+    
+    if (flight) {
+      basePrice += flight.price;
+    }
+    
+    if (tripType === 'roundTrip' && returnFlight) {
+      basePrice += returnFlight.price;
+    }
+    
+    return basePrice * passengerCount;
+  };
+  
+  // Calculate taxes
+  const calculateTaxes = () => {
+    return calculateTotalPrice() * 0.16; // 16% tax
+  };
+  
+  // Grand total
+  const calculateGrandTotal = () => {
+    return calculateTotalPrice() + calculateTaxes();
+  };
+  
+  // Save booking to database
+  const saveBooking = async (paymentReference: string = "", paymentStatus: string = "pending") => {
+    try {
+      const ref = generateBookingReference();
+      setBookingReference(ref);
+      
+      // Check if user is signed in
+      if (!isSignedIn || !user) {
+        throw new Error("User must be signed in to complete booking");
+      }
+      
+      const bookingData = {
+        user_id: user.id,
+        flight_id: id,
+        booking_reference: ref,
+        passenger_name: `${formData.firstName} ${formData.lastName}`,
+        id_passport_number: formData.idPassport,
+        phone_number: formData.phone,
+        email: formData.email,
+        passenger_count: passengerCount,
+        total_amount: calculateGrandTotal(),
+        payment_method: "M-PESA via Flutterwave",
+        payment_reference: paymentReference,
+        payment_status: paymentStatus,
+        booking_status: paymentStatus === "completed" ? "confirmed" : "pending",
+        is_round_trip: tripType === 'roundTrip',
+        return_flight_id: returnFlightId,
+        special_requests: formData.specialRequests || null
+      };
+      
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert(bookingData)
+        .select();
+        
+      if (error) {
+        throw error;
+      }
+      
+      return data[0];
+    } catch (error) {
+      console.error('Error saving booking:', error);
+      toast({
+        title: "Booking Error",
+        description: "Failed to save booking details.",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+  
+  // Initialize Flutterwave configuration
+  const flutterwaveConfig = {
+    public_key: "FLWPUBK_TEST-27eb6ebf4d92f44eee8c8dc83e2c2a71-X", // This is a test key
+    tx_ref: Date.now().toString(),
+    amount: calculateGrandTotal(),
+    currency: 'KES',
+    payment_options: 'mpesa',
+    customer: {
+      email: formData.email,
+      phone_number: formData.phone,
+      name: `${formData.firstName} ${formData.lastName}`,
+    },
+    customizations: {
+      title: 'FlySafari Flight Booking',
+      description: `Booking for flight ${flight?.flight_number} from ${flight?.departure_city} to ${flight?.arrival_city}`,
+      logo: 'https://cdn-icons-png.flaticon.com/512/5403/5403491.png',
+    },
+    callback: async (response: any) => {
+      console.log("Payment callback:", response);
+      closePaymentModal();
+      
+      if (response.status === "successful") {
+        setIsProcessingPayment(true);
+        
+        try {
+          const booking = await saveBooking(response.transaction_id, "completed");
+          setPaymentSuccess(true);
+          
+          // Navigate to confirmation page
+          navigate(`/booking/${id}/confirmation?bookingId=${booking.id}&reference=${booking.booking_reference}`);
+        } catch (error) {
+          console.error("Error processing successful payment:", error);
+          setPaymentError("Payment was successful but we couldn't complete your booking. Please contact support.");
+        } finally {
+          setIsProcessingPayment(false);
+        }
+      } else {
+        setPaymentError("Payment was not successful. Please try again.");
+      }
+    },
+    onclose: () => {
+      console.log("Payment modal closed");
+    }
+  };
+  
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.idPassport) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!formData.agreeToTerms) {
+      toast({
+        title: "Terms & Conditions",
+        description: "Please agree to the terms and conditions to proceed.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // For trip types that need return flights
+    if (tripType === 'roundTrip' && !returnFlightId) {
+      toast({
+        title: "Return Flight Required",
+        description: "Please select a return flight for your round trip booking.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // If the user is not signed in, redirect to sign-in page
+    if (!isSignedIn) {
+      toast({
+        title: "Login Required",
+        description: "Please sign in to complete your booking.",
+        variant: "default"
+      });
+      
+      // Save booking details to local storage and redirect
+      localStorage.setItem('pendingBooking', JSON.stringify({
+        flightId: id,
+        returnFlightId: returnFlightId,
+        passengerCount,
+        tripType,
+        formData
+      }));
+      
+      navigate('/sign-in?redirectTo=' + encodeURIComponent(`/booking/${id}?${queryParams.toString()}`));
+      return;
+    }
+    
+    // If everything is valid, proceed with payment
+    // Flutterwave button click will handle the rest
+    document.getElementById('flutterwave-payment-button')?.click();
   };
   
   if (loading) {
@@ -124,6 +402,49 @@ const Booking = () => {
     );
   }
   
+  if (isProcessingPayment) {
+    return (
+      <div className="container py-16 text-center">
+        <Loader2 size={48} className="animate-spin text-flysafari-primary mx-auto mb-4" />
+        <h2 className="text-2xl font-bold mb-2">Processing Your Booking</h2>
+        <p className="text-gray-600 mb-8">Please wait while we confirm your payment and complete your booking...</p>
+      </div>
+    );
+  }
+  
+  if (paymentError) {
+    return (
+      <div className="container py-16 text-center">
+        <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold mb-2">Payment Error</h2>
+        <p className="text-gray-600 mb-6">{paymentError}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="btn btn-primary"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+  
+  if (paymentSuccess) {
+    return (
+      <div className="container py-16 text-center">
+        <CheckCircle2 size={48} className="text-green-500 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold mb-2">Booking Successful!</h2>
+        <p className="text-gray-600 mb-2">Your booking reference: <span className="font-semibold">{bookingReference}</span></p>
+        <p className="text-gray-600 mb-6">We've sent your e-ticket to your email.</p>
+        <button
+          onClick={() => navigate("/my-bookings")}
+          className="btn btn-primary"
+        >
+          View My Bookings
+        </button>
+      </div>
+    );
+  }
+  
   return (
     <div className="bg-gray-50 min-h-screen py-12">
       <div className="container">
@@ -144,13 +465,27 @@ const Booking = () => {
                 <h1 className="text-xl font-bold">Complete Your Booking</h1>
               </div>
               
-              <form onSubmit={handleSubmit} className="p-6">
+              <SignedOut>
+                <div className="bg-yellow-50 p-4 border-b border-yellow-100">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle size={20} className="text-yellow-500 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-yellow-700">Sign in to complete your booking</h3>
+                      <p className="text-sm mt-1 text-yellow-600">
+                        You need to be signed in to complete your booking. You can continue filling out your details, but you'll need to sign in before payment.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </SignedOut>
+              
+              <form onSubmit={handleFormSubmit} className="p-6">
                 <h2 className="text-lg font-semibold mb-4">Passenger Information</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                      First Name
+                      First Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -169,7 +504,7 @@ const Booking = () => {
                   
                   <div>
                     <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Last Name
+                      Last Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -188,7 +523,7 @@ const Booking = () => {
                   
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address
+                      Email Address <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -207,7 +542,7 @@ const Booking = () => {
                   
                   <div>
                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number
+                      Phone Number <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -219,9 +554,34 @@ const Booking = () => {
                         onChange={handleInputChange}
                         required
                         className="form-input pl-10 w-full"
-                        placeholder="Enter your phone number"
+                        placeholder="e.g. 07XXXXXXXX"
                       />
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      This number will be used for M-PESA payment and flight updates.
+                    </p>
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <label htmlFor="idPassport" className="block text-sm font-medium text-gray-700 mb-1">
+                      ID / Passport Number <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <CreditCardIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      <input
+                        type="text"
+                        id="idPassport"
+                        name="idPassport"
+                        value={formData.idPassport}
+                        onChange={handleInputChange}
+                        required
+                        className="form-input pl-10 w-full"
+                        placeholder="Enter your ID or passport number"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Required for security and check-in purposes.
+                    </p>
                   </div>
                 </div>
                 
@@ -259,10 +619,12 @@ const Booking = () => {
                       <a href="#" className="text-flysafari-primary hover:underline">
                         Privacy Policy
                       </a>
+                      . I confirm that the information provided is accurate.
                     </span>
                   </label>
                 </div>
                 
+                {/* Payment security notice */}
                 <div className="p-4 bg-gray-50 rounded-md mb-6">
                   <h3 className="text-md font-semibold mb-2 flex items-center gap-2">
                     <Shield size={16} className="text-flysafari-primary" />
@@ -270,13 +632,26 @@ const Booking = () => {
                   </h3>
                   <p className="text-sm text-gray-600">
                     Your payment and personal information are protected by secure encryption.
+                    We use Flutterwave, a trusted payment gateway for secure M-PESA transactions.
                   </p>
                 </div>
                 
+                {/* Flutterwave Button (hidden) */}
+                <div className="hidden">
+                  <FlutterWaveButton
+                    {...flutterwaveConfig}
+                    className="btn btn-primary"
+                    id="flutterwave-payment-button"
+                    text="Pay with M-PESA"
+                  />
+                </div>
+                
+                {/* Proceed to Payment button */}
                 <button
                   type="submit"
-                  className="btn btn-secondary w-full py-3 text-base"
+                  className="btn btn-secondary w-full py-3 text-base flex items-center justify-center gap-2"
                 >
+                  <CreditCardIcon size={18} />
                   Proceed to Payment
                 </button>
               </form>
@@ -288,19 +663,30 @@ const Booking = () => {
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
               <h2 className="text-xl font-semibold mb-4">Booking Summary</h2>
               
+              {/* Trip type badge */}
+              {tripType === 'roundTrip' && (
+                <div className="mb-4 inline-flex items-center gap-2 bg-flysafari-primary/10 text-flysafari-primary py-1 px-3 rounded-full text-sm">
+                  <ArrowLeftRight size={16} />
+                  <span>Round Trip</span>
+                </div>
+              )}
+              
+              {/* Outbound flight */}
               <div className="border-b border-gray-200 pb-4 mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
                     <Plane size={18} className="text-flysafari-primary" />
-                    <span className="font-medium">{flight.airline}</span>
+                    <span className="font-medium">
+                      {tripType === 'roundTrip' ? 'Outbound' : 'Flight'}
+                    </span>
                   </div>
-                  <span className="text-sm text-gray-500">{flight.flightNumber}</span>
+                  <span className="text-sm text-gray-500">{flight.flight_number}</span>
                 </div>
                 
                 <div className="flex items-center my-3">
                   <div className="text-center">
-                    <p className="text-lg font-bold">{flight.departureTime}</p>
-                    <p className="text-sm text-gray-500">{flight.from}</p>
+                    <p className="text-lg font-bold">{formatTime(flight.departure_time)}</p>
+                    <p className="text-sm text-gray-500">{flight.departure_city}</p>
                   </div>
                   <div className="mx-3 flex flex-col items-center flex-1">
                     <div className="text-xs text-gray-500 mb-1">{flight.duration}</div>
@@ -310,53 +696,93 @@ const Booking = () => {
                     </div>
                   </div>
                   <div className="text-center">
-                    <p className="text-lg font-bold">{flight.arrivalTime}</p>
-                    <p className="text-sm text-gray-500">{flight.to}</p>
+                    <p className="text-lg font-bold">{formatTime(flight.arrival_time)}</p>
+                    <p className="text-sm text-gray-500">{flight.arrival_city}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <Calendar size={14} />
-                    <span>{flight.date}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users size={14} />
-                    <span>{passengerCount} {passengerCount === 1 ? "Passenger" : "Passengers"}</span>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">{formatDate(flight.departure_time)}</span>
+                  <span className="text-sm font-medium">{formatPrice(flight.price)}</span>
                 </div>
               </div>
               
+              {/* Return flight if round trip */}
+              {tripType === 'roundTrip' && returnFlight && (
+                <div className="border-b border-gray-200 pb-4 mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2">
+                      <Plane size={18} className="text-flysafari-secondary" />
+                      <span className="font-medium">Return</span>
+                    </div>
+                    <span className="text-sm text-gray-500">{returnFlight.flight_number}</span>
+                  </div>
+                  
+                  <div className="flex items-center my-3">
+                    <div className="text-center">
+                      <p className="text-lg font-bold">{formatTime(returnFlight.departure_time)}</p>
+                      <p className="text-sm text-gray-500">{returnFlight.departure_city}</p>
+                    </div>
+                    <div className="mx-3 flex flex-col items-center flex-1">
+                      <div className="text-xs text-gray-500 mb-1">{returnFlight.duration}</div>
+                      <div className="w-full h-0.5 bg-gray-300 relative">
+                        <div className="absolute -left-1 -top-1.5 w-2 h-2 rounded-full bg-flysafari-secondary"></div>
+                        <div className="absolute -right-1 -top-1.5 w-2 h-2 rounded-full bg-flysafari-primary"></div>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold">{formatTime(returnFlight.arrival_time)}</p>
+                      <p className="text-sm text-gray-500">{returnFlight.arrival_city}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">{formatDate(returnFlight.departure_time)}</span>
+                    <span className="text-sm font-medium">{formatPrice(returnFlight.price)}</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Passenger count */}
+              <div className="flex justify-between items-center mb-4 py-2">
+                <span>Passengers</span>
+                <span>{passengerCount} {passengerCount === 1 ? 'passenger' : 'passengers'}</span>
+              </div>
+              
+              {/* Price breakdown */}
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
-                  <span>Flight Price ({passengerCount} {passengerCount === 1 ? "passenger" : "passengers"})</span>
-                  <span>{formatPrice(flight.price * passengerCount)}</span>
+                  <span>Flight Price</span>
+                  <span>{formatPrice(calculateTotalPrice())}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Taxes & Fees</span>
-                  <span>{formatPrice(flight.price * passengerCount * 0.16)}</span>
+                  <span>{formatPrice(calculateTaxes())}</span>
                 </div>
                 <div className="border-t border-gray-200 pt-3 font-bold flex justify-between">
                   <span>Total</span>
                   <span className="text-flysafari-primary">
-                    {formatPrice(flight.price * passengerCount * 1.16)}
+                    {formatPrice(calculateGrandTotal())}
                   </span>
                 </div>
               </div>
               
+              {/* Payment method */}
               <div className="bg-gray-50 p-4 rounded-md">
                 <h3 className="font-medium mb-2 flex items-center gap-2">
-                  <CreditCard size={16} className="text-flysafari-primary" />
-                  Payment Options
+                  <CreditCardIcon size={16} className="text-flysafari-primary" />
+                  Payment Method
                 </h3>
                 <p className="text-sm text-gray-600 mb-2">
-                  Secure payment via M-PESA, processed by Flutterwave.
+                  Payment via M-PESA, processed securely by Flutterwave.
                 </p>
-                <img 
-                  src="https://cdn.filestackcontent.com/oEP1I38aTtyRlEUo0VkX" 
-                  alt="M-PESA Logo" 
-                  className="h-10 mx-auto"
-                />
+                <div className="flex items-center justify-center">
+                  <img 
+                    src="https://cdn.filestackcontent.com/oEP1I38aTtyRlEUo0VkX" 
+                    alt="M-PESA Logo" 
+                    className="h-10"
+                  />
+                </div>
               </div>
             </div>
           </div>

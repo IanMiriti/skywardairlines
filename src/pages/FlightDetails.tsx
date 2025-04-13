@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
+import { format, parseISO } from "date-fns";
 import { 
   Plane, 
   Calendar, 
@@ -10,123 +11,93 @@ import {
   Info, 
   Luggage,
   Shield,
-  AlertCircle
+  AlertCircle,
+  ArrowLeftRight
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
-// Mock flight data
-const mockFlights = [
-  {
-    id: 1,
-    airline: "Kenya Airways",
-    flightNumber: "KQ123",
-    from: "Nairobi",
-    to: "Mombasa",
-    departureTime: "08:00 AM",
-    arrivalTime: "09:00 AM",
-    date: "2025-05-01",
-    price: 12500,
-    duration: "1h",
-    seatsAvailable: 25,
-    aircraft: "Boeing 737-800",
-    amenities: ["Wi-Fi", "In-flight meals", "Entertainment"],
-    baggageAllowance: "23kg checked, 7kg cabin",
-    terminal: "Terminal 1A",
-    gate: "Gate 5",
-    status: "Scheduled"
-  },
-  {
-    id: 2,
-    airline: "Jambojet",
-    flightNumber: "JM456",
-    from: "Nairobi",
-    to: "Kisumu",
-    departureTime: "10:30 AM",
-    arrivalTime: "11:30 AM",
-    date: "2025-05-01",
-    price: 9800,
-    duration: "1h",
-    seatsAvailable: 18,
-    aircraft: "Bombardier Dash 8 Q400",
-    amenities: ["Complimentary drinks"],
-    baggageAllowance: "15kg checked, 7kg cabin",
-    terminal: "Terminal 1B",
-    gate: "Gate 3",
-    status: "Scheduled"
-  },
-  {
-    id: 3,
-    airline: "Fly540",
-    flightNumber: "FL789",
-    from: "Mombasa",
-    to: "Nairobi",
-    departureTime: "02:15 PM",
-    arrivalTime: "03:15 PM",
-    date: "2025-05-01",
-    price: 11200,
-    duration: "1h",
-    seatsAvailable: 12,
-    aircraft: "ATR 72-500",
-    amenities: ["Complimentary drinks"],
-    baggageAllowance: "15kg checked, 5kg cabin",
-    terminal: "Terminal 2",
-    gate: "Gate 8",
-    status: "Scheduled"
-  },
-  {
-    id: 4,
-    airline: "Safarilink",
-    flightNumber: "SF101",
-    from: "Nairobi",
-    to: "Lamu",
-    departureTime: "07:45 AM",
-    arrivalTime: "09:15 AM",
-    date: "2025-05-01",
-    price: 18500,
-    duration: "1h 30m",
-    seatsAvailable: 8,
-    aircraft: "Cessna Caravan",
-    amenities: ["Scenic views"],
-    baggageAllowance: "15kg checked, 5kg cabin",
-    terminal: "Wilson Airport",
-    gate: "Gate 2",
-    status: "Scheduled"
-  },
-  {
-    id: 5,
-    airline: "Kenya Airways",
-    flightNumber: "KQ321",
-    from: "Kisumu",
-    to: "Nairobi",
-    departureTime: "05:00 PM",
-    arrivalTime: "06:00 PM",
-    date: "2025-05-01",
-    price: 10200,
-    duration: "1h",
-    seatsAvailable: 15,
-    aircraft: "Embraer 190",
-    amenities: ["Wi-Fi", "In-flight meals"],
-    baggageAllowance: "23kg checked, 7kg cabin",
-    terminal: "Terminal 1A",
-    gate: "Gate 7",
-    status: "Scheduled"
-  },
-];
+// Flight interface
+interface Flight {
+  id: string;
+  airline: string;
+  flight_number: string;
+  departure_city: string;
+  arrival_city: string;
+  departure_time: string;
+  arrival_time: string;
+  price: number;
+  duration: string;
+  available_seats: number;
+  baggage_allowance: string;
+  aircraft?: string;
+  amenities?: string[];
+  terminal?: string;
+  gate?: string;
+  status?: string;
+}
 
 const FlightDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [flight, setFlight] = useState<any>(null);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  
+  const [flight, setFlight] = useState<Flight | null>(null);
+  const [returnFlight, setReturnFlight] = useState<Flight | null>(null);
   const [loading, setLoading] = useState(true);
-  const [passengerCount, setPassengerCount] = useState(1);
+  const [returnFlightId, setReturnFlightId] = useState<string | null>(queryParams.get('returnFlightId'));
+  const [passengerCount, setPassengerCount] = useState(Number(queryParams.get('passengers')) || 1);
+  const [tripType] = useState(queryParams.get('tripType') || 'oneWay');
   
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      const foundFlight = mockFlights.find(f => f.id.toString() === id);
-      setFlight(foundFlight || null);
-      setLoading(false);
-    }, 500);
-  }, [id]);
+    const fetchFlightDetails = async () => {
+      setLoading(true);
+      
+      try {
+        // Fetch the main flight
+        const { data, error } = await supabase
+          .from('flights')
+          .select('*')
+          .eq('id', id)
+          .single();
+          
+        if (error) {
+          throw error;
+        }
+        
+        setFlight(data);
+        
+        // If it's a round trip and we have a return flight ID, fetch that too
+        if (returnFlightId) {
+          const { data: returnData, error: returnError } = await supabase
+            .from('flights')
+            .select('*')
+            .eq('id', returnFlightId)
+            .single();
+            
+          if (returnError) {
+            console.error('Error fetching return flight:', returnError);
+          } else {
+            setReturnFlight(returnData);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching flight details:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load flight details. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (id) {
+      fetchFlightDetails();
+    }
+  }, [id, returnFlightId]);
   
   // Format price in KES
   const formatPrice = (price: number) => {
@@ -135,6 +106,75 @@ const FlightDetails = () => {
       currency: 'KES',
       minimumFractionDigits: 0,
     }).format(price);
+  };
+  
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    try {
+      const date = parseISO(dateString);
+      return format(date, 'EEE, MMM d, yyyy');
+    } catch (e) {
+      console.error('Date parsing error:', e);
+      return dateString;
+    }
+  };
+  
+  // Format time for display
+  const formatTime = (dateString: string) => {
+    try {
+      const date = parseISO(dateString);
+      return format(date, 'h:mm a');
+    } catch (e) {
+      console.error('Time parsing error:', e);
+      return dateString;
+    }
+  };
+  
+  // Calculate total price
+  const calculateTotalPrice = () => {
+    let basePrice = 0;
+    
+    if (flight) {
+      basePrice += flight.price;
+    }
+    
+    if (tripType === 'roundTrip' && returnFlight) {
+      basePrice += returnFlight.price;
+    }
+    
+    return basePrice * passengerCount;
+  };
+  
+  // Calculate taxes
+  const calculateTaxes = () => {
+    return calculateTotalPrice() * 0.16; // 16% tax
+  };
+  
+  // Grand total
+  const calculateGrandTotal = () => {
+    return calculateTotalPrice() + calculateTaxes();
+  };
+  
+  // Handle booking
+  const handleBookNow = () => {
+    // Set return flight ID in query params
+    const bookingParams = new URLSearchParams();
+    bookingParams.append('passengers', passengerCount.toString());
+    bookingParams.append('tripType', tripType);
+    
+    if (tripType === 'roundTrip' && returnFlight) {
+      bookingParams.append('returnFlightId', returnFlight.id);
+    }
+    
+    navigate(`/booking/${id}?${bookingParams.toString()}`);
+  };
+  
+  // Handle selecting return flight
+  const handleSelectReturnFlight = () => {
+    if (tripType === 'roundTrip') {
+      // Navigate to return flights
+      navigate(`/flights?from=${flight?.arrival_city}&to=${flight?.departure_city}&departureDate=${queryParams.get('returnDate')}&returnDate=${queryParams.get('departureDate')}&passengers=${passengerCount}&tripType=${tripType}&outboundFlightId=${id}`);
+    }
   };
   
   if (loading) {
@@ -177,17 +217,33 @@ const FlightDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Flight details card */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            {/* Trip type badge */}
+            {tripType === 'roundTrip' && (
+              <div className="mb-4 inline-flex items-center gap-2 bg-flysafari-primary/10 text-flysafari-primary py-1 px-3 rounded-full text-sm">
+                <ArrowLeftRight size={16} />
+                <span>Round Trip</span>
+              </div>
+            )}
+            
+            {/* Outbound flight */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
               {/* Header with airline info */}
               <div className="bg-flysafari-primary text-white p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Plane size={20} />
-                    <h1 className="text-xl font-bold">{flight.airline}</h1>
+                    <h1 className="text-xl font-bold">
+                      {tripType === 'roundTrip' ? 'Outbound Flight' : 'Flight Details'}
+                    </h1>
                   </div>
-                  <span className="text-sm font-medium bg-white/20 py-1 px-3 rounded-full">
-                    {flight.flightNumber}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium bg-white/20 py-1 px-3 rounded-full">
+                      {flight.airline}
+                    </span>
+                    <span className="text-sm font-medium bg-white/20 py-1 px-3 rounded-full">
+                      {flight.flight_number}
+                    </span>
+                  </div>
                 </div>
               </div>
               
@@ -196,8 +252,8 @@ const FlightDetails = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="flex items-center flex-1">
                     <div className="text-center">
-                      <p className="text-2xl font-bold">{flight.departureTime}</p>
-                      <p className="text-gray-500">{flight.from}</p>
+                      <p className="text-2xl font-bold">{formatTime(flight.departure_time)}</p>
+                      <p className="text-gray-500">{flight.departure_city}</p>
                     </div>
                     <div className="mx-6 flex flex-col items-center flex-1">
                       <div className="text-sm text-gray-500 mb-1">{flight.duration}</div>
@@ -205,11 +261,11 @@ const FlightDetails = () => {
                         <div className="absolute -left-1 -top-1.5 w-3 h-3 rounded-full bg-flysafari-primary"></div>
                         <div className="absolute -right-1 -top-1.5 w-3 h-3 rounded-full bg-flysafari-secondary"></div>
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">{flight.status}</div>
+                      <div className="text-xs text-gray-500 mt-1">{flight.status || 'Scheduled'}</div>
                     </div>
                     <div className="text-center">
-                      <p className="text-2xl font-bold">{flight.arrivalTime}</p>
-                      <p className="text-gray-500">{flight.to}</p>
+                      <p className="text-2xl font-bold">{formatTime(flight.arrival_time)}</p>
+                      <p className="text-gray-500">{flight.arrival_city}</p>
                     </div>
                   </div>
                 </div>
@@ -217,11 +273,11 @@ const FlightDetails = () => {
                 <div className="flex flex-wrap gap-6 mt-6 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <Calendar size={16} className="text-flysafari-primary" />
-                    <span>{flight.date}</span>
+                    <span>{formatDate(flight.departure_time)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users size={16} className="text-flysafari-primary" />
-                    <span>{flight.seatsAvailable} seats available</span>
+                    <span>{flight.available_seats} seats available</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock size={16} className="text-flysafari-primary" />
@@ -237,19 +293,19 @@ const FlightDetails = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Aircraft</h3>
-                    <p>{flight.aircraft}</p>
+                    <p>{flight.aircraft || 'Not specified'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Terminal & Gate</h3>
-                    <p>{flight.terminal}, {flight.gate}</p>
+                    <p>{flight.terminal || 'TBD'}, {flight.gate || 'TBD'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Baggage Allowance</h3>
-                    <p>{flight.baggageAllowance}</p>
+                    <p>{flight.baggage_allowance}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Amenities</h3>
-                    <p>{flight.amenities.join(", ")}</p>
+                    <p>{flight.amenities?.join(", ") || 'Standard'}</p>
                   </div>
                 </div>
                 
@@ -264,6 +320,114 @@ const FlightDetails = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Return flight (if round trip) */}
+            {tripType === 'roundTrip' && (
+              <>
+                {returnFlight ? (
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+                    {/* Header with airline info */}
+                    <div className="bg-flysafari-secondary text-white p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Plane size={20} />
+                          <h1 className="text-xl font-bold">Return Flight</h1>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium bg-white/20 py-1 px-3 rounded-full">
+                            {returnFlight.airline}
+                          </span>
+                          <span className="text-sm font-medium bg-white/20 py-1 px-3 rounded-full">
+                            {returnFlight.flight_number}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Flight route and time */}
+                    <div className="p-6 border-b border-gray-200">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="flex items-center flex-1">
+                          <div className="text-center">
+                            <p className="text-2xl font-bold">{formatTime(returnFlight.departure_time)}</p>
+                            <p className="text-gray-500">{returnFlight.departure_city}</p>
+                          </div>
+                          <div className="mx-6 flex flex-col items-center flex-1">
+                            <div className="text-sm text-gray-500 mb-1">{returnFlight.duration}</div>
+                            <div className="w-full h-0.5 bg-gray-300 relative">
+                              <div className="absolute -left-1 -top-1.5 w-3 h-3 rounded-full bg-flysafari-secondary"></div>
+                              <div className="absolute -right-1 -top-1.5 w-3 h-3 rounded-full bg-flysafari-primary"></div>
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">{returnFlight.status || 'Scheduled'}</div>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold">{formatTime(returnFlight.arrival_time)}</p>
+                            <p className="text-gray-500">{returnFlight.arrival_city}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-6 mt-6 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <Calendar size={16} className="text-flysafari-secondary" />
+                          <span>{formatDate(returnFlight.departure_time)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Users size={16} className="text-flysafari-secondary" />
+                          <span>{returnFlight.available_seats} seats available</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock size={16} className="text-flysafari-secondary" />
+                          <span>Duration: {returnFlight.duration}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Flight details */}
+                    <div className="p-6">
+                      <h2 className="text-lg font-semibold mb-4">Flight Details</h2>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Aircraft</h3>
+                          <p>{returnFlight.aircraft || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Terminal & Gate</h3>
+                          <p>{returnFlight.terminal || 'TBD'}, {returnFlight.gate || 'TBD'}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Baggage Allowance</h3>
+                          <p>{returnFlight.baggage_allowance}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Amenities</h3>
+                          <p>{returnFlight.amenities?.join(", ") || 'Standard'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-yellow-100 p-3 rounded-full">
+                        <Plane size={24} className="text-yellow-500" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg">Return Flight Not Selected</h3>
+                        <p className="text-gray-600 mb-4">You haven't selected a return flight yet.</p>
+                        <button 
+                          onClick={handleSelectReturnFlight}
+                          className="btn bg-flysafari-secondary hover:bg-flysafari-secondary/90 text-white"
+                        >
+                          Select Return Flight
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
             
             {/* Cancellation Policy */}
             <div className="bg-white rounded-lg shadow-md p-6 mt-6">
@@ -293,10 +457,11 @@ const FlightDetails = () => {
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
               <h2 className="text-xl font-semibold mb-4">Booking Summary</h2>
               
+              {/* Outbound flight summary */}
               <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
                 <div>
-                  <h3 className="font-medium">{flight.from} to {flight.to}</h3>
-                  <p className="text-sm text-gray-500">{flight.date}</p>
+                  <h3 className="font-medium">{flight.departure_city} to {flight.arrival_city}</h3>
+                  <p className="text-sm text-gray-500">{formatDate(flight.departure_time)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-flysafari-primary">
@@ -305,6 +470,22 @@ const FlightDetails = () => {
                   <p className="text-xs text-gray-500">per passenger</p>
                 </div>
               </div>
+              
+              {/* Return flight summary (if any) */}
+              {tripType === 'roundTrip' && returnFlight && (
+                <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
+                  <div>
+                    <h3 className="font-medium">{returnFlight.departure_city} to {returnFlight.arrival_city}</h3>
+                    <p className="text-sm text-gray-500">{formatDate(returnFlight.departure_time)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-flysafari-secondary">
+                      {formatPrice(returnFlight.price)}
+                    </p>
+                    <p className="text-xs text-gray-500">per passenger</p>
+                  </div>
+                </div>
+              )}
               
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -326,26 +507,36 @@ const FlightDetails = () => {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span>Flight Price ({passengerCount} {passengerCount === 1 ? "passenger" : "passengers"})</span>
-                  <span>{formatPrice(flight.price * passengerCount)}</span>
+                  <span>{formatPrice(calculateTotalPrice())}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Taxes & Fees</span>
-                  <span>{formatPrice(flight.price * passengerCount * 0.16)}</span>
+                  <span>{formatPrice(calculateTaxes())}</span>
                 </div>
                 <div className="border-t border-gray-200 pt-3 font-bold flex justify-between">
                   <span>Total</span>
                   <span className="text-flysafari-primary">
-                    {formatPrice(flight.price * passengerCount * 1.16)}
+                    {formatPrice(calculateGrandTotal())}
                   </span>
                 </div>
               </div>
               
-              <Link 
-                to={`/booking/${flight.id}?passengers=${passengerCount}`}
-                className="btn btn-secondary w-full py-3 text-base flex items-center justify-center gap-2"
-              >
-                Book Now
-              </Link>
+              {/* Booking CTA */}
+              {tripType === 'roundTrip' && !returnFlight ? (
+                <button 
+                  onClick={handleSelectReturnFlight}
+                  className="btn btn-secondary w-full py-3 text-base flex items-center justify-center gap-2"
+                >
+                  Select Return Flight
+                </button>
+              ) : (
+                <button 
+                  onClick={handleBookNow}
+                  className="btn btn-secondary w-full py-3 text-base flex items-center justify-center gap-2"
+                >
+                  Book Now
+                </button>
+              )}
               
               <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
                 <Luggage size={14} />
