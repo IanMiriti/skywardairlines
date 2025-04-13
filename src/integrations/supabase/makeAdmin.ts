@@ -1,10 +1,9 @@
-
 // This file allows making a user an admin by updating their role in the profiles table
 import { supabase } from "./client";
 
 /**
- * Makes a user with a specified Clerk ID an admin by updating their role in the profiles table
- * @param clerkUserId The Clerk user ID to make admin
+ * Makes a user with a specified ID an admin by updating their role in the profiles table
+ * @param userId The user ID to make admin
  * @returns Promise<boolean> Whether the operation was successful
  */
 export const makeUserAdmin = async (userId: string): Promise<boolean> => {
@@ -121,27 +120,29 @@ export const checkAdminExists = async (email: string): Promise<boolean> => {
  * This should be called during application initialization
  */
 export const ensureDefaultAdmin = async (): Promise<void> => {
-  const defaultAdminEmail = 'ianmiriti254@gmail.com';
-  
   try {
-    // Check if the admin already exists
-    const isAdmin = await checkAdminExists(defaultAdminEmail);
+    // Instead of trying to access auth.admin.getUserByEmail which doesn't exist,
+    // we'll look for the profile in the profiles table directly
+    const adminEmail = process.env.ADMIN_EMAIL || '';
+    
+    if (!adminEmail) {
+      console.log("No default admin email configured");
+      return;
+    }
+    
+    // Check if an admin with this email already exists
+    const isAdmin = await checkAdminExists(adminEmail);
     
     if (isAdmin) {
       console.log("Default admin already exists");
       return;
     }
     
-    // Check if a user with this email exists
-    const { data: authUser } = await supabase.auth.admin.getUserByEmail(defaultAdminEmail);
+    // If the admin doesn't exist, we can't create them automatically
+    // from the client side without their auth ID
+    console.log("Default admin user does not exist in profiles table");
+    console.log("Please create an admin user manually or through the authentication process");
     
-    if (authUser?.user) {
-      // User exists, make them admin
-      await makeUserAdmin(authUser.user.id);
-    } else {
-      console.log("Default admin user does not exist in auth system");
-      // We can't create auth users from client side - this would need to be done via a Supabase Edge Function
-    }
   } catch (error) {
     console.error("Error ensuring default admin exists:", error);
   }
