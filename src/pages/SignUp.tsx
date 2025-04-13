@@ -4,30 +4,31 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // Only import Clerk if available
-const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-let ClerkSignUp;
+const hasClerkKey = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+let SignUp;
 
 // Try to dynamically import Clerk components
-if (isClerkAvailable) {
+if (hasClerkKey) {
   try {
     // Use dynamic import to avoid direct dependency on Clerk
-    ClerkSignUp = require("@clerk/clerk-react").SignUp;
+    SignUp = require("@clerk/clerk-react").SignUp;
   } catch (error) {
     console.error("Failed to load Clerk components:", error);
   }
 }
 
-const SignUp = () => {
+const SignUpPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if Clerk publishable key exists for debugging purposes
-    const hasClerkKey = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-    if (!hasClerkKey) {
-      console.error("VITE_CLERK_PUBLISHABLE_KEY is missing. Authentication will not work properly.");
-      setError("Authentication configuration is missing. Please contact support.");
+    // Log the environment status for debugging
+    console.log("Clerk publishable key present:", !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+    
+    if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
+      console.warn("VITE_CLERK_PUBLISHABLE_KEY is missing. Authentication will fall back to demo mode.");
+      setError("Authentication is not available. Please contact the administrator.");
     }
     setIsLoading(false);
   }, []);
@@ -117,11 +118,17 @@ const SignUp = () => {
               {error}
             </div>
           )}
+          {!hasClerkKey && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-md mt-4">
+              ❌ Authentication is not available - VITE_CLERK_PUBLISHABLE_KEY is not set.
+              <p className="text-xs mt-1">Using demo mode instead.</p>
+            </div>
+          )}
         </div>
         
         <div className="bg-white rounded-xl shadow-md overflow-hidden p-4">
-          {isClerkAvailable && ClerkSignUp ? (
-            <ClerkSignUp 
+          {hasClerkKey && SignUp ? (
+            <SignUp 
               routing="path" 
               path="/sign-up" 
               redirectUrl="/handle-auth"
@@ -160,4 +167,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default SignUpPage;

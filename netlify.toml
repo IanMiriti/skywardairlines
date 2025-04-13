@@ -10,13 +10,18 @@
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
 
-# Critical environment variables required for the application to function properly:
+# CRITICAL ENVIRONMENT VARIABLES:
+# ===============================
 # VITE_CLERK_PUBLISHABLE_KEY - REQUIRED for authentication - MUST BE SET IN NETLIFY ENV VARIABLES
+#   * Without this key, authentication will fall back to demo mode
+#   * Get your key from https://clerk.com/
+#
+# Other environment variables:
 # VITE_SUPABASE_URL - Required for database access
 # VITE_SUPABASE_ANON_KEY - Required for database access
 # VITE_FLUTTERWAVE_PUBLIC_KEY - Required for payments (if using payments)
 
-# Netlify environment variables are set in the Netlify dashboard:
+# IMPORTANT: Set these environment variables in the Netlify dashboard:
 # Site settings > Build & deploy > Environment > Environment variables
 
 # Add a build plugin to check for required environment variables
