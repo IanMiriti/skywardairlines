@@ -144,8 +144,10 @@ const MyBookings = () => {
       
       if (bookingToCancel.flight_id) {
         const { error: seatError } = await supabase
-          .from('rpc')
-          .select('increment_available_seats("' + bookingToCancel.flight_id + '", ' + bookingToCancel.passenger_count + ')');
+          .rpc('increment_available_seats', {
+            flight_id: bookingToCancel.flight_id,
+            seats_count: bookingToCancel.passenger_count
+          });
         
         if (seatError) {
           console.error("Error restoring flight seats:", seatError);
@@ -154,8 +156,10 @@ const MyBookings = () => {
       
       if (bookingToCancel.is_round_trip && bookingToCancel.return_flight_id) {
         const { error: returnSeatError } = await supabase
-          .from('rpc')
-          .select('increment_available_seats("' + bookingToCancel.return_flight_id + '", ' + bookingToCancel.passenger_count + ')');
+          .rpc('increment_available_seats', {
+            flight_id: bookingToCancel.return_flight_id,
+            seats_count: bookingToCancel.passenger_count
+          });
         
         if (returnSeatError) {
           console.error("Error restoring return flight seats:", returnSeatError);
