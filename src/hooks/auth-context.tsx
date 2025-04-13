@@ -95,6 +95,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .from('profiles')
             .insert({
               id: user.id,
+              email: user.email,
               full_name: user.user_metadata?.full_name || '',
               role: 'admin'
             });
@@ -160,17 +161,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
     
-    if (response.data.user && !response.error) {
-      // Create a profile entry
-      await supabase
-        .from('profiles')
-        .insert({
-          id: response.data.user.id,
-          full_name: fullName,
-          role: 'user'
-        })
-        .single();
-    }
+    // Profile creation is handled by database trigger
     
     return response;
   };

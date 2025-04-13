@@ -17,7 +17,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth-context";
 import { toast } from "@/hooks/use-toast";
-import { Booking } from "@/utils/types";
+import { Booking, Flight } from "@/utils/types";
 
 const MyBookings = () => {
   // Use authentication context
@@ -37,22 +37,59 @@ const MyBookings = () => {
       console.log("Fetching bookings for user:", user.id);
       
       try {
-        // Fetch bookings from Supabase
-        const { data, error } = await supabase
+        // First get all bookings
+        const { data: bookingsData, error: bookingsError } = await supabase
           .from('bookings')
-          .select(`
-            *,
-            flight:flight_id(*)
-          `)
+          .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
         
-        if (error) {
-          throw error;
+        if (bookingsError) {
+          throw bookingsError;
         }
         
-        console.log("Fetched bookings:", data);
-        setBookings(data || []);
+        if (!bookingsData || bookingsData.length === 0) {
+          setBookings([]);
+          setLoading(false);
+          return;
+        }
+        
+        // Create a map to store flight details for each flight_id
+        const flightDetailsMap = new Map<string, Flight>();
+        
+        // Get unique flight IDs (both outbound and return)
+        const flightIds = new Set<string>();
+        bookingsData.forEach(booking => {
+          if (booking.flight_id) flightIds.add(booking.flight_id);
+          if (booking.return_flight_id) flightIds.add(booking.return_flight_id);
+        });
+        
+        // Fetch flight details for all flight IDs
+        for (const flightId of flightIds) {
+          const { data: flightData, error: flightError } = await supabase
+            .from('flights')
+            .select('*')
+            .eq('id', flightId)
+            .single();
+            
+          if (flightError) {
+            console.error(`Error fetching flight ${flightId}:`, flightError);
+            continue;
+          }
+          
+          flightDetailsMap.set(flightId, flightData as Flight);
+        }
+        
+        // Combine booking data with flight details
+        const fullBookings = bookingsData.map(booking => {
+          return {
+            ...booking,
+            flight: booking.flight_id ? flightDetailsMap.get(booking.flight_id) || null : null,
+            return_flight: booking.return_flight_id ? flightDetailsMap.get(booking.return_flight_id) || null : null
+          } as Booking;
+        });
+        
+        setBookings(fullBookings);
       } catch (error) {
         console.error("Error fetching bookings:", error);
         toast({
@@ -198,13 +235,10 @@ const MyBookings = () => {
     setLoading(true);
     
     try {
-      // Fetch bookings from Supabase
-      const { data, error } = await supabase
+      // Similar to the above but with a simpler structure
+      const { data: bookingsData, error } = await supabase
         .from('bookings')
-        .select(`
-          *,
-          flight:flight_id(*)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
@@ -212,7 +246,49 @@ const MyBookings = () => {
         throw error;
       }
       
-      setBookings(data || []);
+      if (!bookingsData || bookingsData.length === 0) {
+        setBookings([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Create a map to store flight details for each flight_id
+      const flightDetailsMap = new Map<string, Flight>();
+      
+      // Get unique flight IDs (both outbound and return)
+      const flightIds = new Set<string>();
+      bookingsData.forEach(booking => {
+        if (booking.flight_id) flightIds.add(booking.flight_id);
+        if (booking.return_flight_id) flightIds.add(booking.return_flight_id);
+      });
+      
+      // Fetch flight details for all flight IDs
+      for (const flightId of flightIds) {
+        const { data: flightData, error: flightError } = await supabase
+          .from('flights')
+          .select('*')
+          .eq('id', flightId)
+          .single();
+          
+        if (flightError) {
+          console.error(`Error fetching flight ${flightId}:`, flightError);
+          continue;
+        }
+        
+        flightDetailsMap.set(flightId, flightData as Flight);
+      }
+      
+      // Combine booking data with flight details
+      const fullBookings = bookingsData.map(booking => {
+        return {
+          ...booking,
+          flight: booking.flight_id ? flightDetailsMap.get(booking.flight_id) || null : null,
+          return_flight: booking.return_flight_id ? flightDetailsMap.get(booking.return_flight_id) || null : null
+        } as Booking;
+      });
+      
+      setBookings(fullBookings);
+      
       toast({
         title: "Refreshed",
         description: "Your bookings have been refreshed.",

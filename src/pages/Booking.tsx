@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
@@ -62,11 +61,7 @@ const Booking = () => {
         if (bookingId) {
           const { data: bookingData, error: bookingError } = await supabase
             .from('bookings')
-            .select(`
-              *,
-              flight:flight_id(*),
-              return_flight:return_flight_id(*)
-            `)
+            .select('*')
             .eq('id', bookingId)
             .single();
             
@@ -75,8 +70,31 @@ const Booking = () => {
           }
           
           if (bookingData) {
-            setFlight(bookingData.flight);
-            setReturnFlight(bookingData.return_flight);
+            // Fetch flight data separately
+            const { data: flightData, error: flightError } = await supabase
+              .from('flights')
+              .select('*')
+              .eq('id', bookingData.flight_id)
+              .single();
+              
+            if (flightError) {
+              throw flightError;
+            }
+            
+            setFlight(flightData);
+            
+            if (bookingData.return_flight_id) {
+              const { data: returnData, error: returnError } = await supabase
+                .from('flights')
+                .select('*')
+                .eq('id', bookingData.return_flight_id)
+                .single();
+                
+              if (!returnError) {
+                setReturnFlight(returnData);
+              }
+            }
+            
             setFormData({
               firstName: bookingData.passenger_name.split(' ')[0] || "",
               lastName: bookingData.passenger_name.split(' ').slice(1).join(' ') || "",

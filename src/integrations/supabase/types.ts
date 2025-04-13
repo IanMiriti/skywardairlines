@@ -157,25 +157,34 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          date_of_birth: string | null
+          email: string
           full_name: string | null
           id: string
-          role: Database["public"]["Enums"]["user_role"]
+          phone_number: string | null
+          role: string
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          email: string
           full_name?: string | null
           id: string
-          role?: Database["public"]["Enums"]["user_role"]
+          phone_number?: string | null
+          role: string
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          email?: string
           full_name?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["user_role"]
+          phone_number?: string | null
+          role?: string
           updated_at?: string
         }
         Relationships: []

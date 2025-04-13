@@ -53,8 +53,8 @@ const Profile = () => {
         setFormData({
           fullName: user.user_metadata?.full_name || data?.full_name || "",
           email: user.email || "",
-          phone: user.user_metadata?.phone || data?.phone_number || "",
-          dateOfBirth: data?.date_of_birth || "",
+          phone: data?.phone_number || "",
+          dateOfBirth: data?.date_of_birth ? data.date_of_birth : "",
         });
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -110,8 +110,8 @@ const Profile = () => {
           id: user.id,
           full_name: formData.fullName,
           phone_number: formData.phone,
-          date_of_birth: formData.dateOfBirth,
-          updated_at: new Date()
+          date_of_birth: formData.dateOfBirth ? formData.dateOfBirth : null,
+          updated_at: new Date().toISOString()
         });
       
       if (profileUpdateError) {

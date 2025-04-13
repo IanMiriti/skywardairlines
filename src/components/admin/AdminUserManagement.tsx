@@ -1,10 +1,9 @@
 
 import { useState, useEffect } from "react";
-import { useUser, useAuth } from "@clerk/clerk-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Users, UserPlus, Shield, AlertCircle, Search, RefreshCw } from "lucide-react";
-import { makeUserAdmin } from "@/integrations/supabase/makeAdmin";
+import { useAuth } from "@/hooks/auth-context";
 
 interface UserProfile {
   id: string;
@@ -16,8 +15,7 @@ interface UserProfile {
 }
 
 const AdminUserManagement = () => {
-  const { user } = useUser();
-  const { getToken } = useAuth();
+  const { user } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,7 +35,7 @@ const AdminUserManagement = () => {
       // Convert profiles to UserProfile format
       const formattedUsers = profiles.map(profile => ({
         id: profile.id,
-        email: "", // Will be filled in the next step if possible
+        email: profile.email || "",
         name: profile.full_name || "No Name",
         role: profile.role,
         created_at: profile.created_at,
@@ -66,40 +64,14 @@ const AdminUserManagement = () => {
 
     setIsPromotingUser(userId);
     try {
-      // First, update the user's role in Clerk using the token
-      try {
-        const token = await getToken();
-        
-        // Make API call to your backend or custom function to update Clerk metadata
-        const clerkResponse = await fetch(`https://api.clerk.dev/v1/users/${userId}/metadata`, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            publicMetadata: { role: 'admin' }
-          })
-        });
-        
-        if (!clerkResponse.ok) {
-          throw new Error('Failed to update Clerk metadata');
-        }
-      } catch (clerkError) {
-        console.error("Error updating Clerk metadata:", clerkError);
-        toast({
-          title: "Clerk API Error",
-          description: "Could not update user role in Clerk. Please check your API keys and permissions.",
-          variant: "destructive"
-        });
-        throw clerkError;
-      }
+      // Update the user's role to admin in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'admin' })
+        .eq('id', userId);
 
-      // Then update the role in Supabase
-      const success = await makeUserAdmin(userId);
-
-      if (!success) {
-        throw new Error("Failed to update user role in Supabase");
+      if (error) {
+        throw error;
       }
 
       // Update the local state
