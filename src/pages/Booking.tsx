@@ -248,10 +248,7 @@ const Booking = () => {
     },
   };
   
-  const handleFlutterPayment = useFlutterwave({
-    ...flutterwaveConfig,
-    amount: String(flutterwaveConfig.amount)
-  });
+  const handleFlutterPayment = useFlutterwave(flutterwaveConfig);
   
   const handleBooking = () => {
     if (!validateForm()) return;
