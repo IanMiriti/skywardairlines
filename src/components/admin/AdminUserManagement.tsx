@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { useUser, useClerk } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Users, UserPlus, Shield, AlertCircle, Search, RefreshCw } from "lucide-react";
+import { makeUserAdmin } from "@/integrations/supabase/makeAdmin";
 
 interface UserProfile {
   id: string;
@@ -16,7 +17,7 @@ interface UserProfile {
 
 const AdminUserManagement = () => {
   const { user } = useUser();
-  const { clerkClient } = useClerk();
+  const { getToken } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,12 +66,25 @@ const AdminUserManagement = () => {
 
     setIsPromotingUser(userId);
     try {
-      // First, update the user's role in Clerk
+      // First, update the user's role in Clerk using the token
       try {
-        // @ts-ignore - clerkClient.users is available but TypeScript doesn't recognize it
-        await clerkClient.users.updateUser(userId, {
-          publicMetadata: { role: 'admin' }
+        const token = await getToken();
+        
+        // Make API call to your backend or custom function to update Clerk metadata
+        const clerkResponse = await fetch(`https://api.clerk.dev/v1/users/${userId}/metadata`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            publicMetadata: { role: 'admin' }
+          })
         });
+        
+        if (!clerkResponse.ok) {
+          throw new Error('Failed to update Clerk metadata');
+        }
       } catch (clerkError) {
         console.error("Error updating Clerk metadata:", clerkError);
         toast({
@@ -82,13 +96,10 @@ const AdminUserManagement = () => {
       }
 
       // Then update the role in Supabase
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: 'admin' })
-        .eq('id', userId);
+      const success = await makeUserAdmin(userId);
 
-      if (error) {
-        throw error;
+      if (!success) {
+        throw new Error("Failed to update user role in Supabase");
       }
 
       // Update the local state
