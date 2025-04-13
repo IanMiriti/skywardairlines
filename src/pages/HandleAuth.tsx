@@ -14,7 +14,7 @@ const HandleAuth = () => {
       if (!isLoaded || !user) return;
 
       try {
-        console.log("Checking role for user:", user.id);
+        console.log("Checking role for user:", user.id, user.primaryEmailAddress?.emailAddress);
         
         // Check if user exists in profiles and their role
         const { data: profile, error } = await supabase
@@ -33,7 +33,7 @@ const HandleAuth = () => {
               id: user.id,
               full_name: user.fullName || '',
               avatar_url: user.imageUrl || '',
-              role: 'user' // Default role
+              role: user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com' ? 'admin' : 'user'
             })
             .select('role')
             .single();
@@ -45,13 +45,18 @@ const HandleAuth = () => {
           }
           
           console.log("Created new profile with role:", newProfile?.role);
-          navigate('/');
+          
+          if (newProfile?.role === 'admin') {
+            navigate('/admin/dashboard');
+          } else {
+            navigate('/');
+          }
           return;
         }
 
-        // If the specified email needs admin role, assign it here
-        if (user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com' && (!profile || profile.role !== 'admin')) {
-          console.log("Assigning admin role to ianmiriti254@gmail.com");
+        // If the specified email needs admin role, update it here
+        if (user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com' && profile.role !== 'admin') {
+          console.log("Updating role to admin for ianmiriti254@gmail.com");
           await supabase
             .from('profiles')
             .update({ role: 'admin' })

@@ -22,6 +22,7 @@ const SignIn = () => {
             routing="path" 
             path="/sign-in" 
             afterSignInUrl="/handle-auth"
+            redirectUrl="/handle-auth"
             appearance={{
               elements: {
                 rootBox: "mx-auto w-full",

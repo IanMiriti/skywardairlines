@@ -32,7 +32,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
           setIsAdmin(false);
         } else {
           const isUserAdmin = data?.role === 'admin';
-          console.log("User admin status:", isUserAdmin);
+          console.log("User admin status:", isUserAdmin, "Data:", data);
           setIsAdmin(isUserAdmin);
         }
       } catch (error) {
