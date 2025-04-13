@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { SignedIn, SignedOut } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Flights from "./pages/Flights";
@@ -16,7 +16,6 @@ import Offers from "./pages/Offers";
 import OfferDetails from "./pages/OfferDetails";
 import Profile from "./pages/Profile";
 import SignIn from "./pages/SignIn";
-import SignUp from "./pages/SignUp";
 import RootLayout from "./components/layouts/RootLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -32,12 +31,21 @@ const queryClient = new QueryClient();
 
 // Role-based access control
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  // In a real app, you'd check Clerk's user.publicMetadata.role
-  return (
-    <SignedIn>
-      {children}
-    </SignedIn>
-  );
+  const { userId, has } = useAuth();
+  
+  // Check if user has admin role
+  // In a real app, this would check Clerk's user.publicMetadata.role
+  const isAdmin = has({ role: "admin" });
+  
+  if (!userId) {
+    return <Navigate to="/sign-in" replace />;
+  }
+  
+  if (!isAdmin) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  return <>{children}</>;
 };
 
 const App = () => (
@@ -56,6 +64,7 @@ const App = () => (
             <Route path="/booking/:id/confirmation" element={<BookingConfirmation />} />
             <Route path="/offers" element={<Offers />} />
             <Route path="/offers/:id" element={<OfferDetails />} />
+            <Route path="/unauthorized" element={<NotFound />} />
             
             {/* Protected customer routes */}
             <Route 
@@ -87,7 +96,6 @@ const App = () => (
             
             {/* Authentication routes */}
             <Route path="/sign-in/*" element={<SignIn />} />
-            <Route path="/sign-up/*" element={<SignUp />} />
           </Route>
           
           {/* Admin routes */}
