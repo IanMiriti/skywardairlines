@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -8,7 +7,8 @@ import {
   Search, 
   ArrowRight, 
   CheckCircle2,
-  MapPin
+  MapPin,
+  BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeroImage from "@/assets/hero-image.png";
