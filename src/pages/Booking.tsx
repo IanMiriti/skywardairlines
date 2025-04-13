@@ -1,12 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
-import { Plane, Calendar, Clock, ArrowLeft, Users, CreditCard, ShieldCheck } from "lucide-react";
+import { Plane, Calendar, Clock, ArrowLeft, Users, CreditCard, ShieldCheck, Smartphone, CreditCard as CardIcon } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Flight } from "@/utils/types";
 import { toast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const FLUTTERWAVE_PUBLIC_KEY = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X";
 
@@ -17,6 +19,7 @@ interface FormData {
   phone: string;
   idPassport: string;
   specialRequests: string;
+  paymentMethod: "mpesa" | "card";
 }
 
 const Booking = () => {
@@ -40,6 +43,7 @@ const Booking = () => {
     phone: "",
     idPassport: "",
     specialRequests: "",
+    paymentMethod: "mpesa"
   });
   
   useEffect(() => {
@@ -230,15 +234,22 @@ const Booking = () => {
     }
   };
   
+  const handlePaymentMethodChange = (value: "mpesa" | "card") => {
+    setFormData(prev => ({
+      ...prev,
+      paymentMethod: value
+    }));
+  };
+  
   const flutterwaveConfig = {
     public_key: FLUTTERWAVE_PUBLIC_KEY,
     tx_ref: `FLYS-${Date.now().toString()}`,
     amount: calculateGrandTotal(),
     currency: 'KES',
-    payment_options: 'mobilemoney',
+    payment_options: formData.paymentMethod === "mpesa" ? "mobilemoney" : "card",
     customer: {
       email: formData.email,
-      phone_number: "054709929300",
+      phone_number: formData.phone,
       name: `${formData.firstName} ${formData.lastName}`,
     },
     customizations: {
@@ -304,7 +315,7 @@ const Booking = () => {
   if (loading) {
     return (
       <div className="container py-12 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-flysafari-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-safari-orange"></div>
       </div>
     );
   }
@@ -319,7 +330,7 @@ const Booking = () => {
           </p>
           <button
             onClick={() => navigate('/flights')}
-            className="btn bg-flysafari-primary text-white hover:bg-flysafari-primary/90"
+            className="btn bg-safari-orange text-white hover:bg-safari-orange/90"
           >
             Back to Flights
           </button>
@@ -329,11 +340,11 @@ const Booking = () => {
   }
   
   return (
-    <div className="bg-gray-50 min-h-screen py-12">
-      <div className="container">
+    <div className="bg-[url('https://images.unsplash.com/photo-1504432842672-1a79f78e4084?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80')] bg-fixed bg-cover bg-center bg-no-repeat min-h-screen py-12">
+      <div className="container bg-white bg-opacity-90 rounded-xl shadow-xl backdrop-blur-sm p-6 md:p-8">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-flysafari-primary mb-6 hover:underline"
+          className="flex items-center gap-2 text-safari-orange mb-6 hover:underline"
         >
           <ArrowLeft size={16} />
           Back to flight details
@@ -341,8 +352,8 @@ const Booking = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-              <div className="bg-flysafari-primary text-white p-4">
+            <div className="wildlife-card mb-6">
+              <div className="safari-header">
                 <h1 className="text-xl font-bold">Passenger Information</h1>
               </div>
               
@@ -358,7 +369,7 @@ const Booking = () => {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-flysafari-primary"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-safari-orange"
                       required
                     />
                   </div>
@@ -373,7 +384,7 @@ const Booking = () => {
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-flysafari-primary"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-safari-orange"
                       required
                     />
                   </div>
@@ -388,7 +399,7 @@ const Booking = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-flysafari-primary"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-safari-orange"
                       required
                     />
                   </div>
@@ -404,7 +415,7 @@ const Booking = () => {
                       value={formData.phone}
                       onChange={handleInputChange}
                       placeholder="e.g. 254712345678"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-flysafari-primary"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-safari-orange"
                       required
                     />
                   </div>
@@ -419,7 +430,7 @@ const Booking = () => {
                       name="idPassport"
                       value={formData.idPassport}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-flysafari-primary"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-safari-orange"
                       required
                     />
                   </div>
@@ -436,20 +447,20 @@ const Booking = () => {
                     onChange={handleInputChange}
                     rows={3}
                     placeholder="Any special requirements or requests..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-flysafari-primary"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-safari-orange"
                   ></textarea>
                 </div>
               </div>
             </div>
             
-            <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-              <div className="bg-flysafari-primary text-white p-4">
+            <div className="wildlife-card mb-6">
+              <div className="safari-header">
                 <h2 className="text-xl font-bold">Flight Summary</h2>
               </div>
               
               <div className="p-6">
                 <div className="border-b border-gray-200 pb-4 mb-4">
-                  <div className="flex items-center gap-2 text-flysafari-primary mb-2">
+                  <div className="flex items-center gap-2 text-safari-orange mb-2">
                     <Plane size={18} />
                     <h3 className="font-semibold">
                       {tripType === 'roundTrip' ? 'Outbound Flight' : 'Selected Flight'}
@@ -464,7 +475,7 @@ const Booking = () => {
                           <p className="text-lg font-bold">{formatTime(flight.departure_time)}</p>
                           <p className="text-sm text-gray-500">{flight.departure_city}</p>
                         </div>
-                        <div className="text-gray-400">→</div>
+                        <div className="text-safari-earth">→</div>
                         <div>
                           <p className="text-lg font-bold">{formatTime(flight.arrival_time)}</p>
                           <p className="text-sm text-gray-500">{flight.arrival_city}</p>
@@ -487,7 +498,7 @@ const Booking = () => {
                 
                 {tripType === 'roundTrip' && returnFlight && (
                   <div>
-                    <div className="flex items-center gap-2 text-flysafari-secondary mb-2">
+                    <div className="flex items-center gap-2 text-safari-wildlife mb-2">
                       <Plane size={18} />
                       <h3 className="font-semibold">Return Flight</h3>
                     </div>
@@ -500,7 +511,7 @@ const Booking = () => {
                             <p className="text-lg font-bold">{formatTime(returnFlight.departure_time)}</p>
                             <p className="text-sm text-gray-500">{returnFlight.departure_city}</p>
                           </div>
-                          <div className="text-gray-400">→</div>
+                          <div className="text-safari-earth">→</div>
                           <div>
                             <p className="text-lg font-bold">{formatTime(returnFlight.arrival_time)}</p>
                             <p className="text-sm text-gray-500">{returnFlight.arrival_city}</p>
@@ -533,69 +544,111 @@ const Booking = () => {
           </div>
           
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
-              <h2 className="text-xl font-semibold mb-4">Payment Summary</h2>
+            <div className="wildlife-card sticky top-6">
+              <div className="safari-header">
+                <h2 className="text-xl font-semibold">Payment Summary</h2>
+              </div>
               
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between">
-                  <span>{flight.departure_city} to {flight.arrival_city}</span>
-                  <span>{formatPrice(flight.price)}</span>
-                </div>
-                
-                {returnFlight && (
+              <div className="p-6">
+                <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
-                    <span>{returnFlight.departure_city} to {returnFlight.arrival_city}</span>
-                    <span>{formatPrice(returnFlight.price)}</span>
+                    <span>{flight.departure_city} to {flight.arrival_city}</span>
+                    <span>{formatPrice(flight.price)}</span>
                   </div>
-                )}
-                
-                <div className="flex justify-between text-gray-500">
-                  <span>Subtotal ({passengerCount} {passengerCount === 1 ? 'passenger' : 'passengers'})</span>
-                  <span>{formatPrice(calculateTotalPrice())}</span>
-                </div>
-                
-                <div className="flex justify-between text-gray-500">
-                  <span>Taxes & Fees (16%)</span>
-                  <span>{formatPrice(calculateTaxes())}</span>
-                </div>
-                
-                <div className="border-t border-gray-200 pt-3 font-bold flex justify-between">
-                  <span>Total</span>
-                  <span className="text-flysafari-primary">{formatPrice(calculateGrandTotal())}</span>
-                </div>
-              </div>
-              
-              <div className="mb-6">
-                <h3 className="font-medium mb-3">Payment Method</h3>
-                <div className="flex items-start gap-3 p-3 border border-gray-200 rounded-md bg-gray-50">
-                  <CreditCard className="text-flysafari-secondary mt-1" size={20} />
-                  <div>
-                    <p className="font-medium">M-Pesa (Mobile Money)</p>
-                    <p className="text-sm text-gray-500">Secure payment via Flutterwave</p>
+                  
+                  {returnFlight && (
+                    <div className="flex justify-between">
+                      <span>{returnFlight.departure_city} to {returnFlight.arrival_city}</span>
+                      <span>{formatPrice(returnFlight.price)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between text-gray-500">
+                    <span>Subtotal ({passengerCount} {passengerCount === 1 ? 'passenger' : 'passengers'})</span>
+                    <span>{formatPrice(calculateTotalPrice())}</span>
+                  </div>
+                  
+                  <div className="flex justify-between text-gray-500">
+                    <span>Taxes & Fees (16%)</span>
+                    <span>{formatPrice(calculateTaxes())}</span>
+                  </div>
+                  
+                  <div className="border-t border-gray-200 pt-3 font-bold flex justify-between">
+                    <span>Total</span>
+                    <span className="text-safari-orange">{formatPrice(calculateGrandTotal())}</span>
                   </div>
                 </div>
-              </div>
-              
-              <button
-                onClick={handleBooking}
-                disabled={isProcessing}
-                className="w-full py-3 bg-flysafari-secondary hover:bg-flysafari-secondary/90 text-white rounded-md font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-white"></div>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    Pay Now {formatPrice(calculateGrandTotal())}
-                  </>
-                )}
-              </button>
-              
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
-                <ShieldCheck size={14} />
-                <span>Your payment is secure and encrypted</span>
+                
+                <div className="mb-6">
+                  <h3 className="font-medium mb-3">Payment Method</h3>
+                  
+                  <RadioGroup 
+                    value={formData.paymentMethod} 
+                    onValueChange={(value) => handlePaymentMethodChange(value as "mpesa" | "card")}
+                    className="grid grid-cols-1 gap-3"
+                  >
+                    <label 
+                      className={`flex items-start gap-3 p-3 border rounded-md cursor-pointer transition-all ${
+                        formData.paymentMethod === "mpesa" 
+                          ? "border-safari-orange bg-orange-50" 
+                          : "border-gray-200 bg-gray-50 hover:border-safari-orange/50"
+                      }`}
+                    >
+                      <RadioGroupItem value="mpesa" id="mpesa" className="mt-1" />
+                      <div className="flex gap-3">
+                        <Smartphone className="text-safari-green mt-1" size={20} />
+                        <div>
+                          <p className="font-medium">M-Pesa (Mobile Money)</p>
+                          <p className="text-sm text-gray-500">Fast and convenient mobile payment</p>
+                        </div>
+                      </div>
+                    </label>
+                    
+                    <label 
+                      className={`flex items-start gap-3 p-3 border rounded-md cursor-pointer transition-all ${
+                        formData.paymentMethod === "card" 
+                          ? "border-safari-orange bg-orange-50" 
+                          : "border-gray-200 bg-gray-50 hover:border-safari-orange/50"
+                      }`}
+                    >
+                      <RadioGroupItem value="card" id="card" className="mt-1" />
+                      <div className="flex gap-3">
+                        <CardIcon className="text-safari-sky mt-1" size={20} />
+                        <div>
+                          <p className="font-medium">Credit/Debit Card</p>
+                          <p className="text-sm text-gray-500">Secure card payment</p>
+                        </div>
+                      </div>
+                    </label>
+                  </RadioGroup>
+                </div>
+                
+                <button
+                  onClick={handleBooking}
+                  disabled={isProcessing}
+                  className={`w-full py-3 text-white rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
+                    formData.paymentMethod === "mpesa" 
+                      ? "bg-safari-green hover:bg-safari-green/90" 
+                      : "bg-safari-sky hover:bg-safari-sky/90"
+                  }`}
+                >
+                  {isProcessing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      {formData.paymentMethod === "mpesa" ? <Smartphone size={18} /> : <CardIcon size={18} />}
+                      Pay {formatPrice(calculateGrandTotal())} Now
+                    </>
+                  )}
+                </button>
+                
+                <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
+                  <ShieldCheck size={14} />
+                  <span>Your payment is secure and encrypted</span>
+                </div>
               </div>
             </div>
           </div>

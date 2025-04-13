@@ -63,6 +63,16 @@ export default {
 					light: '#F8FAFC',      // Light background 
 					accent: '#FF6D00',     // Bright orange
 				},
+				safari: {
+					orange: '#F97316',     // Vibrant orange (sunset)
+					gold: '#FFC107',       // Golden yellow (savanna)
+					earth: '#8B4513',      // Earth brown
+					green: '#2E8B57',      // Safari green (vegetation)
+					sky: '#0EA5E9',        // Vibrant blue (sky/water)
+					clay: '#CD5C5C',       // Reddish clay
+					acacia: '#FFD700',     // Acacia yellow
+					wildlife: '#8B5CF6',   // Wildlife purple accent
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -95,6 +105,10 @@ export default {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'float': 'float 6s ease-in-out infinite'
+			},
+			backgroundImage: {
+				'safari-gradient': 'linear-gradient(90deg, hsla(29, 92%, 70%, 1) 0%, hsla(0, 87%, 73%, 1) 100%)',
+				'wildlife-gradient': 'linear-gradient(90deg, hsla(139, 70%, 75%, 1) 0%, hsla(63, 90%, 76%, 1) 100%)',
 			}
 		}
 	},

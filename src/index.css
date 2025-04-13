@@ -16,16 +16,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 27%;
 
-    --primary: 217 91.2% 59.8%;
+    --primary: 26 100% 55%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 24.6 95% 53.1%;
+    --secondary: 262 83% 58%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215 25% 40%;
 
-    --accent: 262 83.3% 57.8%;
+    --accent: 142 76% 36%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84.2% 60.2%;
@@ -33,7 +33,7 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 217 91.2% 59.8%;
+    --ring: 26 100% 55%;
 
     --radius: 0.75rem;
   }
@@ -48,16 +48,16 @@
     --popover: 215 25% 12%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217 91.2% 59.8%;
+    --primary: 26 100% 55%;
     --primary-foreground: 215 25% 10%;
 
-    --secondary: 24.6 95% 53.1%;
+    --secondary: 262 83% 58%;
     --secondary-foreground: 215 25% 10%;
 
     --muted: 215 25% 20%;
     --muted-foreground: 210 40% 80%;
 
-    --accent: 262 83.3% 57.8%;
+    --accent: 142 76% 36%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -65,7 +65,7 @@
 
     --border: 215 25% 20%;
     --input: 215 25% 20%;
-    --ring: 217 91.2% 59.8%;
+    --ring: 26 100% 55%;
   }
 }
 
@@ -98,11 +98,11 @@
   }
   
   .btn-primary {
-    @apply bg-flysafari-primary text-white hover:bg-primary/90;
+    @apply bg-safari-orange text-white hover:bg-safari-orange/90;
   }
   
   .btn-secondary {
-    @apply bg-flysafari-secondary text-white hover:bg-flysafari-secondary/90;
+    @apply bg-safari-wildlife text-white hover:bg-safari-wildlife/90;
   }
   
   .btn-outline {
@@ -117,5 +117,17 @@
     @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm 
     placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 
     focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .safari-container {
+    @apply bg-safari-gradient p-6 rounded-lg shadow-lg;
+  }
+  
+  .wildlife-card {
+    @apply bg-white bg-opacity-95 backdrop-blur-sm border border-safari-gold/20 rounded-lg shadow-md overflow-hidden;
+  }
+  
+  .safari-header {
+    @apply bg-safari-orange text-white p-4 rounded-t-lg;
   }
 }
