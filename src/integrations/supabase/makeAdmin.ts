@@ -32,12 +32,14 @@ export const makeUserAdmin = async (clerkUserId: string): Promise<boolean> => {
  * @param clerkUserId The Clerk user ID
  * @param fullName Optional full name
  * @param avatarUrl Optional avatar URL
+ * @param email User's email (required for profile creation)
  * @returns Promise<boolean> Whether the operation was successful
  */
 export const createAdminProfile = async (
   clerkUserId: string, 
   fullName?: string,
-  avatarUrl?: string
+  avatarUrl?: string,
+  email?: string
 ): Promise<boolean> => {
   try {
     // Check if the profile already exists
@@ -57,11 +59,18 @@ export const createAdminProfile = async (
       return makeUserAdmin(clerkUserId);
     }
     
+    // Email is required for profile creation
+    if (!email) {
+      console.error("Email is required for profile creation");
+      return false;
+    }
+    
     // Otherwise, create a new profile with admin role
     const { error: createError } = await supabase
       .from('profiles')
       .insert({
         id: clerkUserId,
+        email: email,
         full_name: fullName || '',
         avatar_url: avatarUrl || '',
         role: 'admin'

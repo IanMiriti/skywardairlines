@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   User, 
@@ -103,11 +102,13 @@ const Profile = () => {
         throw userUpdateError;
       }
       
-      // Update profile in database
+      // Update profile in database - include required fields email and role
       const { error: profileUpdateError } = await supabase
         .from('profiles')
         .upsert({
           id: user.id,
+          email: user.email || formData.email, // Use user's email
+          role: profileData?.role || 'customer', // Preserve existing role or default to customer
           full_name: formData.fullName,
           phone_number: formData.phone,
           date_of_birth: formData.dateOfBirth ? formData.dateOfBirth : null,
