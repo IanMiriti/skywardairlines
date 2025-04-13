@@ -194,8 +194,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_current_user: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      set_user_as_admin: {
+        Args: { user_email: string }
         Returns: boolean
       }
     }

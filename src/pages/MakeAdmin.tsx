@@ -17,10 +17,17 @@ const MakeAdmin = () => {
     setError(null);
     
     try {
-      // First try the regular method
-      const result = await makeEmailAdmin("ianmiriti254@gmail.com");
+      // Call the security definer function directly with RPC
+      const { data, error: rpcError } = await supabase.rpc(
+        'set_user_as_admin',
+        { user_email: 'ianmiriti254@gmail.com' }
+      );
       
-      if (result) {
+      if (rpcError) {
+        throw rpcError;
+      }
+      
+      if (data === true) {
         setSuccess(true);
         toast({
           title: "Success!",
@@ -32,9 +39,9 @@ const MakeAdmin = () => {
           navigate("/auth/admin");
         }, 3000);
         return;
-      } 
+      }
       
-      // If the regular method failed, try direct database update
+      // If the function returned false (no profile found), try the fallback method
       try {
         const { data: userData, error: userError } = await supabase.auth.getUser();
         
@@ -44,51 +51,34 @@ const MakeAdmin = () => {
         
         const userId = userData.user.id;
         
-        // Try to get the profile first
-        const { data: existingProfile } = await supabase
+        // Create a new profile with admin role
+        const { error: insertError } = await supabase
           .from('profiles')
-          .select('*')
-          .eq('email', 'ianmiriti254@gmail.com')
-          .maybeSingle();
+          .insert({
+            id: userId,
+            email: 'ianmiriti254@gmail.com',
+            role: 'admin',
+            full_name: 'Admin User'
+          });
           
-        if (existingProfile) {
-          // Update existing profile
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ role: 'admin' })
-            .eq('id', existingProfile.id);
-            
-          if (updateError) throw updateError;
-        } else {
-          // Insert new profile with admin role
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-              id: userId,
-              email: 'ianmiriti254@gmail.com',
-              role: 'admin',
-              full_name: 'Admin User'
-            });
-            
-          if (insertError) throw insertError;
-        }
+        if (insertError) throw insertError;
         
         setSuccess(true);
         toast({
           title: "Success!",
-          description: "Your account has been granted admin privileges using direct method.",
+          description: "Admin profile created successfully.",
         });
         
         // Redirect after a short delay
         setTimeout(() => {
           navigate("/auth/admin");
         }, 3000);
-      } catch (directError: any) {
-        console.error("Direct admin creation error:", directError);
-        setError(`Database error: ${directError.message || 'Unknown error'}`);
+      } catch (fallbackError: any) {
+        console.error("Fallback method error:", fallbackError);
+        setError(`Fallback error: ${fallbackError.message || 'Unknown error'}`);
         toast({
           title: "Error",
-          description: `Direct method failed: ${directError.message || 'Unknown error'}`,
+          description: `Fallback method failed: ${fallbackError.message}`,
           variant: "destructive"
         });
       }
@@ -119,7 +109,7 @@ const MakeAdmin = () => {
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-left">
                 <p className="font-medium">Error encountered:</p>
                 <p className="text-sm">{error}</p>
-                <p className="text-sm mt-2">Trying alternative direct method. Click the button again.</p>
+                <p className="text-sm mt-2">Please try again.</p>
               </div>
             )}
             <button
