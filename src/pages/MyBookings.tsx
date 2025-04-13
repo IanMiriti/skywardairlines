@@ -147,7 +147,7 @@ const MyBookings = () => {
           .rpc('increment_available_seats', {
             flight_id: bookingToCancel.flight_id,
             seats_count: bookingToCancel.passenger_count
-          });
+          }) as { error: any };
         
         if (seatError) {
           console.error("Error restoring flight seats:", seatError);
@@ -159,7 +159,7 @@ const MyBookings = () => {
           .rpc('increment_available_seats', {
             flight_id: bookingToCancel.return_flight_id,
             seats_count: bookingToCancel.passenger_count
-          });
+          }) as { error: any };
         
         if (returnSeatError) {
           console.error("Error restoring return flight seats:", returnSeatError);
