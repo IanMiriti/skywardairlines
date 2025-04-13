@@ -7,18 +7,19 @@ import './index.css';
 
 // Get the publishable key from environment variable
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const CLERK_FRONTEND_API = import.meta.env.VITE_CLERK_FRONTEND_API;
 
 // Check if key is available
 if (!PUBLISHABLE_KEY) {
   console.error("Missing Clerk Publishable Key - Please set VITE_CLERK_PUBLISHABLE_KEY environment variable");
   document.body.innerHTML = `
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center;">
-      <h1 style="color: #e53e3e; margin-bottom: 16px;">Configuration Error</h1>
-      <p style="max-width: 500px; margin-bottom: 24px;">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; font-family: 'Inter', sans-serif;">
+      <h1 style="color: #8B5CF6; margin-bottom: 16px;">Configuration Error</h1>
+      <p style="max-width: 500px; margin-bottom: 24px; color: #222;">
         Missing Clerk Publishable Key. Please set the VITE_CLERK_PUBLISHABLE_KEY environment variable.
       </p>
-      <p style="font-size: 14px; color: #718096;">
-        You can get your publishable key from the <a href="https://dashboard.clerk.com/last-active?path=api-keys" target="_blank" style="color: #4299e1;">Clerk Dashboard</a>.
+      <p style="font-size: 14px; color: #8E9196;">
+        You can get your publishable key from the <a href="https://dashboard.clerk.com/last-active?path=api-keys" target="_blank" style="color: #F97316;">Clerk Dashboard</a>.
       </p>
     </div>
   `;
@@ -32,9 +33,11 @@ if (!PUBLISHABLE_KEY) {
         signUpUrl="/sign-up"
         signInFallbackRedirectUrl="/handle-auth"
         signUpFallbackRedirectUrl="/handle-auth"
+        {...(CLERK_FRONTEND_API && { frontendApi: CLERK_FRONTEND_API })}
       >
         <App />
       </ClerkProvider>
     </React.StrictMode>
   );
 }
+
