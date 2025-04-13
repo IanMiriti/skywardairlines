@@ -12,8 +12,8 @@
 
 # Important: Add these environment variables in the Netlify dashboard
 # under Site settings > Build & deploy > Environment variables:
-# - VITE_CLERK_PUBLISHABLE_KEY
-# - VITE_FLUTTERWAVE_PUBLIC_KEY
+# - VITE_CLERK_PUBLISHABLE_KEY (Required for authentication)
+# - VITE_FLUTTERWAVE_PUBLIC_KEY (Required for payments)
 
 [[redirects]]
   from = "/*"

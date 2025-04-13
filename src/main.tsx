@@ -5,17 +5,11 @@ import { ClerkProvider } from '@clerk/clerk-react';
 import App from './App.tsx';
 import './index.css';
 
-// Clerk publishable key
-// For development environments, provide a fallback
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || 
-  (import.meta.env.DEV ? 'pk_test_placeholder_for_development' : undefined);
+// Get the publishable key from environment variable
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-// Clerk redirect URLs
-// According to the Clerk dashboard settings, redirectUrl should be /handle-auth
-const signInUrl = "/sign-in";
-const signUpUrl = "/sign-up";
-
-if (!PUBLISHABLE_KEY && !import.meta.env.DEV) {
+// Check if key is available
+if (!PUBLISHABLE_KEY) {
   console.error("Missing Clerk Publishable Key - Please set VITE_CLERK_PUBLISHABLE_KEY environment variable");
   document.body.innerHTML = `
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center;">
@@ -24,18 +18,18 @@ if (!PUBLISHABLE_KEY && !import.meta.env.DEV) {
         Missing Clerk Publishable Key. Please set the VITE_CLERK_PUBLISHABLE_KEY environment variable.
       </p>
       <p style="font-size: 14px; color: #718096;">
-        For development: Set this in your .env.local file or directly in your development environment.
+        You can get your publishable key from the <a href="https://dashboard.clerk.com/last-active?path=api-keys" target="_blank" style="color: #4299e1;">Clerk Dashboard</a>.
       </p>
     </div>
   `;
-  throw new Error("Missing Clerk Publishable Key"); // Throw error to prevent further rendering
+  // Don't render the app if the key is missing
 } else {
   createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
       <ClerkProvider 
         publishableKey={PUBLISHABLE_KEY}
-        signInUrl={signInUrl}
-        signUpUrl={signUpUrl}
+        signInUrl="/sign-in"
+        signUpUrl="/sign-up"
         signInFallbackRedirectUrl="/handle-auth"
         signUpFallbackRedirectUrl="/handle-auth"
       >
