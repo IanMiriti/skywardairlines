@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { format, parseISO } from "date-fns";
@@ -263,7 +262,7 @@ const Booking = () => {
     }
   };
 
-  // Updated Flutterwave configuration with FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X as requested
+  // Updated Flutterwave configuration
   const flutterwaveConfig: FlutterWaveConfig = {
     public_key: "FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X",
     tx_ref: `FLYS-${Date.now().toString()}`,
