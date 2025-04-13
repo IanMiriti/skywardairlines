@@ -57,7 +57,6 @@ const Booking = () => {
       setLoading(true);
       
       try {
-        // If bookingId is provided, fetch booking to get flight info
         if (bookingId) {
           const { data: bookingData, error: bookingError } = await supabase
             .from('bookings')
@@ -70,7 +69,6 @@ const Booking = () => {
           }
           
           if (bookingData) {
-            // Fetch flight data separately
             const { data: flightData, error: flightError } = await supabase
               .from('flights')
               .select('*')
@@ -106,7 +104,6 @@ const Booking = () => {
             });
           }
         } else {
-          // Normal flow - fetch flight by ID
           const { data, error } = await supabase
             .from('flights')
             .select('*')
@@ -327,10 +324,8 @@ const Booking = () => {
             let booking;
             
             if (bookingId) {
-              // Update existing booking
               booking = await updateBooking(txId, 'paid');
             } else {
-              // Create new booking
               booking = await createBooking(txId, 'paid');
             }
             
@@ -372,25 +367,6 @@ const Booking = () => {
     return (
       <div className="container py-12 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-safari-orange"></div>
-      </div>
-    );
-  }
-  
-  if (!flight) {
-    return (
-      <div className="container py-12">
-        <div className="bg-white rounded-lg shadow-md p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Flight Not Found</h2>
-          <p className="text-gray-600 mb-6">
-            We couldn't find the flight you're looking for. It may have been removed or the ID is incorrect.
-          </p>
-          <button
-            onClick={() => navigate('/flights')}
-            className="btn bg-safari-orange text-white hover:bg-safari-orange/90"
-          >
-            Back to Flights
-          </button>
-        </div>
       </div>
     );
   }
