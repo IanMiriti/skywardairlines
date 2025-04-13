@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
@@ -143,11 +144,12 @@ const MyBookings = () => {
       }
       
       if (bookingToCancel.flight_id) {
-        const { error: seatError } = await supabase
+        // Use a type assertion to bypass the type checking
+        const { error: seatError } = await (supabase
           .rpc('increment_available_seats', {
             flight_id: bookingToCancel.flight_id,
             seats_count: bookingToCancel.passenger_count
-          }) as { error: any };
+          }) as unknown as Promise<{ error: any }>);
         
         if (seatError) {
           console.error("Error restoring flight seats:", seatError);
@@ -155,11 +157,12 @@ const MyBookings = () => {
       }
       
       if (bookingToCancel.is_round_trip && bookingToCancel.return_flight_id) {
-        const { error: returnSeatError } = await supabase
+        // Use a type assertion to bypass the type checking
+        const { error: returnSeatError } = await (supabase
           .rpc('increment_available_seats', {
             flight_id: bookingToCancel.return_flight_id,
             seats_count: bookingToCancel.passenger_count
-          }) as { error: any };
+          }) as unknown as Promise<{ error: any }>);
         
         if (returnSeatError) {
           console.error("Error restoring return flight seats:", returnSeatError);
