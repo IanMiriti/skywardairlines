@@ -1,5 +1,4 @@
 
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,89 +33,133 @@ import AdminRoute from "./components/admin/AdminRoute";
 import { supabase } from "./integrations/supabase/client";
 
 // Create a client
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<RootLayout />}>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/flights" element={<Flights />} />
-            <Route path="/flights/:id" element={<FlightDetails />} />
-            <Route path="/booking/:id" element={<Booking />} />
-            <Route path="/booking/:id/confirmation" element={<BookingConfirmation />} />
-            <Route path="/offers" element={<Offers />} />
-            <Route path="/offers/:id" element={<OfferDetails />} />
-            <Route path="/unauthorized" element={<NotFound />} />
-            <Route path="/handle-auth" element={<HandleAuth />} />
-            
-            {/* Protected customer routes */}
-            <Route 
-              path="/my-bookings" 
-              element={
-                <>
-                  <SignedIn>
+// Check if Clerk is available
+const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+// Protected route component that works with or without authentication
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  if (!isClerkAvailable) {
+    console.warn("Authentication is disabled: VITE_CLERK_PUBLISHABLE_KEY not set");
+    return <>{children}</>;
+  }
+  
+  return (
+    <>
+      <SignedIn>{children}</SignedIn>
+      <SignedOut>
+        <Navigate to="/sign-in" replace />
+      </SignedOut>
+    </>
+  );
+};
+
+const App = () => {
+  // Log app initialization for debugging
+  useEffect(() => {
+    console.log("App component initialized");
+    console.log("Authentication status:", isClerkAvailable ? "Enabled" : "Disabled");
+    
+    // Check Supabase connection
+    const checkSupabaseConnection = async () => {
+      try {
+        const { data, error } = await supabase.from('profiles').select('id').limit(1);
+        if (error) {
+          console.error("Supabase connection error:", error.message);
+        } else {
+          console.log("Supabase connection successful");
+        }
+      } catch (err) {
+        console.error("Supabase check failed:", err);
+      }
+    };
+    
+    checkSupabaseConnection();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route element={<RootLayout />}>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/flights" element={<Flights />} />
+              <Route path="/flights/:id" element={<FlightDetails />} />
+              <Route path="/booking/:id" element={<Booking />} />
+              <Route path="/booking/:id/confirmation" element={<BookingConfirmation />} />
+              <Route path="/offers" element={<Offers />} />
+              <Route path="/offers/:id" element={<OfferDetails />} />
+              <Route path="/unauthorized" element={<NotFound />} />
+              <Route path="/handle-auth" element={<HandleAuth />} />
+              
+              {/* Protected customer routes */}
+              <Route 
+                path="/my-bookings" 
+                element={
+                  <ProtectedRoute>
                     <MyBookings />
-                  </SignedIn>
-                  <SignedOut>
-                    <Navigate to="/sign-in" replace />
-                  </SignedOut>
-                </>
-              } 
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <>
-                  <SignedIn>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
                     <Profile />
-                  </SignedIn>
-                  <SignedOut>
-                    <Navigate to="/sign-in" replace />
-                  </SignedOut>
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Authentication routes - only shown if Clerk is available */}
+              {isClerkAvailable && (
+                <>
+                  <Route path="/sign-in/*" element={<SignIn />} />
+                  <Route path="/sign-up/*" element={<SignUp />} />
                 </>
-              } 
-            />
+              )}
+            </Route>
             
-            {/* Authentication routes */}
-            <Route path="/sign-in/*" element={<SignIn />} />
-            <Route path="/sign-up/*" element={<SignUp />} />
-          </Route>
-          
-          {/* Admin routes */}
-          <Route 
-            path="/admin" 
-            element={
-              <AdminRoute>
-                <AdminLayout />
-              </AdminRoute>
-            }
-          >
-            <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="flights" element={<AdminFlights />} />
-            <Route path="flights/new" element={<AdminEditFlight />} />
-            <Route path="flights/:id/edit" element={<AdminEditFlight />} />
-            <Route path="offers" element={<AdminOffers />} />
-            <Route path="offers/new" element={<AdminEditOffer />} />
-            <Route path="offers/:id/edit" element={<AdminEditOffer />} />
-            <Route path="bookings" element={<AdminBookings />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="cancellations" element={<AdminCancellations />} />
-          </Route>
-          
-          {/* 404 route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+            {/* Admin routes */}
+            <Route 
+              path="/admin" 
+              element={
+                <AdminRoute>
+                  <AdminLayout />
+                </AdminRoute>
+              }
+            >
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="flights" element={<AdminFlights />} />
+              <Route path="flights/new" element={<AdminEditFlight />} />
+              <Route path="flights/:id/edit" element={<AdminEditFlight />} />
+              <Route path="offers" element={<AdminOffers />} />
+              <Route path="offers/new" element={<AdminEditOffer />} />
+              <Route path="offers/:id/edit" element={<AdminEditOffer />} />
+              <Route path="bookings" element={<AdminBookings />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="cancellations" element={<AdminCancellations />} />
+            </Route>
+            
+            {/* 404 route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
-

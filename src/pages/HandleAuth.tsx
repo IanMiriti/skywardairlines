@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
+// Check if Clerk is available
+const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
 const HandleAuth = () => {
   const { user, isLoaded } = useUser();
   const navigate = useNavigate();
@@ -11,6 +14,13 @@ const HandleAuth = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // If Clerk is not available, redirect to home
+    if (!isClerkAvailable) {
+      console.warn("Authentication is disabled - Redirecting to home page");
+      navigate('/');
+      return;
+    }
+    
     const checkUserRole = async () => {
       if (!isLoaded) {
         console.log("HandleAuth: User data not loaded yet");
@@ -31,119 +41,138 @@ const HandleAuth = () => {
         if (user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com') {
           console.log("Admin email detected, redirecting to admin dashboard");
           
-          // Ensure profile exists with admin role
-          const { data: existingProfile, error: profileError } = await supabase
-            .from('profiles')
-            .select('id, role')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          if (profileError) {
-            console.error("Error checking existing profile:", profileError);
-            setError("Database error: " + profileError.message);
-          }
-            
-          if (!existingProfile) {
-            console.log("Creating admin profile for admin email");
-            // Create admin profile if it doesn't exist
-            const { error: createError } = await supabase
+          try {
+            // Ensure profile exists with admin role
+            const { data: existingProfile, error: profileError } = await supabase
               .from('profiles')
-              .insert({ 
-                id: user.id,
-                full_name: user.fullName || '',
-                avatar_url: user.imageUrl || '',
-                role: 'admin'
-              });
+              .select('id, role')
+              .eq('id', user.id)
+              .maybeSingle();
               
-            if (createError) {
-              console.error("Error creating admin profile:", createError);
-              setError("Database error: " + createError.message);
-            } else {
-              console.log("Admin profile created successfully");
+            if (profileError) {
+              console.error("Error checking existing profile:", profileError);
+              console.warn("Continuing with admin redirection despite database error");
             }
-          } else if (existingProfile.role !== 'admin') {
-            console.log("Updating existing profile to admin role");
-            // Update to admin role if profile exists but not admin
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ role: 'admin' })
-              .eq('id', user.id);
               
-            if (updateError) {
-              console.error("Error updating to admin role:", updateError);
-              setError("Database error: " + updateError.message);
-            } else {
-              console.log("Profile updated to admin role successfully");
+            if (!existingProfile) {
+              console.log("Creating admin profile for admin email");
+              // Create admin profile if it doesn't exist
+              try {
+                const { error: createError } = await supabase
+                  .from('profiles')
+                  .insert({ 
+                    id: user.id,
+                    full_name: user.fullName || '',
+                    avatar_url: user.imageUrl || '',
+                    role: 'admin'
+                  });
+                  
+                if (createError) {
+                  console.error("Error creating admin profile:", createError);
+                  console.warn("Continuing with admin redirection despite database error");
+                } else {
+                  console.log("Admin profile created successfully");
+                }
+              } catch (dbError) {
+                console.error("Database operation failed:", dbError);
+                console.warn("Continuing with admin redirection despite database error");
+              }
+            } else if (existingProfile.role !== 'admin') {
+              console.log("Updating existing profile to admin role");
+              // Update to admin role if profile exists but not admin
+              try {
+                const { error: updateError } = await supabase
+                  .from('profiles')
+                  .update({ role: 'admin' })
+                  .eq('id', user.id);
+                  
+                if (updateError) {
+                  console.error("Error updating to admin role:", updateError);
+                  console.warn("Continuing with admin redirection despite database error");
+                } else {
+                  console.log("Profile updated to admin role successfully");
+                }
+              } catch (dbError) {
+                console.error("Database operation failed:", dbError);
+                console.warn("Continuing with admin redirection despite database error");
+              }
             }
+          } catch (dbError) {
+            console.error("Database operations failed:", dbError);
+            console.warn("Continuing with admin redirection despite database errors");
           }
           
-          // Added delay to ensure database operations complete before redirect
-          setTimeout(() => {
-            console.log("Redirecting to admin dashboard...");
-            navigate('/admin/dashboard');
-            setIsChecking(false);
-          }, 500);
-          return;
-        }
-        
-        // Check if user exists in profiles and their role
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Error checking user role:", error);
-          setError("Database error: " + error.message);
-          
-          // If the user doesn't exist in the profiles table, create a new profile
-          const isAdmin = user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com';
-          console.log("Creating new profile, isAdmin:", isAdmin);
-
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert({ 
-              id: user.id,
-              full_name: user.fullName || '',
-              avatar_url: user.imageUrl || '',
-              role: isAdmin ? 'admin' : 'user'
-            })
-            .select('role')
-            .single();
-            
-          if (createError) {
-            console.error("Error creating new profile:", createError);
-            setError("Database error: " + createError.message);
-            navigate('/');
-            setIsChecking(false);
-            return;
-          }
-          
-          console.log("Created new profile with role:", newProfile?.role);
-          
-          if (newProfile?.role === 'admin') {
-            console.log("Redirecting new admin to admin dashboard");
-            navigate('/admin/dashboard');
-          } else {
-            console.log("Redirecting new user to homepage");
-            navigate('/');
-          }
+          // Redirect to admin dashboard despite any database errors
+          console.log("Redirecting to admin dashboard...");
+          navigate('/admin/dashboard');
           setIsChecking(false);
           return;
         }
+        
+        try {
+          // Check if user exists in profiles and their role
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
 
-        // Redirect based on role
-        if (profile?.role === 'admin') {
-          console.log("User is admin, redirecting to admin dashboard");
-          navigate('/admin/dashboard');
-        } else {
-          console.log("User is not admin, redirecting to home page");
+          if (error) {
+            console.error("Error checking user role:", error);
+            
+            // If the user doesn't exist in the profiles table, create a new profile
+            const isAdmin = user.primaryEmailAddress?.emailAddress === 'ianmiriti254@gmail.com';
+            console.log("Creating new profile, isAdmin:", isAdmin);
+
+            try {
+              const { data: newProfile, error: createError } = await supabase
+                .from('profiles')
+                .insert({ 
+                  id: user.id,
+                  full_name: user.fullName || '',
+                  avatar_url: user.imageUrl || '',
+                  role: isAdmin ? 'admin' : 'user'
+                })
+                .select('role')
+                .single();
+                
+              if (createError) {
+                console.error("Error creating new profile:", createError);
+                // Default to homepage on error
+                navigate('/');
+              } else {
+                console.log("Created new profile with role:", newProfile?.role);
+                
+                if (newProfile?.role === 'admin') {
+                  navigate('/admin/dashboard');
+                } else {
+                  navigate('/');
+                }
+              }
+            } catch (dbError) {
+              console.error("Database operation failed:", dbError);
+              // Default to homepage on error
+              navigate('/');
+            }
+          } else {
+            // Redirect based on role
+            if (profile?.role === 'admin') {
+              console.log("User is admin, redirecting to admin dashboard");
+              navigate('/admin/dashboard');
+            } else {
+              console.log("User is not admin, redirecting to home page");
+              navigate('/');
+            }
+          }
+        } catch (dbError) {
+          console.error("Database operation failed:", dbError);
+          // Default to homepage on error
           navigate('/');
         }
       } catch (error) {
         console.error("Error in auth redirection:", error);
         setError("Authentication error: " + (error instanceof Error ? error.message : String(error)));
+        // Default to homepage on error
         navigate('/');
       } finally {
         setIsChecking(false);
@@ -152,6 +181,10 @@ const HandleAuth = () => {
 
     checkUserRole();
   }, [isLoaded, user, navigate]);
+
+  if (!isClerkAvailable) {
+    return null; // Should never render as we redirect immediately
+  }
 
   if (isChecking) {
     return (

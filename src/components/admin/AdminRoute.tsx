@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
+// Check if Clerk is available
+const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoaded } = useUser();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -12,6 +15,14 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   
   useEffect(() => {
     const checkAdminRole = async () => {
+      // If Clerk is not available, use a dev bypass for testing
+      if (!isClerkAvailable) {
+        console.warn("Authentication disabled - Dev mode admin access granted");
+        setIsAdmin(true);
+        setIsLoading(false);
+        return;
+      }
+      
       if (!isLoaded) {
         console.log("AdminRoute: User data not loaded yet");
         return;
@@ -32,30 +43,35 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
           console.log("User has admin email, granting admin access directly");
           
           // Ensure admin role is saved in database
-          const { data: existingProfile, error: profileCheckError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          if (profileCheckError) {
-            console.error("Error checking profile:", profileCheckError);
-          } else if (!existingProfile) {
-            console.log("Admin user not in database, creating profile");
-            await supabase
+          try {
+            const { data: existingProfile, error: profileCheckError } = await supabase
               .from('profiles')
-              .insert({ 
-                id: user.id,
-                full_name: user.fullName || '',
-                avatar_url: user.imageUrl || '',
-                role: 'admin'
-              });
-          } else if (existingProfile.role !== 'admin') {
-            console.log("Updating user role to admin in database");
-            await supabase
-              .from('profiles')
-              .update({ role: 'admin' })
-              .eq('id', user.id);
+              .select('role')
+              .eq('id', user.id)
+              .maybeSingle();
+              
+            if (profileCheckError) {
+              console.error("Error checking profile:", profileCheckError);
+            } else if (!existingProfile) {
+              console.log("Admin user not in database, creating profile");
+              await supabase
+                .from('profiles')
+                .insert({ 
+                  id: user.id,
+                  full_name: user.fullName || '',
+                  avatar_url: user.imageUrl || '',
+                  role: 'admin'
+                });
+            } else if (existingProfile.role !== 'admin') {
+              console.log("Updating user role to admin in database");
+              await supabase
+                .from('profiles')
+                .update({ role: 'admin' })
+                .eq('id', user.id);
+            }
+          } catch (dbError) {
+            console.error("Database operation failed:", dbError);
+            // Continue anyway since we're using the email check as primary
           }
           
           setIsAdmin(true);
@@ -67,54 +83,32 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         const userRole = user.publicMetadata?.role;
         if (userRole === 'admin') {
           console.log("User has admin role in Clerk metadata");
-          
-          // Sync with Supabase
-          const { data: existingProfile, error: profileCheckError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          if (profileCheckError) {
-            console.error("Error checking profile:", profileCheckError);
-          } else if (!existingProfile) {
-            console.log("Admin user not in database, creating profile");
-            await supabase
-              .from('profiles')
-              .insert({ 
-                id: user.id,
-                full_name: user.fullName || '',
-                avatar_url: user.imageUrl || '',
-                role: 'admin'
-              });
-          } else if (existingProfile.role !== 'admin') {
-            console.log("Updating user role to admin in database");
-            await supabase
-              .from('profiles')
-              .update({ role: 'admin' })
-              .eq('id', user.id);
-          }
-          
           setIsAdmin(true);
           setIsLoading(false);
           return;
         }
         
         // Check admin role from Supabase as backup
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-        
-        if (error) {
-          console.error('Error checking admin role:', error);
-          setError("Database error: " + error.message);
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('Error checking admin role:', error);
+            setError("Database error: " + error.message);
+            setIsAdmin(false);
+          } else {
+            const isUserAdmin = data?.role === 'admin';
+            console.log("User admin status from database:", isUserAdmin, "Data:", data);
+            setIsAdmin(isUserAdmin);
+          }
+        } catch (dbError) {
+          console.error("Database query failed:", dbError);
+          setError("Database query failed");
           setIsAdmin(false);
-        } else {
-          const isUserAdmin = data?.role === 'admin';
-          console.log("User admin status from database:", isUserAdmin, "Data:", data);
-          setIsAdmin(isUserAdmin);
         }
       } catch (error) {
         console.error('Error checking admin status:', error);
@@ -138,6 +132,12 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         </div>
       </div>
     );
+  }
+  
+  // Special handling for when Clerk is not available
+  if (!isClerkAvailable) {
+    console.warn("Authentication is disabled - Granting admin access in dev mode");
+    return <>{children}</>;
   }
   
   if (!isLoaded || !user) {

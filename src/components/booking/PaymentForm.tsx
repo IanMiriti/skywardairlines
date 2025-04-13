@@ -27,7 +27,7 @@ export const PaymentForm = ({
   };
 
   return (
-    <div className="african-card sticky top-6">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
       <div className="bg-safari-sunset text-white p-4 rounded-t-lg">
         <h2 className="text-xl font-semibold">Payment Summary</h2>
       </div>
