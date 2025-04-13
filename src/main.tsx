@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { ClerkProvider } from '@clerk/clerk-react';
 import App from './App.tsx';
 import './index.css';
+import { ThemeProvider } from './hooks/use-theme.tsx';
 
 // Get the publishable key from environment variable
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -45,7 +46,9 @@ const initializeApp = () => {
       // Render app without Clerk
       createRoot(rootElement).render(
         <React.StrictMode>
-          <App />
+          <ThemeProvider defaultTheme="light">
+            <App />
+          </ThemeProvider>
         </React.StrictMode>
       );
       
@@ -61,16 +64,18 @@ const initializeApp = () => {
       console.log("Initializing application with Clerk publishable key");
       createRoot(rootElement).render(
         <React.StrictMode>
-          <ClerkProvider 
-            publishableKey={PUBLISHABLE_KEY}
-            signInUrl="/sign-in"
-            signUpUrl="/sign-up"
-            signInFallbackRedirectUrl="/handle-auth"
-            signUpFallbackRedirectUrl="/handle-auth"
-            {...(CLERK_FRONTEND_API && { frontendApi: CLERK_FRONTEND_API })}
-          >
-            <App />
-          </ClerkProvider>
+          <ThemeProvider defaultTheme="light">
+            <ClerkProvider 
+              publishableKey={PUBLISHABLE_KEY}
+              signInUrl="/sign-in"
+              signUpUrl="/sign-up"
+              signInFallbackRedirectUrl="/handle-auth"
+              signUpFallbackRedirectUrl="/handle-auth"
+              {...(CLERK_FRONTEND_API && { frontendApi: CLERK_FRONTEND_API })}
+            >
+              <App />
+            </ClerkProvider>
+          </ThemeProvider>
         </React.StrictMode>
       );
       console.log("Application initialized successfully with authentication");

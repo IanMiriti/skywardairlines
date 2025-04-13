@@ -8,6 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  // Skip auth check if Clerk is not available (development mode)
+  if (!isClerkAvailable) {
+    console.warn("Authentication is disabled - Development mode admin access granted");
+    return <>{children}</>;
+  }
+
   const { user, isLoaded } = useUser();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,14 +21,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   
   useEffect(() => {
     const checkAdminRole = async () => {
-      // If Clerk is not available, use a dev bypass for testing
-      if (!isClerkAvailable) {
-        console.warn("Authentication disabled - Dev mode admin access granted");
-        setIsAdmin(true);
-        setIsLoading(false);
-        return;
-      }
-      
       if (!isLoaded) {
         console.log("AdminRoute: User data not loaded yet");
         return;
@@ -132,12 +130,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         </div>
       </div>
     );
-  }
-  
-  // Special handling for when Clerk is not available
-  if (!isClerkAvailable) {
-    console.warn("Authentication is disabled - Granting admin access in dev mode");
-    return <>{children}</>;
   }
   
   if (!isLoaded || !user) {

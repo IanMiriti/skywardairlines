@@ -8,8 +8,17 @@ import {
   AlertTriangle,
   LogOut
 } from "lucide-react";
-import { useClerk } from "@clerk/clerk-react";
 import { supabase } from "@/integrations/supabase/client";
+
+// Check if Clerk is available
+const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+// Only import Clerk hooks if available
+const ClerkComponents = isClerkAvailable
+  ? require("@clerk/clerk-react")
+  : { useClerk: () => ({ signOut: (callback: () => void) => callback() }) };
+
+const { useClerk } = ClerkComponents;
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -19,10 +28,15 @@ const AdminSidebar = () => {
     // Sign out from Supabase first
     await supabase.auth.signOut();
     
-    // Then sign out from Clerk
-    signOut(() => {
+    // Then sign out from Clerk if available
+    if (isClerkAvailable) {
+      signOut(() => {
+        window.location.href = "/sign-in";
+      });
+    } else {
+      // If Clerk is not available, just redirect
       window.location.href = "/sign-in";
-    });
+    }
   };
   
   const menuItems = [

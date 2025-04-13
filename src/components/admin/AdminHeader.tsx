@@ -1,16 +1,28 @@
 
-import { UserButton, useUser } from "@clerk/clerk-react";
 import { Bell, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+// Check if Clerk is available
+const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+// Only import Clerk components if available
+const ClerkComponents = isClerkAvailable
+  ? require("@clerk/clerk-react")
+  : { 
+      useUser: () => ({ user: { id: null }, isLoaded: true }),
+      UserButton: () => <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+    };
+
+const { useUser, UserButton } = ClerkComponents;
+
 const AdminHeader = () => {
   const { user, isLoaded } = useUser();
-  const [adminName, setAdminName] = useState<string | null>(null);
+  const [adminName, setAdminName] = useState<string | null>("Admin");
   
   useEffect(() => {
     const fetchAdminProfile = async () => {
-      if (user?.id) {
+      if (isClerkAvailable && user?.id) {
         try {
           const { data, error } = await supabase
             .from('profiles')
@@ -47,12 +59,23 @@ const AdminHeader = () => {
         </button>
         
         <div className="flex items-center">
-          {isLoaded && user && (
-            <span className="text-sm font-medium mr-2">
-              {adminName || user.firstName || user.username}
-            </span>
+          {isClerkAvailable ? (
+            <>
+              {isLoaded && user && (
+                <span className="text-sm font-medium mr-2">
+                  {adminName || user.firstName || user.username || "Admin"}
+                </span>
+              )}
+              <UserButton afterSignOutUrl="/sign-in" />
+            </>
+          ) : (
+            <>
+              <span className="text-sm font-medium mr-2">Development Admin</span>
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                <Settings size={16} className="text-gray-500" />
+              </div>
+            </>
           )}
-          <UserButton afterSignOutUrl="/sign-in" />
         </div>
       </div>
     </header>
