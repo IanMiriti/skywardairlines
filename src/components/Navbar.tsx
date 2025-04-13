@@ -1,12 +1,13 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useUser, UserButton, SignInButton } from "@clerk/clerk-react";
-import { Menu, X, Plane } from "lucide-react";
+import { Menu, X, Plane, User, LogIn } from "lucide-react";
 
 const Navbar = () => {
   const { isSignedIn } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -44,11 +45,18 @@ const Navbar = () => {
             ) : (
               <div className="flex items-center gap-4">
                 <SignInButton mode="modal">
-                  <button className="btn-outline btn py-2 px-4">Sign In</button>
+                  <button className="btn-outline btn py-2 px-4 flex items-center gap-2">
+                    <LogIn size={18} />
+                    <span>Customer Sign In</span>
+                  </button>
                 </SignInButton>
-                <Link to="/sign-up" className="btn btn-primary py-2 px-4">
-                  Sign Up
-                </Link>
+                <button 
+                  onClick={() => navigate('/sign-in')}
+                  className="btn btn-primary py-2 px-4 flex items-center gap-2"
+                >
+                  <User size={18} />
+                  <span>Admin Sign In</span>
+                </button>
               </div>
             )}
           </div>
@@ -101,15 +109,21 @@ const Navbar = () => {
               ) : (
                 <div className="flex flex-col space-y-2">
                   <SignInButton mode="modal">
-                    <button className="btn-outline btn py-2 w-full">Sign In</button>
+                    <button className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center">
+                      <LogIn size={18} />
+                      <span>Customer Sign In</span>
+                    </button>
                   </SignInButton>
-                  <Link
-                    to="/sign-up"
-                    className="btn btn-primary py-2 text-center"
-                    onClick={toggleMenu}
+                  <button
+                    onClick={() => {
+                      navigate('/sign-in');
+                      toggleMenu();
+                    }}
+                    className="btn btn-primary py-2 text-center w-full flex items-center gap-2 justify-center"
                   >
-                    Sign Up
-                  </Link>
+                    <User size={18} />
+                    <span>Admin Sign In</span>
+                  </button>
                 </div>
               )}
             </div>

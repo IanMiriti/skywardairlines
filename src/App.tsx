@@ -113,7 +113,7 @@ const App = () => (
                     <MyBookings />
                   </SignedIn>
                   <SignedOut>
-                    <Navigate to="/sign-in" replace />
+                    <Navigate to="/" replace />
                   </SignedOut>
                 </>
               } 
@@ -126,7 +126,7 @@ const App = () => (
                     <Profile />
                   </SignedIn>
                   <SignedOut>
-                    <Navigate to="/sign-in" replace />
+                    <Navigate to="/" replace />
                   </SignedOut>
                 </>
               } 

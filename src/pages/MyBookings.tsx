@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -11,10 +10,14 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowRight,
-  RefreshCw 
+  RefreshCw,
+  Search 
 } from "lucide-react";
+import { useUser } from "@clerk/clerk-react";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock bookings data
+// Mock bookings data - we'll pretend this comes from Supabase
+// In a real app, this would be fetched from the database
 const mockBookings = [
   {
     id: "BK12345",
@@ -76,19 +79,35 @@ const mockBookings = [
 ];
 
 const MyBookings = () => {
+  const { user } = useUser();
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
   const [cancellationId, setCancellationId] = useState<string | null>(null);
   const [cancellationConfirm, setCancellationConfirm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setBookings(mockBookings);
-      setLoading(false);
-    }, 800);
-  }, []);
+    const fetchBookings = async () => {
+      setLoading(true);
+      
+      // In a real app, this would be a Supabase query
+      // const { data, error } = await supabase
+      //   .from('bookings')
+      //   .select('*, flight:flights(*)')
+      //   .eq('user_id', user?.id);
+      
+      // Simulate API fetch with the mock data
+      setTimeout(() => {
+        setBookings(mockBookings);
+        setLoading(false);
+      }, 800);
+    };
+    
+    if (user) {
+      fetchBookings();
+    }
+  }, [user]);
   
   const toggleBookingDetails = (bookingId: string) => {
     if (expandedBooking === bookingId) {
@@ -103,8 +122,9 @@ const MyBookings = () => {
     setCancellationConfirm(true);
   };
   
-  const confirmCancellation = () => {
+  const confirmCancellation = async () => {
     // In a real app, you would make an API call to cancel the booking
+    // For this mock, we'll update the local state
     setBookings(prevBookings => 
       prevBookings.map(booking => 
         booking.id === cancellationId 
@@ -130,6 +150,16 @@ const MyBookings = () => {
       minimumFractionDigits: 0,
     }).format(price);
   };
+  
+  // Filter bookings based on search term
+  const filteredBookings = bookings.filter(booking => 
+    booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.flight.airline.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.flight.flightNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.flight.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.flight.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.status.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -192,9 +222,23 @@ const MyBookings = () => {
             </button>
           </div>
           
-          {bookings.length > 0 ? (
+          {/* Search Box */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search bookings by ID, airline, flight number, destination..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-flysafari-primary focus:border-flysafari-primary"
+              />
+            </div>
+          </div>
+          
+          {filteredBookings.length > 0 ? (
             <div className="space-y-4">
-              {bookings.map((booking) => (
+              {filteredBookings.map((booking) => (
                 <div 
                   key={booking.id} 
                   className="bg-white rounded-lg shadow-sm overflow-hidden card-hover"
@@ -332,11 +376,22 @@ const MyBookings = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2">No Bookings Found</h3>
               <p className="text-gray-600 mb-6">
-                You haven't made any bookings yet. Start by searching for flights and make your first booking.
+                {searchTerm ? 
+                  "No bookings match your search criteria. Try a different search term." : 
+                  "You haven't made any bookings yet. Start by searching for flights and make your first booking."}
               </p>
-              <Link to="/flights" className="btn btn-primary">
-                Search Flights
-              </Link>
+              {searchTerm ? (
+                <button 
+                  onClick={() => setSearchTerm("")}
+                  className="btn btn-outline"
+                >
+                  Clear Search
+                </button>
+              ) : (
+                <Link to="/flights" className="btn btn-primary">
+                  Search Flights
+                </Link>
+              )}
             </div>
           )}
         </div>

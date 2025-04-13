@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -13,8 +12,8 @@ import {
   X,
   FileDown
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock bookings data
 const mockBookings = [
   {
     id: "BK12345",
@@ -141,14 +140,23 @@ const AdminBookings = () => {
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
   
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setBookings(mockBookings);
-      setLoading(false);
-    }, 800);
+    const fetchBookings = async () => {
+      setLoading(true);
+      
+      try {
+        setTimeout(() => {
+          setBookings(mockBookings);
+          setLoading(false);
+        }, 800);
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        setLoading(false);
+      }
+    };
+    
+    fetchBookings();
   }, []);
   
-  // Format price in KES
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
@@ -157,7 +165,6 @@ const AdminBookings = () => {
     }).format(price);
   };
   
-  // Toggle booking details
   const toggleBookingDetails = (bookingId: string) => {
     if (expandedBooking === bookingId) {
       setExpandedBooking(null);
@@ -166,7 +173,6 @@ const AdminBookings = () => {
     }
   };
   
-  // Filter bookings based on search and status
   const filteredBookings = bookings.filter(booking => {
     const matchesSearch = 
       booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -174,7 +180,8 @@ const AdminBookings = () => {
       booking.customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.flight.flightNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.flight.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.flight.to.toLowerCase().includes(searchTerm.toLowerCase());
+      booking.flight.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.paymentReference.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || booking.status.toLowerCase() === statusFilter.toLowerCase();
     
@@ -206,6 +213,21 @@ const AdminBookings = () => {
     }
   };
   
+  const handleExportBookings = () => {
+    const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(
+      "Booking ID,Customer,Flight,Date,Status,Amount\n" +
+      filteredBookings.map(b => 
+        `${b.id},${b.customer.name},${b.flight.airline} ${b.flight.flightNumber},${b.flight.date},${b.status},${b.totalAmount}`
+      ).join("\n")
+    );
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "bookings.csv");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -223,6 +245,7 @@ const AdminBookings = () => {
         </div>
         
         <button 
+          onClick={handleExportBookings}
           className="btn btn-outline py-2 px-4 inline-flex items-center gap-2 self-start"
         >
           <FileDown size={16} />
@@ -230,7 +253,6 @@ const AdminBookings = () => {
         </button>
       </div>
       
-      {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow">
@@ -259,7 +281,6 @@ const AdminBookings = () => {
         </div>
       </div>
       
-      {/* Bookings List */}
       {filteredBookings.length > 0 ? (
         <div className="space-y-4">
           {filteredBookings.map((booking) => (
@@ -315,7 +336,6 @@ const AdminBookings = () => {
                 </div>
               </div>
               
-              {/* Expanded details */}
               {expandedBooking === booking.id && (
                 <div className="px-4 pb-4 border-t border-gray-200 pt-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

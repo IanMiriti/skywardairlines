@@ -11,9 +11,9 @@ const SignIn = () => {
             <Plane className="h-8 w-8 text-flysafari-primary" />
             <span className="text-2xl font-bold text-flysafari-dark">FlySafari</span>
           </div>
-          <h1 className="text-2xl font-bold text-flysafari-dark">Sign In to Your Account</h1>
+          <h1 className="text-2xl font-bold text-flysafari-dark">Admin Sign In</h1>
           <p className="text-gray-600 mt-2">
-            Please sign in with Google to access your bookings.
+            Please sign in with Google to access the admin dashboard.
           </p>
         </div>
         
