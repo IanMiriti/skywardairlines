@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Plane, 
@@ -24,6 +24,23 @@ const Index = () => {
     passengers: 1,
     tripType: "oneWay" // Default to one-way trip
   });
+  const [animatedElements, setAnimatedElements] = useState<boolean[]>([]);
+
+  useEffect(() => {
+    // Initialize animations with staggered timing
+    const elementsCount = 7; // Number of major sections to animate
+    const animationDelay = 200; // ms between animations
+    
+    for (let i = 0; i < elementsCount; i++) {
+      setTimeout(() => {
+        setAnimatedElements(prev => {
+          const newState = [...prev];
+          newState[i] = true;
+          return newState;
+        });
+      }, i * animationDelay);
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -88,7 +105,7 @@ const Index = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative bg-flysafari-dark text-white overflow-hidden">
+      <section className={`relative bg-flysafari-dark text-white overflow-hidden ${animatedElements[0] ? 'animate-fade-in' : 'opacity-0'}`}>
         <div className="absolute inset-0 opacity-30 bg-gradient-to-r from-black to-transparent z-0">
           <img 
             src="https://images.unsplash.com/photo-1523374228107-6e44bd2b524e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80" 
@@ -99,17 +116,17 @@ const Index = () => {
         
         <div className="container relative z-10 py-20 md:py-32">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 staggered-fade-in" style={{animationDelay: '200ms'}}>
               Your Journey Begins with FlySafari
             </h1>
-            <p className="text-xl md:text-2xl mb-8">
+            <p className="text-xl md:text-2xl mb-8 staggered-fade-in" style={{animationDelay: '400ms'}}>
               Book affordable flights across Kenya with ease. Search, book, and fly with confidence.
             </p>
-            <div className="flex gap-4">
-              <Link to="/flights" className="bg-flysafari-primary hover:bg-flysafari-primary/90 text-white py-3 px-8 rounded-md text-lg font-medium">
+            <div className="flex gap-4 staggered-fade-in" style={{animationDelay: '600ms'}}>
+              <Link to="/flights" className="bg-flysafari-primary hover:bg-flysafari-primary/90 text-white py-3 px-8 rounded-md text-lg font-medium nav-button">
                 Book a Flight
               </Link>
-              <Link to="/offers" className="bg-flysafari-secondary hover:bg-flysafari-secondary/90 text-white py-3 px-8 rounded-md text-lg font-medium border border-white">
+              <Link to="/offers" className="bg-flysafari-secondary hover:bg-flysafari-secondary/90 text-white py-3 px-8 rounded-md text-lg font-medium border-2 border-white nav-button">
                 View Offers
               </Link>
             </div>
@@ -120,7 +137,7 @@ const Index = () => {
       {/* Search Flights Section */}
       <section className="py-12 bg-white">
         <div className="container">
-          <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 -mt-20 relative z-20">
+          <div className={`max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 -mt-20 relative z-20 ${animatedElements[1] ? 'slide-up' : 'opacity-0'}`}>
             <h2 className="text-2xl font-bold mb-6 text-flysafari-dark">Search for Flights</h2>
             
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -278,9 +295,9 @@ const Index = () => {
               
               <button
                 type="submit"
-                className="btn btn-secondary w-full py-3 text-lg flex items-center justify-center gap-2"
+                className="btn btn-secondary w-full py-3 text-lg flex items-center justify-center gap-2 nav-button"
               >
-                <Search size={20} />
+                <Search size={20} className="icon-spin" />
                 Search Flights
               </button>
             </form>
@@ -289,24 +306,25 @@ const Index = () => {
       </section>
       
       {/* Special Offers Section */}
-      <section className="py-16 bg-gray-50">
+      <section className={`py-16 bg-gray-50 ${animatedElements[2] ? 'animate-fade-in' : 'opacity-0'}`}>
         <div className="container">
           <div className="flex justify-between items-center mb-10">
             <h2 className="text-3xl font-bold text-flysafari-dark">Special Offers</h2>
             <Link 
               to="/offers" 
-              className="text-flysafari-primary hover:text-flysafari-primary/80 flex items-center gap-1"
+              className="text-flysafari-primary hover:text-flysafari-primary/80 flex items-center gap-1 nav-item"
             >
-              View all offers <ArrowRight size={16} />
+              View all offers <ArrowRight size={16} className="floating" />
             </Link>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredOffers.map((offer) => (
+            {featuredOffers.map((offer, index) => (
               <Link 
                 to={`/offers/${offer.id}`} 
                 key={offer.id}
-                className="bg-white rounded-xl overflow-hidden shadow-md card-hover"
+                className={`bg-white rounded-xl overflow-hidden shadow-md card-hover staggered-fade-in`} 
+                style={{animationDelay: `${index * 150 + 300}ms`}}
               >
                 <div className="relative h-48">
                   <img 
@@ -314,7 +332,7 @@ const Index = () => {
                     alt={offer.title} 
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-4 right-4 bg-flysafari-secondary text-white py-1 px-3 rounded-full font-semibold text-sm">
+                  <div className="absolute top-4 right-4 bg-flysafari-secondary text-white py-1 px-3 rounded-full font-semibold text-sm pulsing">
                     {offer.discount}
                   </div>
                 </div>
@@ -332,121 +350,99 @@ const Index = () => {
       </section>
       
       {/* How It Works Section */}
-      <section className="py-16 bg-white">
+      <section className={`py-16 bg-white ${animatedElements[3] ? 'animate-fade-in' : 'opacity-0'}`}>
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-12 text-flysafari-dark">How It Works</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-flysafari-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Search className="text-flysafari-primary" size={28} />
+            {[
+              {
+                icon: <Search className="text-flysafari-primary icon-spin" size={28} />,
+                title: "Search Flights",
+                description: "Enter your departure, destination, and travel date to find available flights."
+              },
+              {
+                icon: <BookOpen className="text-flysafari-primary icon-spin" size={28} />,
+                title: "Book Your Flight",
+                description: "Choose your preferred flight, enter passenger details, and complete your booking."
+              },
+              {
+                icon: <Plane className="text-flysafari-primary icon-spin" size={28} />,
+                title: "Fly with Confidence",
+                description: "Receive your e-ticket via email and prepare for your journey."
+              }
+            ].map((step, index) => (
+              <div key={index} className={`text-center staggered-fade-in`} style={{animationDelay: `${index * 200 + 400}ms`}}>
+                <div className="w-16 h-16 bg-flysafari-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 hover-scale">
+                  {step.icon}
+                </div>
+                <h3 className="text-xl font-bold mb-3 text-flysafari-dark">{step.title}</h3>
+                <p className="text-gray-600">
+                  {step.description}
+                </p>
               </div>
-              <h3 className="text-xl font-bold mb-3 text-flysafari-dark">Search Flights</h3>
-              <p className="text-gray-600">
-                Enter your departure, destination, and travel date to find available flights.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-flysafari-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <BookOpen className="text-flysafari-primary" size={28} />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-flysafari-dark">Book Your Flight</h3>
-              <p className="text-gray-600">
-                Choose your preferred flight, enter passenger details, and complete your booking.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-flysafari-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Plane className="text-flysafari-primary" size={28} />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-flysafari-dark">Fly with Confidence</h3>
-              <p className="text-gray-600">
-                Receive your e-ticket via email and prepare for your journey.
-              </p>
-            </div>
+            ))}
           </div>
           
           <div className="mt-12 text-center">
             <Link 
               to="/flights" 
-              className="btn btn-primary py-3 px-8 rounded-md inline-flex items-center gap-2"
+              className="btn btn-primary py-3 px-8 rounded-md inline-flex items-center gap-2 nav-button"
             >
-              Book Now <ArrowRight size={20} />
+              Book Now <ArrowRight size={20} className="floating" />
             </Link>
           </div>
         </div>
       </section>
       
       {/* Testimonials Section */}
-      <section className="py-16 bg-gray-50">
+      <section className={`py-16 bg-gray-50 ${animatedElements[4] ? 'animate-fade-in' : 'opacity-0'}`}>
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-12 text-flysafari-dark">What Our Customers Say</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-flysafari-primary/20 flex items-center justify-center">
-                  <span className="text-flysafari-primary font-bold">JM</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold">John Mwangi</h4>
-                  <div className="flex text-yellow-400">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span key={star}>★</span>
-                    ))}
+            {[
+              {
+                initials: "JM",
+                name: "John Mwangi",
+                text: "Booking with FlySafari was simple and straightforward. The flight was on time and the service was excellent. Will definitely use again!"
+              },
+              {
+                initials: "AO",
+                name: "Aisha Omondi",
+                text: "I found a great deal on FlySafari for my family trip to Mombasa. The booking process was quick and the M-PESA payment option was very convenient."
+              },
+              {
+                initials: "DK",
+                name: "David Kamau",
+                text: "The special offers helped me save a lot on my business trips. The mobile experience is smooth, and customer service is responsive. Highly recommended!"
+              }
+            ].map((testimonial, index) => (
+              <div key={index} className={`bg-white p-6 rounded-xl shadow-md card-hover staggered-fade-in`} style={{animationDelay: `${index * 150 + 300}ms`}}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-flysafari-primary/20 flex items-center justify-center pulsing">
+                    <span className="text-flysafari-primary font-bold">{testimonial.initials}</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">{testimonial.name}</h4>
+                    <div className="flex text-yellow-400">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star}>★</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
+                <p className="text-gray-600">
+                  "{testimonial.text}"
+                </p>
               </div>
-              <p className="text-gray-600">
-                "Booking with FlySafari was simple and straightforward. The flight was on time and the service was excellent. Will definitely use again!"
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-flysafari-primary/20 flex items-center justify-center">
-                  <span className="text-flysafari-primary font-bold">AO</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Aisha Omondi</h4>
-                  <div className="flex text-yellow-400">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span key={star}>★</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <p className="text-gray-600">
-                "I found a great deal on FlySafari for my family trip to Mombasa. The booking process was quick and the M-PESA payment option was very convenient."
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-flysafari-primary/20 flex items-center justify-center">
-                  <span className="text-flysafari-primary font-bold">DK</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold">David Kamau</h4>
-                  <div className="flex text-yellow-400">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span key={star}>★</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <p className="text-gray-600">
-                "The special offers helped me save a lot on my business trips. The mobile experience is smooth, and customer service is responsive. Highly recommended!"
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
       
       {/* Newsletter Section */}
-      <section className="py-12 bg-flysafari-primary text-white">
+      <section className={`py-12 bg-flysafari-primary text-white ${animatedElements[5] ? 'animate-fade-in' : 'opacity-0'}`}>
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl font-bold mb-4">Subscribe to Our Newsletter</h2>
@@ -457,12 +453,12 @@ const Index = () => {
               <input
                 type="email"
                 placeholder="Your email address"
-                className="form-input flex-grow text-gray-800"
+                className="form-input flex-grow text-gray-800 hover-scale"
                 required
               />
               <button
                 type="submit"
-                className="btn btn-secondary py-2 px-6"
+                className="btn btn-secondary py-2 px-6 nav-button"
               >
                 Subscribe
               </button>

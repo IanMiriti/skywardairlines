@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, Plane, LogIn, LogOut, User, UserCircle } from "lucide-react";
 import { useAuth } from "@/hooks/auth-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,6 +15,7 @@ import {
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
 
@@ -36,38 +38,54 @@ const Navbar = () => {
       .substring(0, 2);
   };
 
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   const renderAuthButtons = () => {
     if (user) {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger className="focus:outline-none">
-            <Avatar className="h-8 w-8 cursor-pointer">
+            <Avatar className="h-8 w-8 cursor-pointer hover-scale">
               <AvatarImage src={user.user_metadata?.avatar_url} />
               <AvatarFallback className="bg-flysafari-primary text-white">
                 {getInitials(user.user_metadata?.full_name || user.email || "")}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="animate-fade-in">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate("/profile")}>
-              <User className="mr-2 h-4 w-4" />
+            <DropdownMenuItem 
+              onClick={() => navigate("/profile")} 
+              className="hover-scale"
+            >
+              <User className="mr-2 h-4 w-4 icon-spin" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/my-bookings")}>
-              <Plane className="mr-2 h-4 w-4" />
+            <DropdownMenuItem 
+              onClick={() => navigate("/my-bookings")} 
+              className="hover-scale"
+            >
+              <Plane className="mr-2 h-4 w-4 icon-spin" />
               My Bookings
             </DropdownMenuItem>
             {isAdmin && (
-              <DropdownMenuItem onClick={() => navigate("/admin/dashboard")}>
-                <UserCircle className="mr-2 h-4 w-4" />
+              <DropdownMenuItem 
+                onClick={() => navigate("/admin/dashboard")} 
+                className="hover-scale"
+              >
+                <UserCircle className="mr-2 h-4 w-4 icon-spin" />
                 Admin Dashboard
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut}>
-              <LogOut className="mr-2 h-4 w-4" />
+            <DropdownMenuItem 
+              onClick={handleSignOut} 
+              className="hover-scale text-red-500 hover:text-red-700"
+            >
+              <LogOut className="mr-2 h-4 w-4 icon-spin" />
               Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -78,9 +96,9 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/auth")}
-            className="btn-outline btn py-2 px-4 flex items-center gap-2"
+            className="nav-button btn-outline btn py-2 px-4 flex items-center gap-2"
           >
-            <LogIn size={18} />
+            <LogIn size={18} className="icon-spin" />
             <span>Sign In</span>
           </button>
         </div>
@@ -173,26 +191,31 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-sm">
+    <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <Plane className="h-6 w-6 text-flysafari-primary" />
-            <span className="text-xl font-bold text-flysafari-dark">
+          <Link to="/" className="flex items-center gap-2 hover-scale">
+            <Plane className="h-6 w-6 text-flysafari-primary icon-spin" />
+            <span className="text-xl font-bold text-flysafari-dark nav-link-highlight">
               FlySafari
             </span>
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/flights" className="text-gray-700 hover:text-flysafari-primary">
-              Flights
-            </Link>
-            <Link to="/offers" className="text-gray-700 hover:text-flysafari-primary">
-              Offers
-            </Link>
-            <Link to="/my-bookings" className="text-gray-700 hover:text-flysafari-primary">
-              My Bookings
-            </Link>
+            {[
+              { path: "/flights", label: "Flights" },
+              { path: "/offers", label: "Offers" },
+              { path: "/my-bookings", label: "My Bookings" }
+            ].map((item, index) => (
+              <Link 
+                key={item.path}
+                to={item.path} 
+                className={`nav-item ${isActive(item.path) ? 'text-flysafari-primary font-semibold' : 'text-gray-700'}`}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
@@ -202,40 +225,35 @@ const Navbar = () => {
           <div className="md:hidden">
             <button
               onClick={toggleMenu}
-              className="text-gray-700 focus:outline-none"
+              className="text-gray-700 focus:outline-none hover-scale"
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMenuOpen ? (
-                <X className="h-6 w-6" />
+                <X className="h-6 w-6 animate-fade-in" />
               ) : (
-                <Menu className="h-6 w-6" />
+                <Menu className="h-6 w-6 animate-fade-in" />
               )}
             </button>
           </div>
         </div>
 
         {isMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 space-y-4">
-            <Link
-              to="/flights"
-              className="block py-2 text-gray-700 hover:text-flysafari-primary"
-              onClick={toggleMenu}
-            >
-              Flights
-            </Link>
-            <Link
-              to="/offers"
-              className="block py-2 text-gray-700 hover:text-flysafari-primary"
-              onClick={toggleMenu}
-            >
-              Offers
-            </Link>
-            <Link
-              to="/my-bookings"
-              className="block py-2 text-gray-700 hover:text-flysafari-primary"
-              onClick={toggleMenu}
-            >
-              My Bookings
-            </Link>
+          <div className="md:hidden mt-4 pb-4 space-y-4 animate-slide-in-right">
+            {[
+              { path: "/flights", label: "Flights" },
+              { path: "/offers", label: "Offers" },
+              { path: "/my-bookings", label: "My Bookings" }
+            ].map((item, index) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`block py-2 nav-item ${isActive(item.path) ? 'text-flysafari-primary font-semibold' : 'text-gray-700'}`}
+                onClick={toggleMenu}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {item.label}
+              </Link>
+            ))}
             {renderMobileAuthButtons()}
           </div>
         )}
