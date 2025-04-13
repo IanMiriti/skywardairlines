@@ -72,9 +72,9 @@ const AdminSidebar = () => {
   };
   
   return (
-    <aside className="bg-flysafari-dark text-white w-64 min-h-screen flex flex-col shadow-lg">
+    <aside className="bg-flysafari-dark text-white w-64 min-h-screen flex flex-col shadow-lg animate-fade-in">
       <div className="p-5 border-b border-gray-700">
-        <Link to="/admin/dashboard" className="flex items-center gap-2">
+        <Link to="/admin/dashboard" className="flex items-center gap-2 hover-scale">
           <Plane className="h-6 w-6 text-flysafari-secondary" />
           <span className="text-xl font-bold">FlySafari Admin</span>
         </Link>
@@ -82,11 +82,11 @@ const AdminSidebar = () => {
       
       <nav className="flex-grow p-5">
         <ul className="space-y-2">
-          {menuItems.map((item) => (
-            <li key={item.title}>
+          {menuItems.map((item, index) => (
+            <li key={item.title} style={{ animationDelay: `${index * 100}ms` }} className="animate-fade-in">
               <Link
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-md transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 ${
                   isActive(item.path)
                     ? "bg-flysafari-primary/20 text-white"
                     : "text-gray-300 hover:bg-flysafari-dark/90 hover:text-white"

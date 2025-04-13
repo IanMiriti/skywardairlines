@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
@@ -12,7 +11,7 @@ import {
   AlertCircle
 } from "lucide-react";
 
-// Mock offers data (same as in Offers.tsx)
+// Mock offers data (modified to remove Nairobi to Lamu)
 const mockOffers = [
   {
     id: 1,
@@ -70,7 +69,7 @@ const mockOffers = [
       }
     ]
   },
-  // Add more offers same as in Offers.tsx
+  // Add other offers from Offers.tsx (2, 3, 4) but exclude 5 (Nairobi to Lamu)
 ];
 
 const OfferDetails = () => {
@@ -327,26 +326,26 @@ const OfferDetails = () => {
               <h3 className="font-semibold mb-4">Other Popular Destinations</h3>
               <ul className="space-y-3">
                 <li>
-                  <Link to="/offers/2" className="flex justify-between items-center group">
+                  <Link to="/offers/2" className="flex justify-between items-center group hover-scale">
                     <span className="group-hover:text-flysafari-primary transition-colors">Nairobi to Kisumu</span>
                     <span className="text-sm text-flysafari-secondary">10% OFF</span>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/offers/3" className="flex justify-between items-center group">
+                  <Link to="/offers/3" className="flex justify-between items-center group hover-scale">
                     <span className="group-hover:text-flysafari-primary transition-colors">Mombasa to Malindi</span>
                     <span className="text-sm text-flysafari-secondary">20% OFF</span>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/offers/4" className="flex justify-between items-center group">
+                  <Link to="/offers/4" className="flex justify-between items-center group hover-scale">
                     <span className="group-hover:text-flysafari-primary transition-colors">Nairobi to Eldoret</span>
                     <span className="text-sm text-flysafari-secondary">12% OFF</span>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/offers" className="text-flysafari-primary flex items-center gap-1 mt-2 text-sm">
-                    View all offers <ArrowRight size={14} />
+                  <Link to="/offers" className="text-flysafari-primary flex items-center gap-1 mt-2 text-sm group">
+                    View all offers <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
                   </Link>
                 </li>
               </ul>

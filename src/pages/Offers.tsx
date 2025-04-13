@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Tag, ArrowRight, Plane, Calendar } from "lucide-react";
 
-// Mock offers data
+// Mock offers data with the Nairobi to Lamu offer removed
 const mockOffers = [
   {
     id: 1,
@@ -89,27 +89,6 @@ const mockOffers = [
       "Cannot be combined with other offers"
     ]
   },
-  {
-    id: 5,
-    title: "Nairobi to Lamu",
-    description: "Island getaway special",
-    discount: "18% OFF",
-    image: "https://images.unsplash.com/photo-1587802479226-2e7a45f5f249?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8bGFtdXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60",
-    price: 13999,
-    originalPrice: 17080,
-    route: {
-      from: "Nairobi",
-      to: "Lamu"
-    },
-    validUntil: "2025-06-30",
-    daysValid: 45,
-    terms: [
-      "Valid for direct flights only",
-      "Subject to availability",
-      "Blackout dates may apply during high season",
-      "Cannot be combined with other offers"
-    ]
-  },
 ];
 
 const Offers = () => {
@@ -144,8 +123,8 @@ const Offers = () => {
   return (
     <div className="bg-gray-50 min-h-screen py-12">
       <div className="container">
-        {/* Hero section */}
-        <div className="bg-flysafari-primary rounded-xl overflow-hidden relative mb-12">
+        {/* Hero section with animation */}
+        <div className="bg-flysafari-primary rounded-xl overflow-hidden relative mb-12 animate-fade-in">
           <div className="absolute inset-0 opacity-20">
             <img 
               src="https://images.unsplash.com/photo-1517479149777-5f3b1511d5ad?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80" 
@@ -174,11 +153,12 @@ const Offers = () => {
         
         {offers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {offers.map((offer) => (
+            {offers.map((offer, index) => (
               <Link 
                 to={`/offers/${offer.id}`} 
                 key={offer.id}
-                className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow card-hover"
+                className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow hover-scale card-hover animate-fade-in"
+                style={{ animationDelay: `${index * 150}ms` }}
               >
                 <div className="relative h-48">
                   <img 
@@ -216,8 +196,8 @@ const Offers = () => {
                         {formatPrice(offer.originalPrice)}
                       </p>
                     </div>
-                    <div className="text-flysafari-secondary flex items-center gap-1 font-medium">
-                      View Offer <ArrowRight size={16} />
+                    <div className="text-flysafari-secondary flex items-center gap-1 font-medium group">
+                      View Offer <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
                     </div>
                   </div>
                 </div>
@@ -225,7 +205,7 @@ const Offers = () => {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="bg-white rounded-lg shadow-md p-8 text-center animate-fade-in">
             <div className="text-gray-400 mb-4">
               <Tag size={48} className="mx-auto" />
             </div>
@@ -240,7 +220,7 @@ const Offers = () => {
         )}
         
         {/* Terms and conditions */}
-        <div className="mt-12 bg-white rounded-lg shadow-sm p-6">
+        <div className="mt-12 bg-white rounded-lg shadow-sm p-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
           <h3 className="text-lg font-semibold mb-4">General Terms & Conditions</h3>
           <ul className="space-y-2 text-gray-600 list-disc pl-5">
             <li>All offers are subject to availability and may be withdrawn at any time without notice.</li>

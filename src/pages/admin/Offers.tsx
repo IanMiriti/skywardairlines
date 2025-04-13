@@ -11,7 +11,7 @@ import {
   Calendar
 } from "lucide-react";
 
-// Mock offers data (simplified)
+// Mock offers data (simplified) - Nairobi to Lamu offer has been removed
 const mockOffers = [
   {
     id: 1,
@@ -68,21 +68,7 @@ const mockOffers = [
     price: 7250,
     originalPrice: 8250,
     status: "Inactive"
-  },
-  {
-    id: 5,
-    title: "Nairobi to Lamu",
-    description: "Island getaway special",
-    discount: "18%",
-    route: {
-      from: "Nairobi",
-      to: "Lamu"
-    },
-    validUntil: "2025-06-30",
-    price: 13999,
-    originalPrice: 17080,
-    status: "Active"
-  },
+  }
 ];
 
 const AdminOffers = () => {
@@ -130,7 +116,7 @@ const AdminOffers = () => {
   }
   
   return (
-    <div>
+    <div className="animate-fade-in">
       <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-flysafari-dark">Manage Offers</h1>
@@ -139,7 +125,7 @@ const AdminOffers = () => {
         
         <Link 
           to="/admin/offers/new" 
-          className="btn btn-primary py-2 px-4 inline-flex items-center gap-2 self-start"
+          className="btn btn-primary py-2 px-4 inline-flex items-center gap-2 self-start hover-scale"
         >
           <Plus size={16} />
           Add New Offer
@@ -147,7 +133,7 @@ const AdminOffers = () => {
       </div>
       
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+      <div className="bg-white rounded-lg shadow-sm p-4 mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -176,7 +162,7 @@ const AdminOffers = () => {
       
       {/* Offers Table */}
       {filteredOffers.length > 0 ? (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden animate-fade-in" style={{ animationDelay: '200ms' }}>
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
@@ -191,8 +177,12 @@ const AdminOffers = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredOffers.map((offer) => (
-                  <tr key={offer.id} className="border-b hover:bg-gray-50">
+                {filteredOffers.map((offer, index) => (
+                  <tr 
+                    key={offer.id} 
+                    className="border-b hover:bg-gray-50 transition-colors duration-150"
+                    style={{ animation: 'fade-in 0.3s ease-out', animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-start gap-2">
                         <Tag className="text-flysafari-secondary mt-1" size={16} />
@@ -239,16 +229,16 @@ const AdminOffers = () => {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/admin/offers/${offer.id}/edit`}
-                          className="p-1 text-gray-600 hover:text-flysafari-primary rounded-md"
+                          className="p-1 text-gray-600 hover:text-flysafari-primary rounded-md transition-colors duration-200"
                           title="Edit Offer"
                         >
-                          <Edit size={16} />
+                          <Edit size={16} className="hover-scale" />
                         </Link>
                         <button
-                          className="p-1 text-gray-600 hover:text-red-600 rounded-md"
+                          className="p-1 text-gray-600 hover:text-red-600 rounded-md transition-colors duration-200"
                           title="Delete Offer"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={16} className="hover-scale" />
                         </button>
                       </div>
                     </td>
@@ -259,7 +249,7 @@ const AdminOffers = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+        <div className="bg-white rounded-lg shadow-sm p-8 text-center animate-fade-in">
           <div className="text-gray-400 mb-4">
             <FilterX size={48} className="mx-auto" />
           </div>
@@ -276,14 +266,14 @@ const AdminOffers = () => {
                   setSearchTerm("");
                   setStatusFilter("all");
                 }}
-                className="btn btn-outline py-2 px-4"
+                className="btn btn-outline py-2 px-4 hover-scale"
               >
                 Clear Filters
               </button>
             ) : null}
             <Link
               to="/admin/offers/new"
-              className="btn btn-primary py-2 px-4 inline-flex items-center gap-2"
+              className="btn btn-primary py-2 px-4 inline-flex items-center gap-2 hover-scale"
             >
               <Plus size={16} />
               Add New Offer

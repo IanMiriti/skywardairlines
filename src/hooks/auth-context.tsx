@@ -73,59 +73,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     setIsAdminLoading(true);
 
-    // Quick check for known admin email
-    if (user.email === ADMIN_EMAIL) {
-      console.log("Admin email detected");
-      setIsAdmin(true);
-      setIsAdminLoading(false);
-      
-      // Ensure admin status in database
-      try {
-        const { data: profile, error } = await supabase
+    try {
+      // First check for known admin email
+      if (user.email === ADMIN_EMAIL) {
+        console.log("Admin email detected");
+        setIsAdmin(true);
+        
+        // Ensure admin status in database
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (error) {
+            console.error("Error checking profile:", error);
+          } else if (!profile) {
+            console.log("Creating admin profile");
+            await supabase
+              .from('profiles')
+              .insert({
+                id: user.id,
+                email: user.email,
+                full_name: user.user_metadata?.full_name || '',
+                role: 'admin'
+              });
+          } else if (profile.role !== 'admin') {
+            console.log("Updating to admin role");
+            await supabase
+              .from('profiles')
+              .update({ role: 'admin' })
+              .eq('id', user.id);
+          }
+        } catch (error) {
+          console.error("Database operation failed:", error);
+        }
+      } else {
+        // For all other users, check database for admin role
+        const { data, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .maybeSingle();
           
         if (error) {
-          console.error("Error checking profile:", error);
-        } else if (!profile) {
-          console.log("Creating admin profile");
-          await supabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              email: user.email,
-              full_name: user.user_metadata?.full_name || '',
-              role: 'admin'
-            });
-        } else if (profile.role !== 'admin') {
-          console.log("Updating to admin role");
-          await supabase
-            .from('profiles')
-            .update({ role: 'admin' })
-            .eq('id', user.id);
+          console.error('Error checking admin role:', error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(data?.role === 'admin');
         }
-      } catch (error) {
-        console.error("Database operation failed:", error);
-      }
-      
-      return;
-    }
-
-    // For all other users, check database for admin role
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-        
-      if (error) {
-        console.error('Error checking admin role:', error);
-        setIsAdmin(false);
-      } else {
-        setIsAdmin(data?.role === 'admin');
       }
     } catch (error) {
       console.error('Error checking admin status:', error);
