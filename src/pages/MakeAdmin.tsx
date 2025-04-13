@@ -4,15 +4,20 @@ import { makeEmailAdmin } from "@/integrations/supabase/makeAdmin";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Shield, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const MakeAdmin = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const handleMakeAdmin = async () => {
     setIsProcessing(true);
+    setError(null);
+    
     try {
+      // First try the regular method
       const result = await makeEmailAdmin("ianmiriti254@gmail.com");
       
       if (result) {
@@ -26,18 +31,73 @@ const MakeAdmin = () => {
         setTimeout(() => {
           navigate("/auth/admin");
         }, 3000);
-      } else {
+        return;
+      } 
+      
+      // If the regular method failed, try direct database update
+      try {
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !userData.user) {
+          throw new Error("Could not get current user");
+        }
+        
+        const userId = userData.user.id;
+        
+        // Try to get the profile first
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', 'ianmiriti254@gmail.com')
+          .maybeSingle();
+          
+        if (existingProfile) {
+          // Update existing profile
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ role: 'admin' })
+            .eq('id', existingProfile.id);
+            
+          if (updateError) throw updateError;
+        } else {
+          // Insert new profile with admin role
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: 'ianmiriti254@gmail.com',
+              role: 'admin',
+              full_name: 'Admin User'
+            });
+            
+          if (insertError) throw insertError;
+        }
+        
+        setSuccess(true);
+        toast({
+          title: "Success!",
+          description: "Your account has been granted admin privileges using direct method.",
+        });
+        
+        // Redirect after a short delay
+        setTimeout(() => {
+          navigate("/auth/admin");
+        }, 3000);
+      } catch (directError: any) {
+        console.error("Direct admin creation error:", directError);
+        setError(`Database error: ${directError.message || 'Unknown error'}`);
         toast({
           title: "Error",
-          description: "Failed to make your account an admin. Please try again.",
+          description: `Direct method failed: ${directError.message || 'Unknown error'}`,
           variant: "destructive"
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error making admin:", error);
+      setError(`${error.message || 'An unexpected error occurred'}`);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -55,6 +115,13 @@ const MakeAdmin = () => {
             <p className="text-gray-600 mb-6">
               Click the button below to make your account (ianmiriti254@gmail.com) an admin.
             </p>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-left">
+                <p className="font-medium">Error encountered:</p>
+                <p className="text-sm">{error}</p>
+                <p className="text-sm mt-2">Trying alternative direct method. Click the button again.</p>
+              </div>
+            )}
             <button
               onClick={handleMakeAdmin}
               disabled={isProcessing}
