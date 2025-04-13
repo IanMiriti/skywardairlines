@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import { ArrowLeft } from "lucide-react";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "@/hooks/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Flight } from "@/utils/types";
 import { toast } from "@/hooks/use-toast";
@@ -31,7 +32,7 @@ const Booking = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isSignedIn } = useUser();
+  const { user } = useAuth();
   const queryParams = new URLSearchParams(location.search);
   
   const [flight, setFlight] = useState<Flight | null>(null);
@@ -41,10 +42,11 @@ const Booking = () => {
   const [returnFlightId] = useState<string | null>(queryParams.get('returnFlightId'));
   const [passengerCount] = useState(Number(queryParams.get('passengers')) || 1);
   const [tripType] = useState(queryParams.get('tripType') || 'oneWay');
+  const [bookingId] = useState<string | null>(queryParams.get('bookingId'));
   const [formData, setFormData] = useState<FormData>({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    email: user?.primaryEmailAddress?.emailAddress || "",
+    firstName: "",
+    lastName: "",
+    email: "",
     phone: "",
     idPassport: "",
     specialRequests: "",
@@ -56,29 +58,61 @@ const Booking = () => {
       setLoading(true);
       
       try {
-        const { data, error } = await supabase
-          .from('flights')
-          .select('*')
-          .eq('id', id)
-          .single();
-          
-        if (error) {
-          throw error;
-        }
-        
-        setFlight(data);
-        
-        if (returnFlightId) {
-          const { data: returnData, error: returnError } = await supabase
-            .from('flights')
-            .select('*')
-            .eq('id', returnFlightId)
+        // If bookingId is provided, fetch booking to get flight info
+        if (bookingId) {
+          const { data: bookingData, error: bookingError } = await supabase
+            .from('bookings')
+            .select(`
+              *,
+              flight:flight_id(*),
+              return_flight:return_flight_id(*)
+            `)
+            .eq('id', bookingId)
             .single();
             
-          if (returnError) {
-            console.error('Error fetching return flight:', returnError);
-          } else {
-            setReturnFlight(returnData);
+          if (bookingError) {
+            throw bookingError;
+          }
+          
+          if (bookingData) {
+            setFlight(bookingData.flight);
+            setReturnFlight(bookingData.return_flight);
+            setFormData({
+              firstName: bookingData.passenger_name.split(' ')[0] || "",
+              lastName: bookingData.passenger_name.split(' ').slice(1).join(' ') || "",
+              email: bookingData.email || "",
+              phone: bookingData.phone_number || "",
+              idPassport: bookingData.id_passport_number || "",
+              specialRequests: bookingData.special_requests || "",
+              paymentMethod: "mpesa"
+            });
+          }
+        } else {
+          // Normal flow - fetch flight by ID
+          const { data, error } = await supabase
+            .from('flights')
+            .select('*')
+            .eq('id', id)
+            .single();
+            
+          if (error) {
+            throw error;
+          }
+          
+          setFlight(data);
+          
+          if (returnFlightId) {
+            const { data: returnData, error: returnError } = await supabase
+              .from('flights')
+              .select('*')
+              .eq('id', returnFlightId)
+              .single();
+              
+            if (returnError) {
+              console.error('Error fetching return flight:', returnError);
+            } else {
+              setReturnFlight(returnData);
+            }
           }
         }
       } catch (error) {
@@ -93,18 +127,19 @@ const Booking = () => {
       }
     };
     
-    if (id) {
+    if (id || bookingId) {
       fetchFlightDetails();
     }
-  }, [id, returnFlightId]);
+  }, [id, returnFlightId, bookingId]);
   
   useEffect(() => {
     if (user) {
       setFormData(prev => ({
         ...prev,
-        firstName: user.firstName || prev.firstName,
-        lastName: user.lastName || prev.lastName,
-        email: user.primaryEmailAddress?.emailAddress || prev.email
+        firstName: user.user_metadata?.full_name?.split(' ')[0] || prev.firstName,
+        lastName: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || prev.lastName,
+        email: user.email || prev.email,
+        phone: user.user_metadata?.phone || prev.phone
       }));
     }
   }, [user]);
@@ -149,14 +184,44 @@ const Booking = () => {
     return true;
   };
   
+  const updateBooking = async (paymentReference: string, paymentStatus: string) => {
+    if (!bookingId) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .update({
+          passenger_name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          phone_number: formData.phone,
+          id_passport_number: formData.idPassport,
+          booking_status: 'confirmed',
+          payment_status: paymentStatus,
+          payment_method: 'flutterwave',
+          payment_reference: paymentReference,
+          special_requests: formData.specialRequests || null,
+        })
+        .eq('id', bookingId)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      return data;
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      throw error;
+    }
+  };
+  
   const createBooking = async (paymentReference: string, paymentStatus: string) => {
-    if (!flight) return null;
+    if (!flight || !user) return null;
     
     const bookingReference = generateBookingReference();
     
     const bookingData = {
       booking_reference: bookingReference,
-      user_id: user?.id || null,
+      user_id: user.id,
       flight_id: flight.id,
       return_flight_id: returnFlight?.id || null,
       passenger_name: `${formData.firstName} ${formData.lastName}`,
@@ -240,8 +305,16 @@ const Booking = () => {
             const txId = typeof response.transaction_id === 'number' 
               ? String(response.transaction_id) 
               : response.transaction_id;
-              
-            const booking = await createBooking(txId, 'paid');
+            
+            let booking;
+            
+            if (bookingId) {
+              // Update existing booking
+              booking = await updateBooking(txId, 'paid');
+            } else {
+              // Create new booking
+              booking = await createBooking(txId, 'paid');
+            }
             
             navigate(`/booking/${id}/confirmation?bookingId=${booking.id}`);
             

@@ -5,21 +5,23 @@ import App from './App.tsx';
 import './index.css';
 import { ThemeProvider } from './hooks/use-theme.tsx';
 
-// Get the publishable key from environment variable
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-// Create console message function for debugging
+// Log environment status for debugging
 const logEnvironmentStatus = () => {
   console.log("Environment variables status:");
-  console.log("- VITE_CLERK_PUBLISHABLE_KEY:", PUBLISHABLE_KEY ? "✓ Present" : "✗ Missing");
   
-  // Log other important env variables if they exist
+  // Log important env variables if they exist
   if (import.meta.env.VITE_SUPABASE_URL) {
     console.log("- VITE_SUPABASE_URL: ✓ Present");
+  } else {
+    console.log("- VITE_SUPABASE_URL: ✗ Missing");
   }
+  
   if (import.meta.env.VITE_SUPABASE_ANON_KEY) {
     console.log("- VITE_SUPABASE_ANON_KEY: ✓ Present");
+  } else {
+    console.log("- VITE_SUPABASE_ANON_KEY: ✗ Missing");
   }
+  
   if (import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY) {
     console.log("- VITE_FLUTTERWAVE_PUBLIC_KEY: ✓ Present");
   }
@@ -28,7 +30,7 @@ const logEnvironmentStatus = () => {
 // Log environment status for debugging
 logEnvironmentStatus();
 
-// Initialize app with Clerk (with improved error handling)
+// Initialize app
 const initializeApp = () => {
   const rootElement = document.getElementById("root");
   if (!rootElement) {
@@ -37,41 +39,14 @@ const initializeApp = () => {
   }
 
   try {
-    // Safe approach: pre-load Clerk IF key is available before rendering app
-    if (PUBLISHABLE_KEY) {
-      console.log("Attempting to initialize Clerk with publishable key");
-      // Pre-check if Clerk module is available
-      import('@clerk/clerk-react')
-        .then(({ ClerkProvider }) => {
-          console.log("Clerk module loaded successfully");
-          
-          // Initialize with Clerk
-          createRoot(rootElement).render(
-            <React.StrictMode>
-              <ThemeProvider defaultTheme="light">
-                <ClerkProvider 
-                  publishableKey={PUBLISHABLE_KEY}
-                  afterSignInUrl="/handle-auth"
-                  afterSignUpUrl="/handle-auth"
-                  signInUrl="/sign-in"
-                  signUpUrl="/sign-up"
-                >
-                  <App />
-                </ClerkProvider>
-              </ThemeProvider>
-            </React.StrictMode>
-          );
-          console.log("Application initialized successfully with Clerk authentication");
-        })
-        .catch(error => {
-          console.error("Failed to load Clerk, initializing without authentication:", error);
-          // Fallback to render without Clerk
-          initializeWithoutClerk(rootElement);
-        });
-    } else {
-      console.warn("Missing Clerk Publishable Key - Initializing app without authentication");
-      initializeWithoutClerk(rootElement);
-    }
+    createRoot(rootElement).render(
+      <React.StrictMode>
+        <ThemeProvider defaultTheme="light">
+          <App />
+        </ThemeProvider>
+      </React.StrictMode>
+    );
+    console.log("Application initialized successfully");
   } catch (error) {
     console.error("Error initializing application:", error);
     
@@ -90,19 +65,6 @@ const initializeApp = () => {
       `;
     }
   }
-};
-
-// Helper function to initialize app without Clerk
-const initializeWithoutClerk = (rootElement) => {
-  console.log("Initializing application without Clerk");
-  createRoot(rootElement).render(
-    <React.StrictMode>
-      <ThemeProvider defaultTheme="light">
-        <App />
-      </ThemeProvider>
-    </React.StrictMode>
-  );
-  console.log("Application initialized without authentication");
 };
 
 // Initialize the app

@@ -1,150 +1,191 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, Plane, LogIn, User } from "lucide-react";
-
-// Check if Clerk is available
-const isClerkAvailable = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-// Only import Clerk components if available
-let SignInButton, UserButton, useUser;
-if (isClerkAvailable) {
-  const clerkComponents = import.meta.env.PROD 
-    ? require("@clerk/clerk-react") 
-    : { 
-        useUser: () => ({ isSignedIn: false, user: null }), 
-        UserButton: () => null,
-        SignInButton: ({ children }) => children
-      };
-  
-  ({ SignInButton, UserButton, useUser } = clerkComponents);
-} else {
-  // Provide mock implementation for development
-  useUser = () => ({ isSignedIn: false, user: null });
-  UserButton = () => null;
-  SignInButton = ({ children }) => children;
-}
+import { Menu, X, Plane, LogIn, LogOut, User, UserCircle } from "lucide-react";
+import { useAuth } from "@/hooks/auth-context";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
-  // Only use Clerk hooks if available
-  const user = isClerkAvailable ? useUser().user : null;
-  const isSignedIn = isClerkAvailable ? useUser().isSignedIn : false;
+  const { user, isAdmin, signOut } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Function to handle auth errors gracefully
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   const renderAuthButtons = () => {
-    try {
-      if (isSignedIn) {
-        return isClerkAvailable ? <UserButton afterSignOutUrl="/" /> : null;
-      } else {
-        return (
-          <div className="flex items-center gap-4">
-            {isClerkAvailable ? (
-              <SignInButton mode="modal">
-                <button className="btn-outline btn py-2 px-4 flex items-center gap-2">
-                  <LogIn size={18} />
-                  <span>Customer Sign In</span>
-                </button>
-              </SignInButton>
-            ) : (
-              <button 
-                onClick={() => navigate('/sign-in')}
-                className="btn-outline btn py-2 px-4 flex items-center gap-2"
-              >
-                <LogIn size={18} />
-                <span>Customer Sign In</span>
-              </button>
-            )}
-            <button 
-              onClick={() => navigate('/sign-in')}
-              className="btn btn-primary py-2 px-4 flex items-center gap-2"
-            >
-              <LogIn size={18} />
-              <span>Admin Sign In</span>
-            </button>
-          </div>
-        );
-      }
-    } catch (error) {
-      console.error("Auth rendering error:", error);
+    if (user) {
       return (
-        <button 
-          onClick={() => navigate('/sign-in')}
-          className="btn btn-primary py-2 px-4 flex items-center gap-2"
-        >
-          <LogIn size={18} />
-          <span>Sign In</span>
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="focus:outline-none">
+            <Avatar className="h-8 w-8 cursor-pointer">
+              <AvatarImage src={user.user_metadata?.avatar_url} />
+              <AvatarFallback className="bg-flysafari-primary text-white">
+                {getInitials(user.user_metadata?.full_name || user.email || "")}
+              </AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate("/profile")}>
+              <User className="mr-2 h-4 w-4" />
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/my-bookings")}>
+              <Plane className="mr-2 h-4 w-4" />
+              My Bookings
+            </DropdownMenuItem>
+            {isAdmin && (
+              <DropdownMenuItem onClick={() => navigate("/admin/dashboard")}>
+                <UserCircle className="mr-2 h-4 w-4" />
+                Admin Dashboard
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    } else {
+      return (
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate("/sign-in")}
+            className="btn-outline btn py-2 px-4 flex items-center gap-2"
+          >
+            <LogIn size={18} />
+            <span>Sign In</span>
+          </button>
+          <button
+            onClick={() => navigate("/sign-up")}
+            className="btn btn-primary py-2 px-4 flex items-center gap-2"
+          >
+            <User size={18} />
+            <span>Sign Up</span>
+          </button>
+        </div>
       );
     }
   };
 
-  // Function to handle auth errors in mobile view
   const renderMobileAuthButtons = () => {
-    try {
-      if (isSignedIn) {
-        return (
-          <div className="flex items-center">
-            {isClerkAvailable ? <UserButton afterSignOutUrl="/" /> : null}
-            <span className="ml-4 text-sm text-gray-600">
-              {user?.fullName || 'Your Account'}
-            </span>
+    if (user) {
+      return (
+        <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">
+          <div className="flex items-center gap-3 mb-4">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user.user_metadata?.avatar_url} />
+              <AvatarFallback className="bg-flysafari-primary text-white">
+                {getInitials(user.user_metadata?.full_name || user.email || "")}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-medium text-sm">
+                {user.user_metadata?.full_name || user.email}
+              </p>
+              <p className="text-xs text-gray-500">{user.email}</p>
+            </div>
           </div>
-        );
-      } else {
-        return (
-          <div className="flex flex-col space-y-2">
-            {isClerkAvailable ? (
-              <SignInButton mode="modal">
-                <button className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center">
-                  <LogIn size={18} />
-                  <span>Customer Sign In</span>
-                </button>
-              </SignInButton>
-            ) : (
-              <button
-                onClick={() => {
-                  navigate('/sign-in');
-                  toggleMenu();
-                }}
-                className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center"
-              >
-                <LogIn size={18} />
-                <span>Customer Sign In</span>
-              </button>
-            )}
+          
+          <button
+            onClick={() => {
+              navigate("/profile");
+              toggleMenu();
+            }}
+            className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary"
+          >
+            <User size={16} />
+            Profile
+          </button>
+          
+          <button
+            onClick={() => {
+              navigate("/my-bookings");
+              toggleMenu();
+            }}
+            className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary"
+          >
+            <Plane size={16} />
+            My Bookings
+          </button>
+          
+          {isAdmin && (
             <button
               onClick={() => {
-                navigate('/sign-in');
+                navigate("/admin/dashboard");
                 toggleMenu();
               }}
-              className="btn btn-primary py-2 text-center w-full flex items-center gap-2 justify-center"
+              className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary"
             >
-              <LogIn size={18} />
-              <span>Admin Sign In</span>
+              <UserCircle size={16} />
+              Admin Dashboard
             </button>
-          </div>
-        );
-      }
-    } catch (error) {
-      console.error("Mobile auth rendering error:", error);
+          )}
+          
+          <button
+            onClick={() => {
+              handleSignOut();
+              toggleMenu();
+            }}
+            className="flex w-full items-center gap-2 py-2 text-red-600 hover:text-red-700"
+          >
+            <LogOut size={16} />
+            Sign Out
+          </button>
+        </div>
+      );
+    } else {
       return (
-        <button
-          onClick={() => {
-            navigate('/sign-in');
-            toggleMenu();
-          }}
-          className="btn btn-primary py-2 text-center w-full flex items-center gap-2 justify-center"
-        >
-          <LogIn size={18} />
-          <span>Sign In</span>
-        </button>
+        <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">
+          <button
+            onClick={() => {
+              navigate("/sign-in");
+              toggleMenu();
+            }}
+            className="btn-outline btn py-2 w-full flex items-center gap-2 justify-center"
+          >
+            <LogIn size={18} />
+            <span>Sign In</span>
+          </button>
+          <button
+            onClick={() => {
+              navigate("/sign-up");
+              toggleMenu();
+            }}
+            className="btn btn-primary py-2 text-center w-full flex items-center gap-2 justify-center"
+          >
+            <User size={18} />
+            <span>Sign Up</span>
+          </button>
+        </div>
       );
     }
   };
@@ -218,9 +259,7 @@ const Navbar = () => {
             >
               My Bookings
             </Link>
-            <div className="pt-2 border-t border-gray-200">
-              {renderMobileAuthButtons()}
-            </div>
+            {renderMobileAuthButtons()}
           </div>
         )}
       </div>

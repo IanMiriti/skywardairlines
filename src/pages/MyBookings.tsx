@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -14,90 +15,14 @@ import {
   Search 
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-
-// Check if Clerk is available
-const hasClerkKey = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-let useUser;
-
-if (hasClerkKey) {
-  try {
-    const clerkComponents = require("@clerk/clerk-react");
-    useUser = clerkComponents.useUser;
-  } catch (error) {
-    console.error("Failed to load Clerk components:", error);
-    useUser = () => ({ user: null, isLoaded: true });
-  }
-} else {
-  // Mock implementation for when Clerk is not available
-  useUser = () => ({ user: { id: "demo-user" }, isLoaded: true });
-}
-
-// Mock bookings data - we'll pretend this comes from Supabase
-// In a real app, this would be fetched from the database
-const mockBookings = [
-  {
-    id: "BK12345",
-    flight: {
-      id: 1,
-      airline: "Kenya Airways",
-      flightNumber: "KQ123",
-      from: "Nairobi",
-      to: "Mombasa",
-      departureTime: "08:00 AM",
-      arrivalTime: "09:00 AM",
-      date: "2025-05-01",
-      duration: "1h",
-    },
-    passengerCount: 1,
-    totalAmount: 14500,
-    bookingDate: "2025-04-15",
-    status: "Confirmed",
-    cancellable: true,
-  },
-  {
-    id: "BK12346",
-    flight: {
-      id: 2,
-      airline: "Jambojet",
-      flightNumber: "JM456",
-      from: "Nairobi",
-      to: "Kisumu",
-      departureTime: "10:30 AM",
-      arrivalTime: "11:30 AM",
-      date: "2025-06-15",
-      duration: "1h",
-    },
-    passengerCount: 2,
-    totalAmount: 22736,
-    bookingDate: "2025-04-14",
-    status: "Confirmed",
-    cancellable: true,
-  },
-  {
-    id: "BK12347",
-    flight: {
-      id: 3,
-      airline: "Fly540",
-      flightNumber: "FL789",
-      from: "Mombasa",
-      to: "Nairobi",
-      departureTime: "02:15 PM",
-      arrivalTime: "03:15 PM",
-      date: "2025-04-20",
-      duration: "1h",
-    },
-    passengerCount: 1,
-    totalAmount: 12992,
-    bookingDate: "2025-04-10",
-    status: "Completed",
-    cancellable: false,
-  },
-];
+import { useAuth } from "@/hooks/auth-context";
+import { toast } from "@/hooks/use-toast";
+import { Booking } from "@/utils/types";
 
 const MyBookings = () => {
-  // Safely use Clerk's useUser hook or a mock implementation
-  const { user, isLoaded } = useUser ? useUser() : { user: { id: "demo-user" }, isLoaded: true };
-  const [bookings, setBookings] = useState<any[]>([]);
+  // Use authentication context
+  const { user, loading: authLoading } = useAuth();
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
   const [cancellationId, setCancellationId] = useState<string | null>(null);
@@ -106,28 +31,47 @@ const MyBookings = () => {
   
   useEffect(() => {
     const fetchBookings = async () => {
+      if (!user) return;
+      
       setLoading(true);
+      console.log("Fetching bookings for user:", user.id);
       
-      console.log("Fetching bookings for user:", user?.id || "demo mode");
-      
-      // In a real app, this would be a Supabase query
-      // const { data, error } = await supabase
-      //   .from('bookings')
-      //   .select('*, flight:flights(*)')
-      //   .eq('user_id', user?.id);
-      
-      // Simulate API fetch with the mock data
-      setTimeout(() => {
-        setBookings(mockBookings);
+      try {
+        // Fetch bookings from Supabase
+        const { data, error } = await supabase
+          .from('bookings')
+          .select(`
+            *,
+            flight:flight_id(*)
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          throw error;
+        }
+        
+        console.log("Fetched bookings:", data);
+        setBookings(data || []);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load your bookings. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
         setLoading(false);
-      }, 800);
+      }
     };
     
-    // Only fetch if we have a user (either real or mock)
-    if (isLoaded) {
+    // Only fetch bookings if user is authenticated
+    if (!authLoading && user) {
       fetchBookings();
+    } else if (!authLoading && !user) {
+      setLoading(false);
     }
-  }, [user, isLoaded]);
+  }, [user, authLoading]);
   
   const toggleBookingDetails = (bookingId: string) => {
     if (expandedBooking === bookingId) {
@@ -143,18 +87,45 @@ const MyBookings = () => {
   };
   
   const confirmCancellation = async () => {
-    // In a real app, you would make an API call to cancel the booking
-    // For this mock, we'll update the local state
-    setBookings(prevBookings => 
-      prevBookings.map(booking => 
-        booking.id === cancellationId 
-          ? { ...booking, status: "Cancelled", cancellable: false } 
-          : booking
-      )
-    );
+    if (!cancellationId) return;
     
-    setCancellationConfirm(false);
-    setCancellationId(null);
+    try {
+      // Update booking status in Supabase
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          booking_status: 'cancelled'
+        })
+        .eq('id', cancellationId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update local state
+      setBookings(prevBookings => 
+        prevBookings.map(booking => 
+          booking.id === cancellationId 
+            ? { ...booking, booking_status: 'cancelled' } 
+            : booking
+        )
+      );
+      
+      toast({
+        title: "Booking Cancelled",
+        description: "Your booking has been successfully cancelled.",
+      });
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel your booking. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCancellationConfirm(false);
+      setCancellationId(null);
+    }
   };
   
   const cancelCancellation = () => {
@@ -173,51 +144,114 @@ const MyBookings = () => {
   
   // Filter bookings based on search term
   const filteredBookings = bookings.filter(booking => 
-    booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.flight.airline.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.flight.flightNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.flight.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.flight.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.status.toLowerCase().includes(searchTerm.toLowerCase())
+    booking.booking_reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.flight?.airline?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.flight?.flight_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.flight?.departure_city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.flight?.arrival_city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.booking_status?.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "Confirmed":
+      case "confirmed":
         return (
           <span className="bg-green-100 text-green-800 py-1 px-3 rounded-full text-xs font-medium flex items-center gap-1">
             <CheckCircle size={12} />
             Confirmed
           </span>
         );
-      case "Cancelled":
+      case "cancelled":
         return (
           <span className="bg-red-100 text-red-800 py-1 px-3 rounded-full text-xs font-medium flex items-center gap-1">
             <XCircle size={12} />
             Cancelled
           </span>
         );
-      case "Completed":
+      case "completed":
         return (
           <span className="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-xs font-medium flex items-center gap-1">
             <CheckCircle size={12} />
             Completed
           </span>
         );
+      case "unpaid":
+        return (
+          <span className="bg-yellow-100 text-yellow-800 py-1 px-3 rounded-full text-xs font-medium flex items-center gap-1">
+            <AlertCircle size={12} />
+            Unpaid
+          </span>
+        );
       default:
         return (
           <span className="bg-gray-100 text-gray-800 py-1 px-3 rounded-full text-xs font-medium flex items-center gap-1">
             <AlertCircle size={12} />
-            {status}
+            {status || "Pending"}
           </span>
         );
     }
   };
+
+  const refreshBookings = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    
+    try {
+      // Fetch bookings from Supabase
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          flight:flight_id(*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      setBookings(data || []);
+      toast({
+        title: "Refreshed",
+        description: "Your bookings have been refreshed.",
+      });
+    } catch (error) {
+      console.error("Error refreshing bookings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh your bookings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="container py-12 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-flysafari-primary"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return (
+      <div className="container py-12">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="text-gray-400 mb-4">
+            <Plane size={48} className="mx-auto" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Sign In Required</h3>
+          <p className="text-gray-600 mb-6">
+            Please sign in to view your bookings.
+          </p>
+          <Link to="/sign-in" className="btn btn-primary">
+            Sign In
+          </Link>
+        </div>
       </div>
     );
   }
@@ -230,12 +264,7 @@ const MyBookings = () => {
             <h1 className="text-2xl font-bold text-flysafari-dark">My Bookings</h1>
             <button 
               className="text-flysafari-primary hover:text-flysafari-primary/80 flex items-center gap-1"
-              onClick={() => {
-                setLoading(true);
-                setTimeout(() => {
-                  setLoading(false);
-                }, 500);
-              }}
+              onClick={refreshBookings}
             >
               <RefreshCw size={16} />
               Refresh
@@ -268,39 +297,43 @@ const MyBookings = () => {
                     <div className="flex flex-col md:flex-row justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-3 mb-2">
-                          <h2 className="font-semibold text-lg">{booking.id}</h2>
-                          {getStatusBadge(booking.status)}
+                          <h2 className="font-semibold text-lg">{booking.booking_reference}</h2>
+                          {getStatusBadge(booking.booking_status)}
                         </div>
                         
-                        <div className="flex items-center gap-2 mb-1">
-                          <Plane size={16} className="text-flysafari-primary" />
-                          <span className="font-medium text-gray-700">{booking.flight.airline}</span>
-                          <span className="text-sm text-gray-500">{booking.flight.flightNumber}</span>
-                        </div>
-                        
-                        <div className="flex items-center my-2">
-                          <span className="font-medium">{booking.flight.from}</span>
-                          <ArrowRight size={14} className="mx-2 text-gray-400" />
-                          <span className="font-medium">{booking.flight.to}</span>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Calendar size={14} />
-                            <span>{booking.flight.date}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock size={14} />
-                            <span>{booking.flight.departureTime}</span>
-                          </div>
-                        </div>
+                        {booking.flight && (
+                          <>
+                            <div className="flex items-center gap-2 mb-1">
+                              <Plane size={16} className="text-flysafari-primary" />
+                              <span className="font-medium text-gray-700">{booking.flight.airline}</span>
+                              <span className="text-sm text-gray-500">{booking.flight.flight_number}</span>
+                            </div>
+                            
+                            <div className="flex items-center my-2">
+                              <span className="font-medium">{booking.flight.departure_city}</span>
+                              <ArrowRight size={14} className="mx-2 text-gray-400" />
+                              <span className="font-medium">{booking.flight.arrival_city}</span>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <Calendar size={14} />
+                                <span>{new Date(booking.flight.departure_time).toLocaleDateString()}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock size={14} />
+                                <span>{new Date(booking.flight.departure_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                       
                       <div className="flex flex-row md:flex-col justify-between items-end">
                         <div className="text-right">
                           <p className="text-sm text-gray-500">Total Amount</p>
                           <p className="text-lg font-bold text-flysafari-primary">
-                            {formatPrice(booking.totalAmount)}
+                            {formatPrice(booking.total_amount)}
                           </p>
                         </div>
                         
@@ -325,15 +358,15 @@ const MyBookings = () => {
                   </div>
                   
                   {/* Expanded details */}
-                  {expandedBooking === booking.id && (
+                  {expandedBooking === booking.id && booking.flight && (
                     <div className="px-4 md:px-6 pb-6 border-t border-gray-100 pt-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div>
                           <h3 className="text-sm font-medium text-gray-500 mb-1">Flight Details</h3>
                           <div className="flex items-center my-2">
                             <div className="flex flex-col items-center">
-                              <p className="font-semibold">{booking.flight.departureTime}</p>
-                              <p className="text-xs text-gray-500">{booking.flight.from}</p>
+                              <p className="font-semibold">{new Date(booking.flight.departure_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                              <p className="text-xs text-gray-500">{booking.flight.departure_city}</p>
                             </div>
                             <div className="mx-3 flex flex-col items-center flex-1">
                               <div className="text-xs text-gray-500 mb-1">{booking.flight.duration}</div>
@@ -343,8 +376,8 @@ const MyBookings = () => {
                               </div>
                             </div>
                             <div className="flex flex-col items-center">
-                              <p className="font-semibold">{booking.flight.arrivalTime}</p>
-                              <p className="text-xs text-gray-500">{booking.flight.to}</p>
+                              <p className="font-semibold">{new Date(booking.flight.arrival_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                              <p className="text-xs text-gray-500">{booking.flight.arrival_city}</p>
                             </div>
                           </div>
                         </div>
@@ -354,15 +387,15 @@ const MyBookings = () => {
                           <ul className="space-y-1 text-sm">
                             <li className="flex justify-between">
                               <span className="text-gray-600">Booking Date:</span>
-                              <span>{booking.bookingDate}</span>
+                              <span>{new Date(booking.created_at).toLocaleDateString()}</span>
                             </li>
                             <li className="flex justify-between">
                               <span className="text-gray-600">Passengers:</span>
-                              <span>{booking.passengerCount}</span>
+                              <span>{booking.passenger_count}</span>
                             </li>
                             <li className="flex justify-between">
                               <span className="text-gray-600">Status:</span>
-                              <span>{booking.status}</span>
+                              <span>{booking.booking_status}</span>
                             </li>
                           </ul>
                         </div>
@@ -370,12 +403,22 @@ const MyBookings = () => {
                       
                       <div className="flex flex-col sm:flex-row gap-3 mt-4">
                         <Link
-                          to={`/booking/${booking.flight.id}/confirmation`}
+                          to={`/booking/${booking.flight_id}/confirmation?bookingId=${booking.id}`}
                           className="btn btn-primary py-2 flex-1 text-center"
                         >
                           View Ticket
                         </Link>
-                        {booking.status === "Confirmed" && booking.cancellable && (
+                        
+                        {booking.booking_status === "unpaid" && (
+                          <Link
+                            to={`/booking/${booking.flight_id}/payment?bookingId=${booking.id}`}
+                            className="btn btn-secondary py-2 flex-1 text-center"
+                          >
+                            Complete Payment
+                          </Link>
+                        )}
+                        
+                        {(booking.booking_status === "confirmed" || booking.booking_status === "unpaid") && (
                           <button
                             onClick={() => handleCancelBooking(booking.id)}
                             className="btn btn-outline py-2 flex-1 text-red-500 border-red-200 hover:bg-red-50"

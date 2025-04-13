@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/clerk-react";
 import { 
   User, 
   Mail, 
@@ -11,13 +10,15 @@ import {
   ShieldCheck,
   Bell
 } from "lucide-react";
+import { useAuth } from "@/hooks/auth-context";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const Profile = () => {
-  const { user, isLoaded } = useUser();
+  const { user, loading: authLoading, refreshSession } = useAuth();
   
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     phone: "",
     dateOfBirth: "",
@@ -25,19 +26,54 @@ const Profile = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [profileData, setProfileData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    if (isLoaded && user) {
-      setFormData({
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        email: user.primaryEmailAddress?.emailAddress || "",
-        phone: user.phoneNumbers?.[0]?.phoneNumber || "",
-        dateOfBirth: "",
-      });
+    const fetchProfile = async () => {
+      if (!user) return;
+      
+      setIsLoading(true);
+      
+      try {
+        // Get profile data
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+        
+        setProfileData(data || {});
+        
+        // Set form data from profile and user
+        setFormData({
+          fullName: user.user_metadata?.full_name || data?.full_name || "",
+          email: user.email || "",
+          phone: user.user_metadata?.phone || data?.phone_number || "",
+          dateOfBirth: data?.date_of_birth || "",
+        });
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load your profile. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (!authLoading && user) {
+      fetchProfile();
+    } else if (!authLoading && !user) {
+      setIsLoading(false);
     }
-  }, [isLoaded, user]);
+  }, [user, authLoading]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -47,27 +83,85 @@ const Profile = () => {
     });
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) return;
+    
     setIsSaving(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSaving(false);
-      setIsEditing(false);
-      setSaveSuccess(true);
+    try {
+      // Update user metadata
+      const { error: userUpdateError } = await supabase.auth.updateUser({
+        data: {
+          full_name: formData.fullName,
+          phone: formData.phone
+        }
+      });
       
-      // Reset success message after 3 seconds
-      setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
-    }, 1000);
+      if (userUpdateError) {
+        throw userUpdateError;
+      }
+      
+      // Update profile in database
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          full_name: formData.fullName,
+          phone_number: formData.phone,
+          date_of_birth: formData.dateOfBirth,
+          updated_at: new Date()
+        });
+      
+      if (profileUpdateError) {
+        throw profileUpdateError;
+      }
+      
+      // Refresh session to get updated user data
+      await refreshSession();
+      
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
+      });
+      
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update your profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
   
-  if (!isLoaded) {
+  if (authLoading || isLoading) {
     return (
       <div className="container py-12 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-flysafari-primary"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return (
+      <div className="container py-12">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="text-gray-400 mb-4">
+            <User size={48} className="mx-auto" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Sign In Required</h3>
+          <p className="text-gray-600 mb-6">
+            Please sign in to view and edit your profile.
+          </p>
+          <a href="/sign-in" className="btn btn-primary">
+            Sign In
+          </a>
+        </div>
       </div>
     );
   }
@@ -87,10 +181,10 @@ const Profile = () => {
                     <User size={36} className="text-flysafari-primary" />
                   </div>
                   <h2 className="text-lg font-semibold">
-                    {user?.firstName} {user?.lastName}
+                    {formData.fullName || user.email}
                   </h2>
                   <p className="text-gray-600 text-sm">
-                    {user?.primaryEmailAddress?.emailAddress}
+                    {user.email}
                   </p>
                 </div>
                 
@@ -134,44 +228,19 @@ const Profile = () => {
                   </button>
                 </div>
                 
-                {saveSuccess && (
-                  <div className="bg-green-50 text-green-700 px-6 py-3 flex items-center gap-2">
-                    <ShieldCheck size={18} />
-                    <span>Profile updated successfully!</span>
-                  </div>
-                )}
-                
                 <form onSubmit={handleSubmit} className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
-                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                        First Name
+                      <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                        Full Name
                       </label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                         <input
                           type="text"
-                          id="firstName"
-                          name="firstName"
-                          value={formData.firstName}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                          className={`form-input pl-10 w-full ${!isEditing ? 'bg-gray-50' : ''}`}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                        Last Name
-                      </label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                          type="text"
-                          id="lastName"
-                          name="lastName"
-                          value={formData.lastName}
+                          id="fullName"
+                          name="fullName"
+                          value={formData.fullName}
                           onChange={handleInputChange}
                           disabled={!isEditing}
                           className={`form-input pl-10 w-full ${!isEditing ? 'bg-gray-50' : ''}`}
@@ -278,24 +347,20 @@ const Profile = () => {
                         <Lock size={20} className="text-flysafari-primary" />
                         <div>
                           <h3 className="font-medium">Password</h3>
-                          <p className="text-sm text-gray-500">Last changed 30 days ago</p>
+                          <p className="text-sm text-gray-500">Update your password</p>
                         </div>
                       </div>
-                      <button className="text-flysafari-primary hover:text-flysafari-primary/80 text-sm font-medium">
+                      <button 
+                        className="text-flysafari-primary hover:text-flysafari-primary/80 text-sm font-medium"
+                        onClick={() => {
+                          // Password reset flow
+                          toast({
+                            title: "Password Reset",
+                            description: "Password reset functionality will be implemented soon.",
+                          });
+                        }}
+                      >
                         Change
-                      </button>
-                    </div>
-                    
-                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-md">
-                      <div className="flex items-center gap-3">
-                        <ShieldCheck size={20} className="text-flysafari-primary" />
-                        <div>
-                          <h3 className="font-medium">Two-Factor Authentication</h3>
-                          <p className="text-sm text-gray-500">Add an extra layer of security</p>
-                        </div>
-                      </div>
-                      <button className="text-flysafari-primary hover:text-flysafari-primary/80 text-sm font-medium">
-                        Enable
                       </button>
                     </div>
                   </div>

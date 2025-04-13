@@ -1,100 +1,67 @@
 
-import { Plane } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-// Only import Clerk if available
-const hasClerkKey = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-let SignIn;
-
-// Try to dynamically import Clerk components only if the key exists
-if (hasClerkKey) {
-  try {
-    // Dynamic import approach to avoid direct dependency on Clerk when key is missing
-    SignIn = require("@clerk/clerk-react").SignIn;
-  } catch (error) {
-    console.error("Failed to load Clerk components:", error);
-  }
-}
+import { Plane, Mail, Lock, AlertCircle } from "lucide-react";
+import { useAuth } from "@/hooks/auth-context";
+import { toast } from "@/hooks/use-toast";
 
 const SignInPage = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
+  const { signIn, loading } = useAuth();
+  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Log the environment status for debugging
-    console.log("Clerk publishable key present:", !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
-      console.warn("VITE_CLERK_PUBLISHABLE_KEY is missing. Authentication will fall back to demo mode.");
-      setError("Authentication is not available. Please contact the administrator.");
+    if (!email || !password) {
+      setError("Email and password are required");
+      return;
     }
-    setIsLoading(false);
-  }, []);
-
-  // Function to handle manual sign in (fallback when Clerk is not available)
-  const handleManualSignIn = () => {
-    console.log("Manual sign in - redirecting to dashboard");
-    // For demo purposes, redirect to admin dashboard if using admin email
-    const emailInput = document.getElementById("email") as HTMLInputElement;
-    if (emailInput && emailInput.value === "ianmiriti254@gmail.com") {
-      navigate("/admin/dashboard");
-    } else {
-      navigate("/");
+    
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        console.error("Sign in error:", error);
+        setError(error.message);
+        toast({
+          title: "Sign in failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        console.log("Sign in successful");
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully signed in."
+        });
+        
+        // Check if it's an admin email
+        if (email === "ianmiriti254@gmail.com") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/");
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error during sign in:", err);
+      setError("An unexpected error occurred. Please try again.");
+      toast({
+        title: "Sign in failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-  // Render fallback sign-in form when Clerk is not available
-  const renderFallbackSignIn = () => (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <label htmlFor="email" className="text-gray-700">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          placeholder="Email"
-          className="border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md p-2 border"
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <label htmlFor="password" className="text-gray-700">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          placeholder="Password"
-          className="border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md p-2 border"
-        />
-      </div>
-      <button
-        onClick={handleManualSignIn}
-        className="bg-flysafari-primary hover:bg-flysafari-primary/90 text-white py-2 px-4 rounded mt-2"
-      >
-        Sign In
-      </button>
-      <p className="text-center text-sm text-gray-600 mt-2">
-        Don't have an account?{" "}
-        <Link to="/sign-up" className="text-flysafari-primary hover:underline font-medium">
-          Sign up
-        </Link>
-      </p>
-    </div>
-  );
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto py-12 px-4">
-        <div className="max-w-md mx-auto text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-flysafari-primary mx-auto mb-4"></div>
-          <p>Loading authentication...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -109,44 +76,82 @@ const SignInPage = () => {
             Please sign in to access FlySafari.
           </p>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-md mt-4">
-              {error}
-            </div>
-          )}
-          {!hasClerkKey && (
-            <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-md mt-4">
-              ❌ Authentication is not available - VITE_CLERK_PUBLISHABLE_KEY is not set.
-              <p className="text-xs mt-1">Using demo mode instead.</p>
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-md mt-4 flex items-center gap-2">
+              <AlertCircle size={16} />
+              <span>{error}</span>
             </div>
           )}
         </div>
         
-        <div className="bg-white rounded-xl shadow-md overflow-hidden p-4">
-          {hasClerkKey && SignIn ? (
-            <SignIn 
-              routing="path" 
-              path="/sign-in" 
-              redirectUrl="/handle-auth"
-              appearance={{
-                elements: {
-                  rootBox: "mx-auto w-full",
-                  card: "shadow-none p-0 mx-auto w-full",
-                  navbar: "hidden",
-                  header: "hidden",
-                  footer: "hidden",
-                  formButtonPrimary: "bg-flysafari-primary hover:bg-flysafari-primary/90",
-                  formFieldInput: "border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary",
-                  formFieldLabel: "text-gray-700",
-                  identityPreview: "bg-gray-50 border-gray-200",
-                  alert: "bg-red-50 border-red-100 text-red-600",
-                  socialButtonsBlockButton: "bg-white border hover:bg-gray-50",
-                  socialButtonsBlockButtonText: "text-gray-700"
-                }
-              }}
-            />
-          ) : (
-            renderFallbackSignIn()
-          )}
+        <div className="bg-white rounded-xl shadow-md overflow-hidden p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 w-full border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <Link to="/forgot-password" className="text-xs text-flysafari-primary hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 w-full border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div>
+              <button
+                type="submit"
+                className="w-full bg-flysafari-primary hover:bg-flysafari-primary/90 text-white py-2 px-4 rounded flex items-center justify-center"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </button>
+            </div>
+            
+            <div className="text-center mt-4">
+              <p className="text-sm text-gray-600">
+                Don't have an account?{" "}
+                <Link to="/sign-up" className="text-flysafari-primary hover:underline font-medium">
+                  Sign up
+                </Link>
+              </p>
+            </div>
+          </form>
         </div>
         
         <div className="text-center mt-6 text-sm text-gray-600">
