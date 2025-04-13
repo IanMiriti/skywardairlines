@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from "react";
+import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
@@ -26,10 +26,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Flight } from "@/utils/types";
 
-// Flutterwave library
-import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
-
-// Form data interface
 interface FormData {
   firstName: string;
   lastName: string;
@@ -245,11 +241,10 @@ const Booking = () => {
     }
   };
 
-  // Flutterwave payment configuration
   const flutterwaveConfig = {
     public_key: "FLWPUBK_TEST-f2a20c8d451aa374570b6b93e90c127a-X",
     tx_ref: `FLYS-${Date.now().toString()}`,
-    amount: calculateGrandTotal(),
+    amount: calculateGrandTotal().toString(),
     currency: 'KES',
     payment_options: 'mpesa',
     customer: {
@@ -264,7 +259,6 @@ const Booking = () => {
     },
   };
   
-  // Initialize the Flutterwave hook
   const handleFlutterwavePayment = useFlutterwave(flutterwaveConfig);
   
   const initiatePayment = async () => {
