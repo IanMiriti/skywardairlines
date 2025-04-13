@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
@@ -269,6 +270,57 @@ const Booking = () => {
     }
   };
   
+  // Initialize the unpaid booking (before payment)
+  const createUnpaidBooking = async () => {
+    if (!flight || !user || !validateForm()) return null;
+    
+    const bookingReference = generateBookingReference();
+    
+    const bookingData = {
+      booking_reference: bookingReference,
+      user_id: user.id,
+      flight_id: flight.id,
+      return_flight_id: returnFlight?.id || null,
+      passenger_name: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+      phone_number: formData.phone,
+      id_passport_number: formData.idPassport,
+      passenger_count: passengerCount,
+      total_amount: calculateGrandTotal(flight, returnFlight, passengerCount, tripType),
+      booking_status: 'pending',
+      payment_status: 'unpaid',
+      payment_method: null,
+      payment_reference: null,
+      is_round_trip: tripType === 'roundTrip',
+      special_requests: formData.specialRequests || null,
+    };
+    
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert(bookingData)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Booking Created",
+        description: "Your booking has been created. Please complete the payment to confirm.",
+      });
+      
+      return data;
+    } catch (error) {
+      console.error('Error creating unpaid booking:', error);
+      toast({
+        title: "Error",
+        description: "There was an error creating your booking. Please try again.",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+  
   const flutterwaveConfig = {
     public_key: FLUTTERWAVE_PUBLIC_KEY,
     tx_ref: `FLYS-${Date.now().toString()}`,
@@ -294,6 +346,28 @@ const Booking = () => {
   
   const handleFlutterPayment = useFlutterwave(flutterwaveConfig);
   
+  // New handler for the "Book Now" button that creates an unpaid booking first
+  const handleBookNow = async () => {
+    if (!validateForm() || !flight) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      // Create an unpaid booking first
+      const unpaidBooking = await createUnpaidBooking();
+      
+      if (unpaidBooking) {
+        // Redirect to payment page
+        navigate(`/payment/${unpaidBooking.id}`);
+      }
+    } catch (error) {
+      console.error('Error in booking process:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  // Original payment handler (for direct payment from this page)
   const handleBooking = () => {
     if (!validateForm() || !flight) return;
     
@@ -416,7 +490,8 @@ const Booking = () => {
                   totalAmount={calculateGrandTotal(flight, returnFlight, passengerCount, tripType)}
                   onPaymentMethodChange={handlePaymentMethodChange}
                   paymentMethod={formData.paymentMethod}
-                  onSubmit={handleBooking}
+                  onSubmit={handleBookNow}
+                  buttonText="Book Now"
                 />
               </div>
             </div>

@@ -13,6 +13,7 @@ import Flights from "./pages/Flights";
 import FlightDetails from "./pages/FlightDetails";
 import Booking from "./pages/Booking";
 import BookingConfirmation from "./pages/BookingConfirmation";
+import Payment from "./pages/Payment";
 import MyBookings from "./pages/MyBookings";
 import Offers from "./pages/Offers";
 import OfferDetails from "./pages/OfferDetails";
@@ -82,6 +83,7 @@ const App = () => {
                 <Route path="/flights/:id" element={<FlightDetails />} />
                 <Route path="/booking/:id" element={<Booking />} />
                 <Route path="/booking/:id/confirmation" element={<BookingConfirmation />} />
+                <Route path="/payment/:bookingId" element={<Payment />} />
                 <Route path="/offers" element={<Offers />} />
                 <Route path="/offers/:id" element={<OfferDetails />} />
                 <Route path="/unauthorized" element={<NotFound />} />

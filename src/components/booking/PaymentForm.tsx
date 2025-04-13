@@ -9,6 +9,7 @@ interface PaymentFormProps {
   onPaymentMethodChange: (method: "mpesa" | "card") => void;
   paymentMethod: "mpesa" | "card";
   onSubmit: () => void;
+  buttonText?: string;
 }
 
 export const PaymentForm = ({
@@ -17,6 +18,7 @@ export const PaymentForm = ({
   onPaymentMethodChange,
   paymentMethod,
   onSubmit,
+  buttonText = "Pay Now"
 }: PaymentFormProps) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-KE', {
@@ -94,7 +96,7 @@ export const PaymentForm = ({
           ) : (
             <>
               {paymentMethod === "mpesa" ? <Smartphone size={18} /> : <CreditCard size={18} />}
-              Pay {formatPrice(totalAmount)} Now
+              {buttonText} {formatPrice(totalAmount)}
             </>
           )}
         </button>
