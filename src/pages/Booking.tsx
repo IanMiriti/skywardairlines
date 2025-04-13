@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
@@ -635,7 +635,6 @@ const Booking = () => {
                     {...flutterwaveConfig}
                     className="btn btn-primary"
                     text="Pay with M-PESA"
-                    id="flutterwave-payment-button"
                   />
                 </div>
                 
