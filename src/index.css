@@ -4,10 +4,10 @@
 @tailwind utilities;
 
 :root {
-  --skyward-primary: #4A6DB5;
-  --skyward-secondary: #EB6A5C;
-  --skyward-dark: #1A2C4D;
-  --skyward-light: #F4F8FF;
+  --skyward-primary: #E53935;
+  --skyward-secondary: #FF6D00;
+  --skyward-dark: #B71C1C;
+  --skyward-light: #FFEBEE;
   --skyward-accent: #FFD166;
   
   /* Safari theme colors */
@@ -68,6 +68,15 @@
   
   .african-card {
     @apply rounded-lg overflow-hidden shadow-md bg-white border border-gray-100;
+  }
+  
+  /* Fix for dropdown menus visibility */
+  .dropdown-menu {
+    @apply bg-white border border-gray-200 shadow-lg rounded-md z-50;
+  }
+  
+  .form-select {
+    @apply h-10 px-3 py-2 rounded-md border border-gray-300 bg-white text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-skyward-primary focus:border-skyward-primary;
   }
 }
 

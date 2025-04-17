@@ -19,8 +19,8 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        primary: "bg-flysafari-primary text-white hover:bg-flysafari-primary/90",
-        accent: "bg-flysafari-secondary text-white hover:bg-flysafari-secondary/90 border border-white",
+        primary: "bg-skyward-primary text-white hover:bg-skyward-primary/90",
+        accent: "bg-skyward-secondary text-white hover:bg-skyward-secondary/90 border border-white",
       },
       size: {
         default: "h-10 px-4 py-2",

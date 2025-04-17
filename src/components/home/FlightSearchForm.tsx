@@ -81,7 +81,7 @@ const FlightSearchForm = () => {
             value="oneWay"
             checked={tripType === "oneWay"}
             onChange={() => setTripType("oneWay")}
-            className="form-radio text-flysafari-primary"
+            className="form-radio text-skyward-primary"
           />
           <span className="ml-2">One Way</span>
         </label>
@@ -93,7 +93,7 @@ const FlightSearchForm = () => {
             value="roundTrip"
             checked={tripType === "roundTrip"}
             onChange={() => setTripType("roundTrip")}
-            className="form-radio text-flysafari-primary"
+            className="form-radio text-skyward-primary"
           />
           <span className="ml-2">Round Trip</span>
         </label>
@@ -117,7 +117,7 @@ const FlightSearchForm = () => {
                 id="from"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="form-select pl-10 w-full"
+                className="form-select pl-10 w-full bg-white"
                 required
               >
                 <option value="">Select departure city</option>
@@ -146,7 +146,7 @@ const FlightSearchForm = () => {
                 id="to"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                className="form-select pl-10 w-full"
+                className="form-select pl-10 w-full bg-white"
                 required
               >
                 <option value="">Select arrival city</option>
@@ -159,7 +159,7 @@ const FlightSearchForm = () => {
               <button
                 type="button"
                 onClick={handleSwitchCities}
-                className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-10 text-gray-400 hover:text-flysafari-primary"
+                className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-10 text-gray-400 hover:text-skyward-primary"
               >
                 <ArrowLeftRight size={16} />
               </button>
@@ -178,7 +178,7 @@ const FlightSearchForm = () => {
                   <button
                     type="button"
                     className={cn(
-                      "w-full form-input pl-10 text-left flex items-center",
+                      "w-full form-input pl-10 text-left flex items-center bg-white",
                       !departureDate && "text-gray-400"
                     )}
                   >
@@ -190,7 +190,7 @@ const FlightSearchForm = () => {
                     )}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 bg-white z-[100]">
                   <Calendar
                     mode="single"
                     selected={departureDate}
@@ -213,7 +213,7 @@ const FlightSearchForm = () => {
                   <button
                     type="button"
                     className={cn(
-                      "w-full form-input pl-10 text-left flex items-center",
+                      "w-full form-input pl-10 text-left flex items-center bg-white",
                       !returnDate && "text-gray-400",
                       tripType !== "roundTrip" && "opacity-70"
                     )}
@@ -227,7 +227,7 @@ const FlightSearchForm = () => {
                     )}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 bg-white z-[100]">
                   <Calendar
                     mode="single"
                     selected={returnDate}
@@ -259,7 +259,7 @@ const FlightSearchForm = () => {
                 id="passengers"
                 value={passengers}
                 onChange={(e) => setPassengers(Number(e.target.value))}
-                className="form-select pl-10 w-full"
+                className="form-select pl-10 w-full bg-white"
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
                   <option key={num} value={num}>

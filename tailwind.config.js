@@ -19,11 +19,11 @@ export default {
     extend: {
       colors: {
         skyward: {
-          primary: "#4A6DB5",  // Primary blue
-          secondary: "#EB6A5C", // Secondary orange-red
-          dark: "#1A2C4D",     // Dark blue
-          light: "#F4F8FF",    // Light blue
-          accent: "#FFD166",   // Accent yellow
+          primary: "#E53935",  // Changed to red
+          secondary: "#FF6D00", // Orange-red secondary
+          dark: "#B71C1C",     // Dark red
+          light: "#FFEBEE",    // Light red background
+          accent: "#FFD166",   // Kept accent yellow
         },
         safari: {
           earth: "#BD8B2F",
