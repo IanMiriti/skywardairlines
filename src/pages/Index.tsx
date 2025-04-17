@@ -105,7 +105,7 @@ const Index = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className={`relative bg-flysafari-dark text-white overflow-hidden ${animatedElements[0] ? 'animate-fade-in' : 'opacity-0'}`}>
+      <section className={`relative bg-skyward-dark text-white overflow-hidden ${animatedElements[0] ? 'animate-fade-in' : 'opacity-0'}`}>
         <div className="absolute inset-0 opacity-30 bg-gradient-to-r from-black to-transparent z-0">
           <img 
             src="https://images.unsplash.com/photo-1523374228107-6e44bd2b524e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80" 
@@ -117,16 +117,16 @@ const Index = () => {
         <div className="container relative z-10 py-20 md:py-32">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 staggered-fade-in" style={{animationDelay: '200ms'}}>
-              Your Journey Begins with FlySafari
+              Your Journey Begins with Skyward Airlines
             </h1>
             <p className="text-xl md:text-2xl mb-8 staggered-fade-in" style={{animationDelay: '400ms'}}>
               Book affordable flights across Kenya with ease. Search, book, and fly with confidence.
             </p>
             <div className="flex gap-4 staggered-fade-in" style={{animationDelay: '600ms'}}>
-              <Link to="/flights" className="bg-flysafari-primary hover:bg-flysafari-primary/90 text-white py-3 px-8 rounded-md text-lg font-medium nav-button">
+              <Link to="/flights" className="bg-skyward-primary hover:bg-skyward-primary/90 text-white py-3 px-8 rounded-md text-lg font-medium nav-button">
                 Book a Flight
               </Link>
-              <Link to="/offers" className="bg-flysafari-secondary hover:bg-flysafari-secondary/90 text-white py-3 px-8 rounded-md text-lg font-medium border-2 border-white nav-button">
+              <Link to="/offers" className="bg-skyward-secondary hover:bg-skyward-secondary/90 text-white py-3 px-8 rounded-md text-lg font-medium border-2 border-white nav-button">
                 View Offers
               </Link>
             </div>
@@ -138,7 +138,7 @@ const Index = () => {
       <section className="py-12 bg-white">
         <div className="container">
           <div className={`max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 -mt-20 relative z-20 ${animatedElements[1] ? 'slide-up' : 'opacity-0'}`}>
-            <h2 className="text-2xl font-bold mb-6 text-flysafari-dark">Search for Flights</h2>
+            <h2 className="text-2xl font-bold mb-6 text-skyward-dark">Search for Flights</h2>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Trip Type Selection */}
@@ -147,7 +147,7 @@ const Index = () => {
                   type="button"
                   className={`flex-1 py-2 px-4 text-center rounded-md transition-colors ${
                     searchParams.tripType === "oneWay" 
-                      ? "bg-flysafari-primary text-white" 
+                      ? "bg-skyward-primary text-white" 
                       : "text-gray-700 hover:bg-gray-200"
                   }`}
                   onClick={() => handleTripTypeChange("oneWay")}
@@ -158,7 +158,7 @@ const Index = () => {
                   type="button"
                   className={`flex-1 py-2 px-4 text-center rounded-md transition-colors ${
                     searchParams.tripType === "roundTrip" 
-                      ? "bg-flysafari-primary text-white" 
+                      ? "bg-skyward-primary text-white" 
                       : "text-gray-700 hover:bg-gray-200"
                   }`}
                   onClick={() => handleTripTypeChange("roundTrip")}
@@ -309,10 +309,10 @@ const Index = () => {
       <section className={`py-16 bg-gray-50 ${animatedElements[2] ? 'animate-fade-in' : 'opacity-0'}`}>
         <div className="container">
           <div className="flex justify-between items-center mb-10">
-            <h2 className="text-3xl font-bold text-flysafari-dark">Special Offers</h2>
+            <h2 className="text-3xl font-bold text-skyward-dark">Special Offers</h2>
             <Link 
               to="/offers" 
-              className="text-flysafari-primary hover:text-flysafari-primary/80 flex items-center gap-1 nav-item"
+              className="text-skyward-primary hover:text-skyward-primary/80 flex items-center gap-1 nav-item"
             >
               View all offers <ArrowRight size={16} className="floating" />
             </Link>
@@ -332,14 +332,14 @@ const Index = () => {
                     alt={offer.title} 
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-4 right-4 bg-flysafari-secondary text-white py-1 px-3 rounded-full font-semibold text-sm pulsing">
+                  <div className="absolute top-4 right-4 bg-skyward-secondary text-white py-1 px-3 rounded-full font-semibold text-sm pulsing">
                     {offer.discount}
                   </div>
                 </div>
                 <div className="p-5">
-                  <h3 className="text-xl font-bold mb-2 text-flysafari-dark">{offer.title}</h3>
+                  <h3 className="text-xl font-bold mb-2 text-skyward-dark">{offer.title}</h3>
                   <p className="text-gray-600 mb-3">
-                    Starting from <span className="text-flysafari-primary font-bold">KES {offer.price}</span>
+                    Starting from <span className="text-skyward-primary font-bold">KES {offer.price}</span>
                   </p>
                   <p className="text-sm text-gray-500">Valid for next {offer.daysValid} days</p>
                 </div>
@@ -352,31 +352,31 @@ const Index = () => {
       {/* How It Works Section */}
       <section className={`py-16 bg-white ${animatedElements[3] ? 'animate-fade-in' : 'opacity-0'}`}>
         <div className="container">
-          <h2 className="text-3xl font-bold text-center mb-12 text-flysafari-dark">How It Works</h2>
+          <h2 className="text-3xl font-bold text-center mb-12 text-skyward-dark">How It Works</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                icon: <Search className="text-flysafari-primary icon-spin" size={28} />,
+                icon: <Search className="text-skyward-primary icon-spin" size={28} />,
                 title: "Search Flights",
                 description: "Enter your departure, destination, and travel date to find available flights."
               },
               {
-                icon: <BookOpen className="text-flysafari-primary icon-spin" size={28} />,
+                icon: <BookOpen className="text-skyward-primary icon-spin" size={28} />,
                 title: "Book Your Flight",
                 description: "Choose your preferred flight, enter passenger details, and complete your booking."
               },
               {
-                icon: <Plane className="text-flysafari-primary icon-spin" size={28} />,
+                icon: <Plane className="text-skyward-primary icon-spin" size={28} />,
                 title: "Fly with Confidence",
                 description: "Receive your e-ticket via email and prepare for your journey."
               }
             ].map((step, index) => (
               <div key={index} className={`text-center staggered-fade-in`} style={{animationDelay: `${index * 200 + 400}ms`}}>
-                <div className="w-16 h-16 bg-flysafari-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 hover-scale">
+                <div className="w-16 h-16 bg-skyward-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 hover-scale">
                   {step.icon}
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-flysafari-dark">{step.title}</h3>
+                <h3 className="text-xl font-bold mb-3 text-skyward-dark">{step.title}</h3>
                 <p className="text-gray-600">
                   {step.description}
                 </p>
@@ -398,19 +398,19 @@ const Index = () => {
       {/* Testimonials Section */}
       <section className={`py-16 bg-gray-50 ${animatedElements[4] ? 'animate-fade-in' : 'opacity-0'}`}>
         <div className="container">
-          <h2 className="text-3xl font-bold text-center mb-12 text-flysafari-dark">What Our Customers Say</h2>
+          <h2 className="text-3xl font-bold text-center mb-12 text-skyward-dark">What Our Customers Say</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 initials: "JM",
                 name: "John Mwangi",
-                text: "Booking with FlySafari was simple and straightforward. The flight was on time and the service was excellent. Will definitely use again!"
+                text: "Booking with Skyward Airlines was simple and straightforward. The flight was on time and the service was excellent. Will definitely use again!"
               },
               {
                 initials: "AO",
                 name: "Aisha Omondi",
-                text: "I found a great deal on FlySafari for my family trip to Mombasa. The booking process was quick and the M-PESA payment option was very convenient."
+                text: "I found a great deal on Skyward Airlines for my family trip to Mombasa. The booking process was quick and the M-PESA payment option was very convenient."
               },
               {
                 initials: "DK",
@@ -420,8 +420,8 @@ const Index = () => {
             ].map((testimonial, index) => (
               <div key={index} className={`bg-white p-6 rounded-xl shadow-md card-hover staggered-fade-in`} style={{animationDelay: `${index * 150 + 300}ms`}}>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-flysafari-primary/20 flex items-center justify-center pulsing">
-                    <span className="text-flysafari-primary font-bold">{testimonial.initials}</span>
+                  <div className="w-12 h-12 rounded-full bg-skyward-primary/20 flex items-center justify-center pulsing">
+                    <span className="text-skyward-primary font-bold">{testimonial.initials}</span>
                   </div>
                   <div>
                     <h4 className="font-semibold">{testimonial.name}</h4>
@@ -442,7 +442,7 @@ const Index = () => {
       </section>
       
       {/* Newsletter Section */}
-      <section className={`py-12 bg-flysafari-primary text-white ${animatedElements[5] ? 'animate-fade-in' : 'opacity-0'}`}>
+      <section className={`py-12 bg-skyward-primary text-white ${animatedElements[5] ? 'animate-fade-in' : 'opacity-0'}`}>
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl font-bold mb-4">Subscribe to Our Newsletter</h2>

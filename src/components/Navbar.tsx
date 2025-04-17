@@ -49,7 +49,7 @@ const Navbar = () => {
           <DropdownMenuTrigger className="focus:outline-none">
             <Avatar className="h-8 w-8 cursor-pointer hover-scale">
               <AvatarImage src={user.user_metadata?.avatar_url} />
-              <AvatarFallback className="bg-flysafari-primary text-white">
+              <AvatarFallback className="bg-skyward-primary text-white">
                 {getInitials(user.user_metadata?.full_name || user.email || "")}
               </AvatarFallback>
             </Avatar>
@@ -113,7 +113,7 @@ const Navbar = () => {
           <div className="flex items-center gap-3 mb-4">
             <Avatar className="h-8 w-8">
               <AvatarImage src={user.user_metadata?.avatar_url} />
-              <AvatarFallback className="bg-flysafari-primary text-white">
+              <AvatarFallback className="bg-skyward-primary text-white">
                 {getInitials(user.user_metadata?.full_name || user.email || "")}
               </AvatarFallback>
             </Avatar>
@@ -130,7 +130,7 @@ const Navbar = () => {
               navigate("/profile");
               toggleMenu();
             }}
-            className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary zoom-on-hover"
+            className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-skyward-primary zoom-on-hover"
           >
             <User size={16} />
             Profile
@@ -141,7 +141,7 @@ const Navbar = () => {
               navigate("/my-bookings");
               toggleMenu();
             }}
-            className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary zoom-on-hover"
+            className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-skyward-primary zoom-on-hover"
           >
             <Plane size={16} />
             My Bookings
@@ -153,7 +153,7 @@ const Navbar = () => {
                 navigate("/admin/dashboard");
                 toggleMenu();
               }}
-              className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-flysafari-primary zoom-on-hover"
+              className="flex w-full items-center gap-2 py-2 text-gray-700 hover:text-skyward-primary zoom-on-hover"
             >
               <UserCircle size={16} />
               Admin Dashboard
@@ -195,9 +195,9 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 hover-scale floating">
-            <Plane className="h-6 w-6 text-flysafari-primary icon-spin" />
-            <span className="text-xl font-bold text-flysafari-dark nav-link-highlight">
-              FlySafari
+            <Plane className="h-6 w-6 text-skyward-primary icon-spin" />
+            <span className="text-xl font-bold text-skyward-dark nav-link-highlight">
+              Skyward Airlines
             </span>
           </Link>
 
@@ -210,7 +210,7 @@ const Navbar = () => {
               <Link 
                 key={item.path}
                 to={item.path} 
-                className={`nav-item staggered-fade-in ${isActive(item.path) ? 'text-flysafari-primary font-semibold' : 'text-gray-700'}`}
+                className={`nav-item staggered-fade-in ${isActive(item.path) ? 'text-skyward-primary font-semibold' : 'text-gray-700'}`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {item.label}
@@ -247,7 +247,7 @@ const Navbar = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`block py-2 nav-item staggered-fade-in ${isActive(item.path) ? 'text-flysafari-primary font-semibold' : 'text-gray-700'}`}
+                className={`block py-2 nav-item staggered-fade-in ${isActive(item.path) ? 'text-skyward-primary font-semibold' : 'text-gray-700'}`}
                 onClick={toggleMenu}
                 style={{ animationDelay: `${index * 100}ms` }}
               >

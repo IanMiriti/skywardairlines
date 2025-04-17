@@ -53,7 +53,7 @@ export const FlightSummary = ({
           
           <div className="flex flex-col sm:flex-row justify-between">
             <div>
-              <p className="font-medium">{flight.flight_number} • {flight.airline}</p>
+              <p className="font-medium">{flight.flight_number} • Skyward Express</p>
               <div className="flex items-center gap-4 mt-2">
                 <div>
                   <p className="text-lg font-bold">{formatTime(flight.departure_time)}</p>
@@ -89,7 +89,7 @@ export const FlightSummary = ({
             
             <div className="flex flex-col sm:flex-row justify-between">
               <div>
-                <p className="font-medium">{returnFlight.flight_number} • {returnFlight.airline}</p>
+                <p className="font-medium">{returnFlight.flight_number} • Skyward Express</p>
                 <div className="flex items-center gap-4 mt-2">
                   <div>
                     <p className="text-lg font-bold">{formatTime(returnFlight.departure_time)}</p>

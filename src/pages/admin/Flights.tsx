@@ -13,12 +13,12 @@ import {
   Calendar
 } from "lucide-react";
 
-// Mock flights data
+// Mock flights data - Updated airline name to Skyward Express
 const mockFlights = [
   {
     id: 1,
-    airline: "Kenya Airways",
-    flightNumber: "KQ123",
+    airline: "Skyward Express",
+    flightNumber: "SE123",
     from: "Nairobi",
     to: "Mombasa",
     departureTime: "08:00 AM",
@@ -30,8 +30,8 @@ const mockFlights = [
   },
   {
     id: 2,
-    airline: "Jambojet",
-    flightNumber: "JM456",
+    airline: "Skyward Express",
+    flightNumber: "SE456",
     from: "Nairobi",
     to: "Kisumu",
     departureTime: "10:30 AM",
@@ -43,8 +43,8 @@ const mockFlights = [
   },
   {
     id: 3,
-    airline: "Fly540",
-    flightNumber: "FL789",
+    airline: "Skyward Express",
+    flightNumber: "SE789",
     from: "Mombasa",
     to: "Nairobi",
     departureTime: "02:15 PM",
@@ -56,8 +56,8 @@ const mockFlights = [
   },
   {
     id: 4,
-    airline: "Safarilink",
-    flightNumber: "SF101",
+    airline: "Skyward Express",
+    flightNumber: "SE101",
     from: "Nairobi",
     to: "Lamu",
     departureTime: "07:45 AM",
@@ -69,8 +69,8 @@ const mockFlights = [
   },
   {
     id: 5,
-    airline: "Kenya Airways",
-    flightNumber: "KQ321",
+    airline: "Skyward Express",
+    flightNumber: "SE321",
     from: "Kisumu",
     to: "Nairobi",
     departureTime: "05:00 PM",
@@ -173,7 +173,7 @@ const AdminFlights = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-flysafari-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-skyward-primary"></div>
       </div>
     );
   }
@@ -182,7 +182,7 @@ const AdminFlights = () => {
     <div>
       <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-flysafari-dark">Manage Flights</h1>
+          <h1 className="text-2xl font-bold text-skyward-dark">Manage Flights</h1>
           <p className="text-gray-600">Add, edit, or remove flights</p>
         </div>
         
@@ -244,7 +244,7 @@ const AdminFlights = () => {
                   <tr key={flight.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Plane className="text-flysafari-primary" size={16} />
+                        <Plane className="text-skyward-primary" size={16} />
                         <div>
                           <div className="font-medium">{flight.airline}</div>
                           <div className="text-xs text-gray-500">{flight.flightNumber}</div>
@@ -282,7 +282,7 @@ const AdminFlights = () => {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/admin/flights/${flight.id}/edit`}
-                          className="p-1 text-gray-600 hover:text-flysafari-primary rounded-md"
+                          className="p-1 text-gray-600 hover:text-skyward-primary rounded-md"
                           title="Edit Flight"
                         >
                           <Edit size={16} />

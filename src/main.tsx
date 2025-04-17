@@ -27,6 +27,19 @@ const logEnvironmentStatus = () => {
   }
 };
 
+// Set document title
+document.title = "Skyward Airlines - Book Your Flight";
+
+// Add favicon
+const updateFavicon = () => {
+  const link = document.querySelector("link[rel='icon']") || document.createElement('link');
+  link.setAttribute('rel', 'icon');
+  link.setAttribute('href', '/plane.png');
+  link.setAttribute('type', 'image/png');
+  document.head.appendChild(link);
+};
+updateFavicon();
+
 // Log environment status for debugging
 logEnvironmentStatus();
 

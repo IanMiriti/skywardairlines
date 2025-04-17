@@ -8,12 +8,12 @@ import {
   AlertCircle 
 } from "lucide-react";
 
-// Mock flights data
+// Mock flights data with updated airline name
 const mockFlights = [
   {
     id: 1,
-    airline: "Kenya Airways",
-    flightNumber: "KQ123",
+    airline: "Skyward Express",
+    flightNumber: "SE123",
     from: "Nairobi",
     to: "Mombasa",
     departureTime: "08:00",
@@ -41,13 +41,9 @@ const destinations = [
   "Ukunda"
 ];
 
-// Available airlines
+// Only Skyward Express is available now
 const airlines = [
-  "Kenya Airways",
-  "Jambojet",
-  "Fly540",
-  "Safarilink",
-  "AirKenya"
+  "Skyward Express"
 ];
 
 const AdminEditFlight = () => {
@@ -80,7 +76,7 @@ const AdminEditFlight = () => {
     if (isNewFlight) {
       // Set default values for new flight
       setFlightData({
-        airline: "Kenya Airways",
+        airline: "Skyward Express",
         flightNumber: "",
         from: "Nairobi",
         to: "",
@@ -167,7 +163,7 @@ const AdminEditFlight = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-flysafari-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-skyward-primary"></div>
       </div>
     );
   }
@@ -177,13 +173,13 @@ const AdminEditFlight = () => {
       <div className="mb-6">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-flysafari-primary mb-3 hover:underline"
+          className="flex items-center gap-2 text-skyward-primary mb-3 hover:underline"
         >
           <ArrowLeft size={16} />
           Back to flights
         </button>
         
-        <h1 className="text-2xl font-bold text-flysafari-dark">
+        <h1 className="text-2xl font-bold text-skyward-dark">
           {isNewFlight ? "Add New Flight" : "Edit Flight"}
         </h1>
       </div>
@@ -197,7 +193,7 @@ const AdminEditFlight = () => {
       
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-200 flex items-center gap-2">
-          <Plane className="text-flysafari-primary" size={18} />
+          <Plane className="text-skyward-primary" size={18} />
           <h2 className="text-lg font-semibold">Flight Information</h2>
         </div>
         
@@ -234,7 +230,7 @@ const AdminEditFlight = () => {
                 value={flightData.flightNumber}
                 onChange={handleInputChange}
                 required
-                placeholder="e.g., KQ123"
+                placeholder="e.g., SE123"
                 className="form-input w-full"
               />
             </div>

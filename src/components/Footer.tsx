@@ -14,14 +14,14 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="bg-flysafari-dark text-white">
+    <footer className="bg-skyward-dark text-white">
       <div className="container mx-auto px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div>
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <Plane className="h-6 w-6 text-flysafari-secondary" />
-              <span className="text-xl font-bold">FlySafari</span>
+              <Plane className="h-6 w-6 text-skyward-secondary" />
+              <span className="text-xl font-bold">Skyward Airlines</span>
             </Link>
             <p className="text-gray-300 text-sm mb-4">
               Your trusted flight booking service for the Kenyan market. 
@@ -86,23 +86,23 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
-                <MapPin size={18} className="text-flysafari-secondary mt-1" />
+                <MapPin size={18} className="text-skyward-secondary mt-1" />
                 <span className="text-gray-300">Nairobi, Kenya</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone size={18} className="text-flysafari-secondary" />
+                <Phone size={18} className="text-skyward-secondary" />
                 <span className="text-gray-300">+254 700 000000</span>
               </li>
               <li className="flex items-center gap-3">
-                <Mail size={18} className="text-flysafari-secondary" />
-                <span className="text-gray-300">info@flysafari.com</span>
+                <Mail size={18} className="text-skyward-secondary" />
+                <span className="text-gray-300">info@skywardairlines.com</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300 text-sm">
-          <p>© {currentYear} FlySafari. All rights reserved.</p>
+          <p>© {currentYear} Skyward Airlines. All rights reserved.</p>
         </div>
       </div>
     </footer>
