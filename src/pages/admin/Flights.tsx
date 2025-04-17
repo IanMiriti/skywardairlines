@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -83,6 +82,7 @@ const mockFlights = [
 ];
 
 const AdminFlights = () => {
+  // ... keep existing code (state variables and hooks)
   const [flights, setFlights] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

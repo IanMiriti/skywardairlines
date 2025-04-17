@@ -117,7 +117,7 @@ const FlightSearchForm = () => {
                 id="from"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="form-select pl-10 w-full bg-white"
+                className="form-select pl-10 w-full bg-white border border-gray-300 rounded-md"
                 required
               >
                 <option value="">Select departure city</option>
@@ -146,7 +146,7 @@ const FlightSearchForm = () => {
                 id="to"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                className="form-select pl-10 w-full bg-white"
+                className="form-select pl-10 w-full bg-white border border-gray-300 rounded-md"
                 required
               >
                 <option value="">Select arrival city</option>
@@ -178,7 +178,7 @@ const FlightSearchForm = () => {
                   <button
                     type="button"
                     className={cn(
-                      "w-full form-input pl-10 text-left flex items-center bg-white",
+                      "w-full form-input pl-10 text-left flex items-center bg-white border border-gray-300 rounded-md",
                       !departureDate && "text-gray-400"
                     )}
                   >
@@ -190,7 +190,7 @@ const FlightSearchForm = () => {
                     )}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-white z-[100]">
+                <PopoverContent className="w-auto p-0 bg-white z-[100] border border-gray-200 shadow-lg rounded-md">
                   <Calendar
                     mode="single"
                     selected={departureDate}
@@ -213,7 +213,7 @@ const FlightSearchForm = () => {
                   <button
                     type="button"
                     className={cn(
-                      "w-full form-input pl-10 text-left flex items-center bg-white",
+                      "w-full form-input pl-10 text-left flex items-center bg-white border border-gray-300 rounded-md",
                       !returnDate && "text-gray-400",
                       tripType !== "roundTrip" && "opacity-70"
                     )}
@@ -227,7 +227,7 @@ const FlightSearchForm = () => {
                     )}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-white z-[100]">
+                <PopoverContent className="w-auto p-0 bg-white z-[100] border border-gray-200 shadow-lg rounded-md">
                   <Calendar
                     mode="single"
                     selected={returnDate}
@@ -259,7 +259,7 @@ const FlightSearchForm = () => {
                 id="passengers"
                 value={passengers}
                 onChange={(e) => setPassengers(Number(e.target.value))}
-                className="form-select pl-10 w-full bg-white"
+                className="form-select pl-10 w-full bg-white border border-gray-300 rounded-md"
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
                   <option key={num} value={num}>

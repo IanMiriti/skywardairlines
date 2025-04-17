@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -110,7 +109,7 @@ const AdminOffers = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-flysafari-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-skyward-primary"></div>
       </div>
     );
   }
@@ -119,7 +118,7 @@ const AdminOffers = () => {
     <div className="animate-fade-in">
       <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-flysafari-dark">Manage Offers</h1>
+          <h1 className="text-2xl font-bold text-skyward-dark">Manage Offers</h1>
           <p className="text-gray-600">Add, edit, or remove special offers</p>
         </div>
         
@@ -185,7 +184,7 @@ const AdminOffers = () => {
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-start gap-2">
-                        <Tag className="text-flysafari-secondary mt-1" size={16} />
+                        <Tag className="text-skyward-secondary mt-1" size={16} />
                         <div>
                           <div className="font-medium">{offer.title}</div>
                           <div className="text-xs text-gray-500 line-clamp-1">{offer.description}</div>
@@ -200,7 +199,7 @@ const AdminOffers = () => {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="bg-flysafari-secondary/10 text-flysafari-secondary py-1 px-2 rounded text-xs font-medium">
+                      <span className="bg-skyward-secondary/10 text-skyward-secondary py-1 px-2 rounded text-xs font-medium">
                         {offer.discount} OFF
                       </span>
                     </td>
@@ -229,7 +228,7 @@ const AdminOffers = () => {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/admin/offers/${offer.id}/edit`}
-                          className="p-1 text-gray-600 hover:text-flysafari-primary rounded-md transition-colors duration-200"
+                          className="p-1 text-gray-600 hover:text-skyward-primary rounded-md transition-colors duration-200"
                           title="Edit Offer"
                         >
                           <Edit size={16} className="hover-scale" />

@@ -19,7 +19,7 @@ export default {
     extend: {
       colors: {
         skyward: {
-          primary: "#E53935",  // Changed to red
+          primary: "#E53935",  // Red
           secondary: "#FF6D00", // Orange-red secondary
           dark: "#B71C1C",     // Dark red
           light: "#FFEBEE",    // Light red background
