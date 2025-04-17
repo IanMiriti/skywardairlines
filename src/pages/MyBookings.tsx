@@ -378,13 +378,13 @@ const MyBookings = () => {
       <div className="container">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-flysafari-dark">My Bookings</h1>
+            <h1 className="text-2xl font-bold text-skyward-dark">My Bookings</h1>
             <button 
-              className="text-flysafari-primary hover:text-flysafari-primary/80 flex items-center gap-1"
+              className="text-skyward-primary hover:text-skyward-primary/80 flex items-center gap-1"
               onClick={refreshBookings}
             >
               <RefreshCw size={16} />
-              Refresh
+              <span>Refresh</span>
             </button>
           </div>
           
@@ -396,7 +396,7 @@ const MyBookings = () => {
                 placeholder="Search bookings by ID, airline, flight number, destination..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-flysafari-primary focus:border-flysafari-primary"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-skyward-primary focus:border-skyward-primary"
               />
             </div>
           </div>
@@ -526,20 +526,20 @@ const MyBookings = () => {
                         {booking.booking_status !== "cancelled" && (
                           <Link
                             to={`/booking/${booking.flight_id}/confirmation?bookingId=${booking.id}`}
-                            className="bg-safari-sky hover:bg-safari-sky/90 text-white py-2 px-4 rounded flex-1 text-center transition flex items-center justify-center gap-1"
+                            className="bg-skyward-secondary text-white py-2 px-4 rounded flex-1 text-center transition flex items-center justify-center gap-1"
                           >
                             <CheckCircle size={16} />
-                            View Ticket
+                            <span>View Ticket</span>
                           </Link>
                         )}
                         
                         {booking.booking_status === "unpaid" && (
                           <button
                             onClick={() => handlePayment(booking.id)}
-                            className="bg-safari-kente hover:bg-safari-kente/90 text-white py-2 px-4 rounded flex-1 text-center transition flex items-center justify-center gap-2 animate-pulse"
+                            className="bg-skyward-primary hover:bg-skyward-primary/90 text-white py-2 px-4 rounded flex-1 text-center transition flex items-center justify-center gap-2"
                           >
                             <Smartphone size={16} />
-                            Complete Payment
+                            <span>Complete Payment</span>
                           </button>
                         )}
                         
@@ -549,7 +549,7 @@ const MyBookings = () => {
                             className="border border-red-300 text-red-500 bg-white hover:bg-red-50 py-2 px-4 rounded flex-1 text-center transition flex items-center justify-center gap-1"
                           >
                             <XCircle size={16} />
-                            Cancel Booking
+                            <span>Cancel Booking</span>
                           </button>
                         )}
                       </div>

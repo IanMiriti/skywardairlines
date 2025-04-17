@@ -10,10 +10,10 @@ export default function AuthRoleSelect() {
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 mb-6">
-            <Plane className="h-8 w-8 text-flysafari-primary" />
-            <span className="text-2xl font-bold text-flysafari-dark">FlySafari</span>
+            <Plane className="h-8 w-8 text-skyward-primary" />
+            <span className="text-2xl font-bold text-skyward-dark">Skyward Express</span>
           </div>
-          <h1 className="text-2xl font-bold text-flysafari-dark">Sign in as</h1>
+          <h1 className="text-2xl font-bold text-skyward-dark">Sign in as</h1>
           <p className="text-gray-600 mt-2">
             Please select your account type to continue.
           </p>
@@ -23,7 +23,7 @@ export default function AuthRoleSelect() {
           <div className="flex flex-col gap-4">
             <button
               onClick={() => navigate("/auth/customer")}
-              className="bg-flysafari-primary text-white px-6 py-3 rounded-lg hover:bg-flysafari-primary/90 transition"
+              className="bg-skyward-primary text-white px-6 py-3 rounded-lg hover:bg-skyward-primary/90 transition"
             >
               I'm a Customer
             </button>
@@ -39,7 +39,7 @@ export default function AuthRoleSelect() {
         <div className="text-center mt-6">
           <button
             onClick={() => navigate("/")}
-            className="text-flysafari-primary hover:underline text-sm"
+            className="text-skyward-primary hover:underline text-sm"
           >
             Back to Home
           </button>
