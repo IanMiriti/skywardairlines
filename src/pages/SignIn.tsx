@@ -62,12 +62,12 @@ const SignInPage = () => {
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 mb-6">
-            <Plane className="h-8 w-8 text-flysafari-primary" />
-            <span className="text-2xl font-bold text-flysafari-dark">FlySafari</span>
+            <Plane className="h-8 w-8 text-skyward-primary" />
+            <span className="text-2xl font-bold text-skyward-dark">Skyward Airlines</span>
           </div>
-          <h1 className="text-2xl font-bold text-flysafari-dark">Sign In</h1>
+          <h1 className="text-2xl font-bold text-skyward-dark">Sign In</h1>
           <p className="text-gray-600 mt-2">
-            Please sign in to access FlySafari.
+            Please sign in to access Skyward Airlines.
           </p>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-md mt-4 flex items-center gap-2">
@@ -91,7 +91,7 @@ const SignInPage = () => {
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 w-full border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md"
+                  className="pl-10 w-full border-gray-300 focus:border-skyward-primary focus:ring-skyward-primary rounded-md"
                   required
                 />
               </div>
@@ -102,7 +102,7 @@ const SignInPage = () => {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <Link to="/forgot-password" className="text-xs text-flysafari-primary hover:underline">
+                <Link to="/forgot-password" className="text-xs text-skyward-primary hover:underline">
                   Forgot password?
                 </Link>
               </div>
@@ -114,7 +114,7 @@ const SignInPage = () => {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 w-full border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md"
+                  className="pl-10 w-full border-gray-300 focus:border-skyward-primary focus:ring-skyward-primary rounded-md"
                   required
                 />
               </div>
@@ -123,7 +123,7 @@ const SignInPage = () => {
             <div>
               <button
                 type="submit"
-                className="w-full bg-flysafari-primary hover:bg-flysafari-primary/90 text-white py-2 px-4 rounded flex items-center justify-center"
+                className="w-full bg-skyward-primary hover:bg-skyward-primary/90 text-white py-2 px-4 rounded flex items-center justify-center"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
@@ -140,7 +140,7 @@ const SignInPage = () => {
             <div className="text-center mt-4">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
-                <Link to="/sign-up" className="text-flysafari-primary hover:underline font-medium">
+                <Link to="/sign-up" className="text-skyward-primary hover:underline font-medium">
                   Sign up
                 </Link>
               </p>

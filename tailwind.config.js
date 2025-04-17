@@ -33,6 +33,17 @@ export default {
           sahara: "#F2DCA2",
           orange: "#D96A29",
           night: "#2B3A4B",
+          
+          // Additional colors from the extended palette
+          masai: "#E53935",      // Masai red
+          serengeti: "#FFB74D",  // Serengeti sun/sand
+          kente: "#43A047",      // Kente cloth green
+          tribal: "#6D4C41",     // Tribal wood brown
+          baobab: "#795548",     // Baobab tree brown
+          zebra: "#212121",      // Zebra black
+          sunset: "#FF7043",     // African sunset orange
+          jungle: "#2E7D32",     // Jungle green
+          savanna: "#F57F17",    // Savanna gold
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

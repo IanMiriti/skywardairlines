@@ -60,11 +60,11 @@ export const PaymentForm = ({
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-      <div className="bg-safari-sunset text-white p-4 rounded-t-lg">
+      <div className="bg-skyward-primary text-white p-4 rounded-t-lg">
         <h2 className="text-xl font-semibold">Payment Summary</h2>
       </div>
       
-      <div className="p-6 bg-gradient-to-r from-white to-safari-sahara/10">
+      <div className="p-6 bg-gradient-to-r from-white to-gray-100">
         <div className="mb-6">
           <h3 className="font-medium mb-3">Payment Method</h3>
           
@@ -76,13 +76,13 @@ export const PaymentForm = ({
             <label 
               className={`flex items-start gap-3 p-3 border rounded-md cursor-pointer transition-all ${
                 paymentMethod === "mpesa" 
-                  ? "border-safari-kente bg-safari-kente/10" 
-                  : "border-gray-200 bg-gray-50 hover:border-safari-kente/50"
+                  ? "border-green-500 bg-green-50" 
+                  : "border-gray-200 bg-gray-50 hover:border-green-300"
               }`}
             >
               <RadioGroupItem value="mpesa" id="mpesa" className="mt-1" />
               <div className="flex gap-3">
-                <Smartphone className="text-safari-kente mt-1" size={20} />
+                <Smartphone className="text-green-600 mt-1" size={20} />
                 <div>
                   <p className="font-medium">M-Pesa (Mobile Money)</p>
                   <p className="text-sm text-gray-500">Fast and convenient mobile payment</p>
@@ -93,13 +93,13 @@ export const PaymentForm = ({
             <label 
               className={`flex items-start gap-3 p-3 border rounded-md cursor-pointer transition-all ${
                 paymentMethod === "card" 
-                  ? "border-safari-sky bg-safari-sky/10" 
-                  : "border-gray-200 bg-gray-50 hover:border-safari-sky/50"
+                  ? "border-blue-500 bg-blue-50" 
+                  : "border-gray-200 bg-gray-50 hover:border-blue-300"
               }`}
             >
               <RadioGroupItem value="card" id="card" className="mt-1" />
               <div className="flex gap-3">
-                <CreditCard className="text-safari-sky mt-1" size={20} />
+                <CreditCard className="text-blue-600 mt-1" size={20} />
                 <div>
                   <p className="font-medium">Credit/Debit Card</p>
                   <p className="text-sm text-gray-500">Secure card payment</p>
@@ -135,25 +135,25 @@ export const PaymentForm = ({
           disabled={isProcessing}
           className={`w-full py-3 text-white rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
             paymentMethod === "mpesa" 
-              ? "bg-safari-kente hover:bg-safari-kente/90" 
-              : "bg-safari-sky hover:bg-safari-sky/90"
+              ? "bg-green-600 hover:bg-green-700" 
+              : "bg-blue-600 hover:bg-blue-700"
           } transform hover:-translate-y-1 hover:shadow-lg duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:shadow-none`}
         >
           {isProcessing ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-white"></div>
-              Processing...
+              <span>Processing...</span>
             </>
           ) : (
             <>
               {paymentMethod === "mpesa" ? <Smartphone size={18} /> : <CreditCard size={18} />}
-              {buttonText} {formatPrice(totalAmount)}
+              <span>{buttonText}</span> <span>{formatPrice(totalAmount)}</span>
             </>
           )}
         </button>
         
         <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
-          <ShieldCheck size={14} className="text-safari-kente" />
+          <ShieldCheck size={14} className="text-green-500" />
           <span>Your payment is secure and encrypted</span>
         </div>
       </div>

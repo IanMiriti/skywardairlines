@@ -73,7 +73,7 @@ const AdminSidebar = () => {
   };
   
   return (
-    <aside className="bg-skyward-dark text-white w-64 min-h-screen flex flex-col shadow-lg animate-fade-in">
+    <aside className="bg-gray-900 text-white w-64 min-h-screen flex flex-col shadow-lg animate-fade-in">
       <div className="p-5 border-b border-gray-700">
         <Link to="/admin/dashboard" className="flex items-center gap-2 hover-scale">
           <Plane className="h-6 w-6 text-skyward-secondary" />
@@ -90,11 +90,11 @@ const AdminSidebar = () => {
                 className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 ${
                   isActive(item.path)
                     ? "bg-skyward-primary/20 text-white"
-                    : "text-gray-300 hover:bg-skyward-dark/90 hover:text-white"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
                 }`}
               >
                 {item.icon}
-                <span className="text-white">{item.title}</span>
+                <span>{item.title}</span>
               </Link>
             </li>
           ))}
@@ -104,14 +104,14 @@ const AdminSidebar = () => {
       <div className="p-5 border-t border-gray-700">
         <Link to="/" className="flex items-center gap-3 w-full px-4 py-3 mb-2 rounded-md text-gray-300 hover:bg-skyward-secondary/10 hover:text-white transition-colors">
           <ArrowLeft size={20} />
-          <span className="text-white">Back to Homepage</span>
+          <span>Back to Homepage</span>
         </Link>
         <button
           onClick={handleSignOut}
           className="flex items-center gap-3 w-full px-4 py-3 rounded-md text-gray-300 hover:bg-red-500/10 hover:text-white transition-colors"
         >
           <LogOut size={20} />
-          <span className="text-white">Sign Out</span>
+          <span>Sign Out</span>
         </button>
       </div>
     </aside>

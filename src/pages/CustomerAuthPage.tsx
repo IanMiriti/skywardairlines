@@ -125,10 +125,10 @@ const CustomerAuthPage = () => {
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 mb-6">
-            <Plane className="h-8 w-8 text-flysafari-primary" />
-            <span className="text-2xl font-bold text-flysafari-dark">FlySafari</span>
+            <Plane className="h-8 w-8 text-skyward-primary" />
+            <span className="text-2xl font-bold text-skyward-dark">Skyward Airlines</span>
           </div>
-          <h1 className="text-2xl font-bold text-flysafari-dark">Customer Portal</h1>
+          <h1 className="text-2xl font-bold text-skyward-dark">Customer Portal</h1>
           <p className="text-gray-600 mt-2">
             Sign in or create your customer account to book flights and track your bookings.
           </p>
@@ -161,7 +161,7 @@ const CustomerAuthPage = () => {
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 w-full border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md"
+                      className="pl-10 w-full border-gray-300 focus:border-skyward-primary focus:ring-skyward-primary rounded-md"
                       required
                     />
                   </div>
@@ -179,7 +179,7 @@ const CustomerAuthPage = () => {
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 w-full border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md"
+                      className="pl-10 w-full border-gray-300 focus:border-skyward-primary focus:ring-skyward-primary rounded-md"
                       required
                     />
                   </div>
@@ -187,16 +187,16 @@ const CustomerAuthPage = () => {
                 
                 <button
                   type="submit"
-                  className="w-full bg-flysafari-primary hover:bg-flysafari-primary/90 text-white py-2 px-4 rounded flex items-center justify-center"
+                  className="w-full bg-skyward-primary hover:bg-skyward-primary/90 text-white py-2 px-4 rounded flex items-center justify-center"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
                       <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
-                      Signing in...
+                      <span>Signing in...</span>
                     </>
                   ) : (
-                    "Sign In"
+                    <span>Sign In</span>
                   )}
                 </button>
               </form>
@@ -216,7 +216,7 @@ const CustomerAuthPage = () => {
                       placeholder="Enter your full name"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10 w-full border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md"
+                      className="pl-10 w-full border-gray-300 focus:border-skyward-primary focus:ring-skyward-primary rounded-md"
                       required
                     />
                   </div>
@@ -234,7 +234,7 @@ const CustomerAuthPage = () => {
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 w-full border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md"
+                      className="pl-10 w-full border-gray-300 focus:border-skyward-primary focus:ring-skyward-primary rounded-md"
                       required
                     />
                   </div>
@@ -252,7 +252,7 @@ const CustomerAuthPage = () => {
                       placeholder="Create a password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 w-full border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md"
+                      className="pl-10 w-full border-gray-300 focus:border-skyward-primary focus:ring-skyward-primary rounded-md"
                       required
                     />
                   </div>
@@ -271,7 +271,7 @@ const CustomerAuthPage = () => {
                       placeholder="Confirm your password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="pl-10 w-full border-gray-300 focus:border-flysafari-primary focus:ring-flysafari-primary rounded-md"
+                      className="pl-10 w-full border-gray-300 focus:border-skyward-primary focus:ring-skyward-primary rounded-md"
                       required
                     />
                   </div>
@@ -279,16 +279,16 @@ const CustomerAuthPage = () => {
                 
                 <button
                   type="submit"
-                  className="w-full bg-flysafari-primary hover:bg-flysafari-primary/90 text-white py-2 px-4 rounded flex items-center justify-center"
+                  className="w-full bg-skyward-primary hover:bg-skyward-primary/90 text-white py-2 px-4 rounded flex items-center justify-center"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
                       <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
-                      Creating account...
+                      <span>Creating account...</span>
                     </>
                   ) : (
-                    "Create Account"
+                    <span>Create Account</span>
                   )}
                 </button>
               </form>
@@ -297,7 +297,7 @@ const CustomerAuthPage = () => {
         </div>
         
         <div className="text-center mt-6">
-          <Link to="/auth" className="text-flysafari-primary hover:underline text-sm">
+          <Link to="/auth" className="text-skyward-primary hover:underline text-sm">
             Back to Role Selection
           </Link>
         </div>
